@@ -16,11 +16,31 @@ const MapViewer = dynamic(() => import('@/components/map-viewer').then(mod => ({
   loading: () => <div className="flex items-center justify-center h-full"><p className="text-muted-foreground">Loading map...</p></div>
 });
 
+interface IndexResult {
+  statistics: {
+    min: number;
+    max: number;
+    mean: number;
+    median: number;
+    std: number;
+    count: number;
+  };
+  histogram: {
+    bins: number[];
+    counts: number[];
+  };
+  image_base64: string;
+  product_used: string;
+}
+
 export default function Home() {
   const [fields, setFields] = useState<KMLField[]>([]);
   const [selectedFieldId, setSelectedFieldId] = useState<string | undefined>();
   const [selectedIndex, setSelectedIndex] = useState<IndexType>('NDVI');
   const [loading, setLoading] = useState(true);
+  const [calculating, setCalculating] = useState(false);
+  const [indexResult, setIndexResult] = useState<IndexResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchFields();
@@ -38,6 +58,47 @@ export default function Home() {
       console.error('Error fetching fields:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const calculateIndex = async () => {
+    if (!selectedFieldId) return;
+
+    const field = fields.find((f) => f.id === selectedFieldId);
+    if (!field) return;
+
+    setCalculating(true);
+    setError(null);
+
+    try {
+      const response = await fetch('http://localhost:8000/calculate-index', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          field_id: field.id,
+          coordinates: field.coordinates.map((c) => ({
+            longitude: c.longitude,
+            latitude: c.latitude,
+          })),
+          index_type: selectedIndex,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to calculate index');
+      }
+
+      const result = await response.json();
+      setIndexResult(result);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      setError(errorMessage);
+      console.error('Error calculating index:', err);
+    } finally {
+      setCalculating(false);
     }
   };
 
@@ -122,17 +183,26 @@ export default function Home() {
                 </Tabs>
 
                 <div className="pt-2">
-                  <Button className="w-full" disabled={!selectedFieldId}>
-                    Calculate {selectedIndex}
+                  <Button
+                    className="w-full"
+                    disabled={!selectedFieldId || calculating}
+                    onClick={calculateIndex}
+                  >
+                    {calculating ? 'Calculating...' : `Calculate ${selectedIndex}`}
                   </Button>
                   <p className="text-xs text-muted-foreground mt-2">
                     This will process Sentinel-2 bands for the selected field
                   </p>
+                  {error && (
+                    <p className="text-xs text-destructive mt-2">
+                      Error: {error}
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
 
-            <IndexLegend indexType={selectedIndex} />
+            <IndexLegend indexType={selectedIndex} statistics={indexResult?.statistics} />
           </div>
 
           {/* Right side - Map and visualization */}
@@ -176,21 +246,52 @@ export default function Home() {
               <CardHeader>
                 <CardTitle>Index Visualization</CardTitle>
                 <CardDescription>
-                  {selectedIndex} results for {selectedField?.name || 'selected field'}
+                  {indexResult
+                    ? `${selectedIndex} results for ${selectedField?.name || 'selected field'}`
+                    : 'Click Calculate to generate visualization'}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-[400px] flex items-center justify-center border border-dashed rounded-lg">
-                  <div className="text-center space-y-2">
-                    <Badge variant="outline">Coming Soon</Badge>
-                    <p className="text-sm text-muted-foreground">
-                      Click Calculate {selectedIndex} to generate visualization
-                    </p>
+                {!indexResult ? (
+                  <div className="h-[400px] flex items-center justify-center border border-dashed rounded-lg">
+                    <div className="text-center space-y-2">
+                      <Badge variant="outline">Ready to Calculate</Badge>
+                      <p className="text-sm text-muted-foreground">
+                        Select a field and click Calculate {selectedIndex}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        This will process Sentinel-2 bands and show the {selectedIndex} visualization
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="rounded-lg overflow-hidden border">
+                      <img
+                        src={`data:image/png;base64,${indexResult.image_base64}`}
+                        alt={`${selectedIndex} visualization`}
+                        className="w-full h-auto"
+                      />
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 text-sm">
+                      <div className="p-3 border rounded-lg">
+                        <p className="text-xs text-muted-foreground">Mean</p>
+                        <p className="font-semibold">{indexResult.statistics.mean.toFixed(3)}</p>
+                      </div>
+                      <div className="p-3 border rounded-lg">
+                        <p className="text-xs text-muted-foreground">Min</p>
+                        <p className="font-semibold">{indexResult.statistics.min.toFixed(3)}</p>
+                      </div>
+                      <div className="p-3 border rounded-lg">
+                        <p className="text-xs text-muted-foreground">Max</p>
+                        <p className="font-semibold">{indexResult.statistics.max.toFixed(3)}</p>
+                      </div>
+                    </div>
                     <p className="text-xs text-muted-foreground">
-                      This will show the calculated index overlaid on the field
+                      Using product: {indexResult.product_used}
                     </p>
                   </div>
-                </div>
+                )}
               </CardContent>
             </Card>
           </div>

@@ -8,3 +8,12 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Large data files
+data/products/
+*.jp2
+*.SAFE/
+
+# Keep directory structure but ignore contents
+!data/products/.gitkeep
+!data/KML\ Fields/
