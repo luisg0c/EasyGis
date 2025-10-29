@@ -13,7 +13,7 @@ import numpy as np
 from PIL import Image
 from shapely.geometry import Polygon
 
-from sentinel_processor import SentinelProcessor
+from api.sentinel_processor import SentinelProcessor
 
 app = FastAPI(
     title="Remote Sensing API",
@@ -81,41 +81,47 @@ def coordinates_to_polygon(coordinates: List[Coordinate]) -> Polygon:
 
 def ndvi_to_image(ndvi: np.ndarray, colormap: str = 'RdYlGn') -> str:
     """
-    Convert NDVI array to colored image and encode as base64
+    Convert NDVI array to colored image with transparency and encode as base64
 
     Args:
-        ndvi: NDVI array
+        ndvi: NDVI array (with NaN for no-data areas)
         colormap: Matplotlib colormap name
 
     Returns:
-        Base64 encoded PNG image
+        Base64 encoded PNG image with alpha channel
     """
+    height, width = ndvi.shape
+
+    # Create mask for valid data (non-NaN and non-zero)
+    valid_mask = ~np.isnan(ndvi) & (ndvi != 0)
+
     # Normalize NDVI to 0-255 range
-    ndvi_normalized = ((ndvi + 1) / 2 * 255).astype(np.uint8)
+    ndvi_normalized = np.zeros_like(ndvi, dtype=np.float32)
+    ndvi_normalized[valid_mask] = (ndvi[valid_mask] + 1) / 2 * 255
+    ndvi_normalized = ndvi_normalized.astype(np.uint8)
 
-    # Replace NaN with 0
-    ndvi_normalized = np.nan_to_num(ndvi_normalized, nan=0)
+    # Create RGBA image (with alpha channel for transparency)
+    colored = np.zeros((height, width, 4), dtype=np.uint8)
 
-    # Apply colormap (simplified - using a basic gradient)
-    # For better results, could use matplotlib's colormaps
-    height, width = ndvi_normalized.shape
-    colored = np.zeros((height, width, 3), dtype=np.uint8)
-
-    # Simple green-yellow-red gradient
+    # Simple green-yellow-red gradient for valid pixels
     for i in range(height):
         for j in range(width):
-            val = ndvi_normalized[i, j]
-            if val < 85:  # Low NDVI - brown/red
-                colored[i, j] = [139 + val, 69, 19]
-            elif val < 170:  # Medium NDVI - yellow/green
-                colored[i, j] = [255 - val, 255, 0]
-            else:  # High NDVI - green
-                colored[i, j] = [0, val, 0]
+            if valid_mask[i, j]:
+                val = ndvi_normalized[i, j]
+                if val < 85:  # Low NDVI - brown/red
+                    colored[i, j] = [min(139 + val, 255), 69, 19, 255]
+                elif val < 170:  # Medium NDVI - yellow/green
+                    colored[i, j] = [max(255 - val, 0), 255, 0, 255]
+                else:  # High NDVI - green
+                    colored[i, j] = [0, val, 0, 255]
+            else:
+                # Transparent for invalid pixels
+                colored[i, j] = [0, 0, 0, 0]
 
-    # Convert to PIL Image
-    img = Image.fromarray(colored, mode='RGB')
+    # Convert to PIL Image with alpha channel
+    img = Image.fromarray(colored, mode='RGBA')
 
-    # Encode as base64
+    # Encode as base64 PNG
     buffer = io.BytesIO()
     img.save(buffer, format='PNG')
     buffer.seek(0)
