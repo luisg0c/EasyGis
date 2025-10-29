@@ -42,7 +42,7 @@ class Coordinate(BaseModel):
 class CalculateIndexRequest(BaseModel):
     field_id: str
     coordinates: List[Coordinate]
-    index_type: str  # 'NDVI', 'EVI', 'SAVI', 'NDWI', 'NDBI'
+    index_type: str  # 'NDVI', 'EVI', 'SAVI', 'NDWI', 'NDBI', 'RGB', 'FALSE_COLOR', 'B01'-'B12'
     product_name: Optional[str] = None  # If None, uses most recent
 
 
@@ -77,6 +77,100 @@ def coordinates_to_polygon(coordinates: List[Coordinate]) -> Polygon:
     """Convert coordinate list to Shapely Polygon"""
     coords = [(c.longitude, c.latitude) for c in coordinates]
     return Polygon(coords)
+
+
+def single_band_to_image(band_data: np.ndarray, band_name: str = 'Band') -> str:
+    """
+    Convert single band to grayscale image with transparency
+
+    Args:
+        band_data: Band array (with NaN for no-data areas)
+        band_name: Name of the band
+
+    Returns:
+        Base64 encoded PNG image with alpha channel
+    """
+    height, width = band_data.shape
+
+    # Create mask for valid data
+    valid_mask = ~np.isnan(band_data) & (band_data != 0)
+
+    # Normalize to 0-255 range
+    valid_data = band_data[valid_mask]
+    if len(valid_data) > 0:
+        vmin, vmax = np.percentile(valid_data, [2, 98])  # Stretch contrast
+        normalized = np.zeros_like(band_data, dtype=np.float32)
+        normalized[valid_mask] = np.clip((band_data[valid_mask] - vmin) / (vmax - vmin) * 255, 0, 255)
+    else:
+        normalized = np.zeros_like(band_data, dtype=np.float32)
+
+    # Create RGBA image
+    colored = np.zeros((height, width, 4), dtype=np.uint8)
+
+    for i in range(height):
+        for j in range(width):
+            if valid_mask[i, j]:
+                val = int(normalized[i, j])
+                colored[i, j] = [val, val, val, 255]  # Grayscale
+            else:
+                colored[i, j] = [0, 0, 0, 0]  # Transparent
+
+    img = Image.fromarray(colored, mode='RGBA')
+    buffer = io.BytesIO()
+    img.save(buffer, format='PNG')
+    buffer.seek(0)
+    return base64.b64encode(buffer.read()).decode('utf-8')
+
+
+def rgb_composite_to_image(red: np.ndarray, green: np.ndarray, blue: np.ndarray) -> str:
+    """
+    Create RGB composite image with transparency
+
+    Args:
+        red, green, blue: Band arrays
+
+    Returns:
+        Base64 encoded PNG image
+    """
+    height, width = red.shape
+
+    # Create mask for valid data
+    valid_mask = ~np.isnan(red) & ~np.isnan(green) & ~np.isnan(blue) & \
+                 (red != 0) & (green != 0) & (blue != 0)
+
+    # Normalize each band
+    def normalize_band(band):
+        norm = np.zeros_like(band, dtype=np.float32)
+        if np.any(valid_mask):
+            valid_data = band[valid_mask]
+            vmin, vmax = np.percentile(valid_data, [2, 98])
+            norm[valid_mask] = np.clip((band[valid_mask] - vmin) / (vmax - vmin) * 255, 0, 255)
+        return norm
+
+    r_norm = normalize_band(red)
+    g_norm = normalize_band(green)
+    b_norm = normalize_band(blue)
+
+    # Create RGBA image
+    colored = np.zeros((height, width, 4), dtype=np.uint8)
+
+    for i in range(height):
+        for j in range(width):
+            if valid_mask[i, j]:
+                colored[i, j] = [
+                    int(r_norm[i, j]),
+                    int(g_norm[i, j]),
+                    int(b_norm[i, j]),
+                    255
+                ]
+            else:
+                colored[i, j] = [0, 0, 0, 0]
+
+    img = Image.fromarray(colored, mode='RGBA')
+    buffer = io.BytesIO()
+    img.save(buffer, format='PNG')
+    buffer.seek(0)
+    return base64.b64encode(buffer.read()).decode('utf-8')
 
 
 def ndvi_to_image(ndvi: np.ndarray, colormap: str = 'RdYlGn') -> str:
@@ -203,6 +297,81 @@ def calculate_index(request: CalculateIndexRequest):
             blue_cropped, _ = processor.crop_to_geometry(blue_data, blue_meta, geometry)
 
             index_data = processor.calculate_evi(nir_cropped, red_cropped, blue_cropped)
+
+        elif request.index_type == 'RGB':
+            # True Color RGB (B04-Red, B03-Green, B02-Blue)
+            red_data, red_meta = processor.read_band('B04', '10m')
+            green_data, green_meta = processor.read_band('B03', '10m')
+            blue_data, blue_meta = processor.read_band('B02', '10m')
+
+            red_cropped, _ = processor.crop_to_geometry(red_data, red_meta, geometry)
+            green_cropped, _ = processor.crop_to_geometry(green_data, green_meta, geometry)
+            blue_cropped, _ = processor.crop_to_geometry(blue_data, blue_meta, geometry)
+
+            # Generate RGB composite
+            image_base64 = rgb_composite_to_image(red_cropped, green_cropped, blue_cropped)
+            statistics = processor.calculate_statistics(red_cropped)  # Use red for stats
+            bin_edges, counts = processor.calculate_histogram(red_cropped)
+
+            return IndexResult(
+                field_id=request.field_id,
+                index_type=request.index_type,
+                statistics=statistics,
+                histogram={'bins': bin_edges, 'counts': counts},
+                image_base64=image_base64,
+                product_used=product_path.name
+            )
+
+        elif request.index_type == 'FALSE_COLOR':
+            # False Color (B08-NIR, B04-Red, B03-Green)
+            nir_data, nir_meta = processor.read_band('B08', '10m')
+            red_data, red_meta = processor.read_band('B04', '10m')
+            green_data, green_meta = processor.read_band('B03', '10m')
+
+            nir_cropped, _ = processor.crop_to_geometry(nir_data, nir_meta, geometry)
+            red_cropped, _ = processor.crop_to_geometry(red_data, red_meta, geometry)
+            green_cropped, _ = processor.crop_to_geometry(green_data, green_meta, geometry)
+
+            image_base64 = rgb_composite_to_image(nir_cropped, red_cropped, green_cropped)
+            statistics = processor.calculate_statistics(nir_cropped)
+            bin_edges, counts = processor.calculate_histogram(nir_cropped)
+
+            return IndexResult(
+                field_id=request.field_id,
+                index_type=request.index_type,
+                statistics=statistics,
+                histogram={'bins': bin_edges, 'counts': counts},
+                image_base64=image_base64,
+                product_used=product_path.name
+            )
+
+        elif request.index_type.startswith('B') and len(request.index_type) in [3, 4]:
+            # Single band visualization (B01, B02, ..., B12, B8A)
+            band_name = request.index_type
+
+            # Determine resolution based on band
+            if band_name in ['B02', 'B03', 'B04', 'B08']:
+                resolution = '10m'
+            elif band_name in ['B05', 'B06', 'B07', 'B8A', 'B11', 'B12']:
+                resolution = '20m'
+            else:
+                resolution = '60m'
+
+            band_data, band_meta = processor.read_band(band_name, resolution)
+            band_cropped, _ = processor.crop_to_geometry(band_data, band_meta, geometry)
+
+            image_base64 = single_band_to_image(band_cropped, band_name)
+            statistics = processor.calculate_statistics(band_cropped)
+            bin_edges, counts = processor.calculate_histogram(band_cropped)
+
+            return IndexResult(
+                field_id=request.field_id,
+                index_type=request.index_type,
+                statistics=statistics,
+                histogram={'bins': bin_edges, 'counts': counts},
+                image_base64=image_base64,
+                product_used=product_path.name
+            )
 
         else:
             raise HTTPException(

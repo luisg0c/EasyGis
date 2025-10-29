@@ -185,3 +185,58 @@
 .leaflet-popup .gap-2 {
   gap: 0.5rem;
 }
+
+/* Leaflet Draw styles */
+.leaflet-draw-toolbar a {
+  background-color: white;
+  border-radius: 4px;
+}
+
+.leaflet-draw-toolbar a:hover {
+  background-color: #f3f4f6;
+}
+
+.leaflet-draw-actions {
+  background-color: white;
+  border-radius: 4px;
+}
+
+/* Geosearch styles */
+.leaflet-control-geosearch {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.leaflet-control-geosearch form input {
+  padding: 8px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 14px;
+  min-width: 250px;
+}
+
+.leaflet-control-geosearch form input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.leaflet-control-geosearch .results {
+  background: white;
+  border-radius: 6px;
+  margin-top: 4px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.leaflet-control-geosearch .results > * {
+  padding: 8px 12px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.leaflet-control-geosearch .results > *:hover {
+  background-color: #f9fafb;
+  cursor: pointer;
+}

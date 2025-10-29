@@ -60,6 +60,22 @@ export default function Home() {
     }
   };
 
+  const handleNewField = (coordinates: { latitude: number; longitude: number }[]) => {
+    // Generate a temporary ID for the new field
+    const newFieldId = `field-${Date.now()}`;
+    const newField: KMLField = {
+      id: newFieldId,
+      name: `New Field ${fields.length + 1}`,
+      coordinates: coordinates,
+    };
+
+    // Add to fields list
+    setFields([...fields, newField]);
+    setSelectedFieldId(newFieldId);
+
+    console.log('New field created:', newField);
+  };
+
   const calculateIndex = async () => {
     if (!selectedFieldId) return;
 
@@ -218,7 +234,7 @@ export default function Home() {
               disabled={!selectedFieldId || calculating}
               onClick={calculateIndex}
             >
-              {calculating ? 'Calculating...' : `Calculate ${selectedIndex}`}
+              {calculating ? 'Processing...' : `Visualize ${selectedIndex}`}
             </Button>
             {error && (
               <p className="text-xs text-destructive text-center">
@@ -254,20 +270,56 @@ export default function Home() {
               </div>
             )}
 
-            {/* Index selector tabs at bottom */}
-            <div className="space-y-2">
-              <div className="text-xs text-muted-foreground">Available Indices</div>
-              <Tabs value={selectedIndex} onValueChange={(v) => setSelectedIndex(v as IndexType)}>
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="NDVI" className="text-xs">NDVI</TabsTrigger>
-                  <TabsTrigger value="EVI" className="text-xs">EVI</TabsTrigger>
-                  <TabsTrigger value="SAVI" className="text-xs">SAVI</TabsTrigger>
-                </TabsList>
-                <TabsList className="grid w-full grid-cols-2 mt-2">
-                  <TabsTrigger value="NDWI" className="text-xs">NDWI</TabsTrigger>
-                  <TabsTrigger value="NDBI" className="text-xs">NDBI</TabsTrigger>
-                </TabsList>
-              </Tabs>
+            {/* Index and Band selector */}
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <div className="text-xs font-medium text-muted-foreground">Spectral Indices</div>
+                <Tabs value={selectedIndex} onValueChange={(v) => setSelectedIndex(v as IndexType)}>
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="NDVI" className="text-xs">NDVI</TabsTrigger>
+                    <TabsTrigger value="EVI" className="text-xs">EVI</TabsTrigger>
+                    <TabsTrigger value="SAVI" className="text-xs">SAVI</TabsTrigger>
+                  </TabsList>
+                  <TabsList className="grid w-full grid-cols-2 mt-2">
+                    <TabsTrigger value="NDWI" className="text-xs">NDWI</TabsTrigger>
+                    <TabsTrigger value="NDBI" className="text-xs">NDBI</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+
+              <div className="space-y-2">
+                <div className="text-xs font-medium text-muted-foreground">RGB Composites</div>
+                <Tabs value={selectedIndex} onValueChange={(v) => setSelectedIndex(v as IndexType)}>
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="RGB" className="text-xs">True Color</TabsTrigger>
+                    <TabsTrigger value="FALSE_COLOR" className="text-xs">False Color</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+
+              <div className="space-y-2">
+                <div className="text-xs font-medium text-muted-foreground">Individual Bands</div>
+                <Tabs value={selectedIndex} onValueChange={(v) => setSelectedIndex(v as IndexType)}>
+                  <TabsList className="grid w-full grid-cols-4">
+                    <TabsTrigger value="B01" className="text-xs">B01</TabsTrigger>
+                    <TabsTrigger value="B02" className="text-xs">B02</TabsTrigger>
+                    <TabsTrigger value="B03" className="text-xs">B03</TabsTrigger>
+                    <TabsTrigger value="B04" className="text-xs">B04</TabsTrigger>
+                  </TabsList>
+                  <TabsList className="grid w-full grid-cols-4 mt-2">
+                    <TabsTrigger value="B05" className="text-xs">B05</TabsTrigger>
+                    <TabsTrigger value="B06" className="text-xs">B06</TabsTrigger>
+                    <TabsTrigger value="B07" className="text-xs">B07</TabsTrigger>
+                    <TabsTrigger value="B08" className="text-xs">B08</TabsTrigger>
+                  </TabsList>
+                  <TabsList className="grid w-full grid-cols-4 mt-2">
+                    <TabsTrigger value="B8A" className="text-xs">B8A</TabsTrigger>
+                    <TabsTrigger value="B09" className="text-xs">B09</TabsTrigger>
+                    <TabsTrigger value="B11" className="text-xs">B11</TabsTrigger>
+                    <TabsTrigger value="B12" className="text-xs">B12</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
             </div>
           </div>
         </div>
@@ -286,6 +338,7 @@ export default function Home() {
             onFieldClick={setSelectedFieldId}
             indexResult={indexResult}
             indexType={selectedIndex}
+            onNewField={handleNewField}
           />
         ) : (
           <div className="flex items-center justify-center h-full bg-muted">

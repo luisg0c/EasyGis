@@ -1,10 +1,14 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import 'leaflet-draw/dist/leaflet.draw.css';
+import 'leaflet-draw';
 import { KMLField } from '@/types';
 import { IndexType } from '@/lib/spectral-indices';
+import { GeoSearchControl, OpenStreetMapProvider } from 'leaflet-geosearch';
+import 'leaflet-geosearch/dist/geosearch.css';
 
 interface IndexResult {
   statistics: {
@@ -29,13 +33,15 @@ interface MapViewerProps {
   onFieldClick?: (fieldId: string) => void;
   indexResult?: IndexResult | null;
   indexType?: IndexType;
+  onNewField?: (coordinates: { latitude: number; longitude: number }[]) => void;
 }
 
-export function MapViewer({ fields, selectedFieldId, onFieldClick, indexResult, indexType }: MapViewerProps) {
+export function MapViewer({ fields, selectedFieldId, onFieldClick, indexResult, indexType, onNewField }: MapViewerProps) {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const layersRef = useRef<Map<string, L.Polygon>>(new Map());
   const imageOverlayRef = useRef<L.ImageOverlay | null>(null);
+  const drawnItemsRef = useRef<L.FeatureGroup>(new L.FeatureGroup());
 
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
@@ -46,33 +52,87 @@ export function MapViewer({ fields, selectedFieldId, onFieldClick, indexResult, 
       zoom: 13,
       zoomControl: true,
       minZoom: 3,
-      maxZoom: 18,
+      maxZoom: 17,
     });
 
     // Add OpenStreetMap tiles
     const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors',
-      maxZoom: 18,
+      maxZoom: 17,
       minZoom: 3,
-    }).addTo(map);
+    });
 
-    // Add satellite imagery option
+    // Add satellite imagery option (default layer)
     const satelliteLayer = L.tileLayer(
       'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
       {
         attribution: 'Tiles © Esri',
-        maxZoom: 18,
+        maxZoom: 17,
         minZoom: 3,
       }
-    );
+    ).addTo(map);
 
-    // Layer control
+    // Layer control (Satellite is already added as default)
     const baseMaps = {
-      'Street Map': streetLayer,
       'Satellite': satelliteLayer,
+      'Street Map': streetLayer,
     };
 
     L.control.layers(baseMaps).addTo(map);
+
+    // Add search control
+    const provider = new OpenStreetMapProvider();
+    const searchControl = new (GeoSearchControl as any)({
+      provider: provider,
+      style: 'bar',
+      showMarker: true,
+      showPopup: false,
+      autoClose: true,
+      retainZoomLevel: false,
+      animateZoom: true,
+      keepResult: false,
+      searchLabel: 'Search for location...',
+    });
+
+    map.addControl(searchControl);
+
+    // Add drawn items layer to map
+    map.addLayer(drawnItemsRef.current);
+
+    // Initialize draw control
+    const drawControl = new L.Control.Draw({
+      position: 'topright',
+      draw: {
+        polygon: {
+          allowIntersection: false,
+          showArea: true,
+          drawError: {
+            color: '#e74c3c',
+            message: '<strong>Error:</strong> Shape edges cannot cross!',
+          },
+          shapeOptions: {
+            color: '#3b82f6',
+            fillOpacity: 0.3,
+          },
+        },
+        polyline: false,
+        rectangle: {
+          shapeOptions: {
+            color: '#3b82f6',
+            fillOpacity: 0.3,
+          },
+        },
+        circle: false,
+        marker: false,
+        circlemarker: false,
+      },
+      edit: {
+        featureGroup: drawnItemsRef.current,
+        remove: true,
+      },
+    });
+
+    map.addControl(drawControl);
 
     mapRef.current = map;
 
@@ -81,6 +141,37 @@ export function MapViewer({ fields, selectedFieldId, onFieldClick, indexResult, 
       mapRef.current = null;
     };
   }, []);
+
+  // Handle draw events separately to avoid map recreation
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    const map = mapRef.current;
+
+    const handleDrawCreated = (event: any) => {
+      const layer = event.layer;
+      drawnItemsRef.current.addLayer(layer);
+
+      // Extract coordinates
+      if (layer instanceof L.Polygon || layer instanceof L.Rectangle) {
+        const latLngs = layer.getLatLngs()[0] as L.LatLng[];
+        const coordinates = latLngs.map((latLng: L.LatLng) => ({
+          latitude: latLng.lat,
+          longitude: latLng.lng,
+        }));
+
+        if (onNewField) {
+          onNewField(coordinates);
+        }
+      }
+    };
+
+    map.on(L.Draw.Event.CREATED, handleDrawCreated);
+
+    return () => {
+      map.off(L.Draw.Event.CREATED, handleDrawCreated);
+    };
+  }, [onNewField]);
 
   useEffect(() => {
     if (!mapRef.current || fields.length === 0) return;
