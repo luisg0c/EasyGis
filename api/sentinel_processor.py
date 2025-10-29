@@ -88,8 +88,17 @@ class SentinelProcessor:
         Returns:
             Tuple of (cropped_data, updated_metadata)
         """
-        # Create temporary in-memory raster
         from rasterio.io import MemoryFile
+        from pyproj import Transformer
+        from shapely.ops import transform
+
+        # Reproject geometry from WGS84 to image CRS
+        transformer = Transformer.from_crs("EPSG:4326", metadata['crs'], always_xy=True)
+
+        def transform_coords(x, y, z=None):
+            return transformer.transform(x, y)
+
+        geometry_projected = transform(transform_coords, geometry)
 
         with MemoryFile() as memfile:
             with memfile.open(
@@ -103,8 +112,8 @@ class SentinelProcessor:
             ) as dataset:
                 dataset.write(band_data, 1)
 
-                # Crop to geometry
-                geom_dict = mapping(geometry)
+                # Crop to reprojected geometry
+                geom_dict = mapping(geometry_projected)
                 cropped_data, cropped_transform = mask(
                     dataset,
                     [geom_dict],
