@@ -146,16 +146,37 @@ function pseudoNoise(x: number, y: number, seed: number): number {
   );
 }
 
-// Raio do "talhão" perturbado por ângulo — não é círculo perfeito
-function plotRadius(angle: number, base: number, seed: number): number {
-  const s = (seed % 100) / 100;
-  return (
-    base *
-    (1 +
-      Math.sin(angle * 3 + s * 2) * 0.07 +
-      Math.cos(angle * 5 - s) * 0.04 +
-      Math.sin(angle * 7 + s * 3) * 0.02)
-  );
+// ── Point-in-polygon (ray casting) ──────────────────────────────────────
+// O Leaflet posiciona o overlay sobre o BBOX retangular do polígono. Então
+// pra que o mock fique no formato exato do talhão (não num círculo), cada
+// pixel é convertido pra coordenadas geográficas e testado contra o polígono.
+
+function computeBbox(coords: Coordinate[]) {
+  let minLon = Infinity;
+  let maxLon = -Infinity;
+  let minLat = Infinity;
+  let maxLat = -Infinity;
+  for (const c of coords) {
+    if (c.longitude < minLon) minLon = c.longitude;
+    if (c.longitude > maxLon) maxLon = c.longitude;
+    if (c.latitude < minLat) minLat = c.latitude;
+    if (c.latitude > maxLat) maxLat = c.latitude;
+  }
+  return { minLon, maxLon, minLat, maxLat };
+}
+
+function pointInPolygon(lon: number, lat: number, polygon: Coordinate[]): boolean {
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const xi = polygon[i].longitude;
+    const yi = polygon[i].latitude;
+    const xj = polygon[j].longitude;
+    const yj = polygon[j].latitude;
+    const intersect =
+      yi > lat !== yj > lat && lon < ((xj - xi) * (lat - yi)) / (yj - yi || 1e-12) + xi;
+    if (intersect) inside = !inside;
+  }
+  return inside;
 }
 
 // ── Geração da textura do talhão ────────────────────────────────────────
@@ -186,17 +207,21 @@ function biasForIndex(indexType: string, t: number): number {
   return 0.45 + (t - 0.5) * 0.7;
 }
 
-function generateMockField(indexType: string, seed: string): MockField {
+function generateMockField(
+  indexType: string,
+  seed: string,
+  coordinates: Coordinate[]
+): MockField {
   if (typeof document === "undefined") {
     throw new Error("Mock API só funciona no browser (precisa de Canvas).");
   }
 
   const width = 240;
   const height = 240;
-  const cx = width / 2;
-  const cy = height / 2;
-  const baseRadius = width * 0.42;
   const seedNum = seedFromString(seed + indexType);
+  const { minLon, maxLon, minLat, maxLat } = computeBbox(coordinates);
+  const lonSpan = maxLon - minLon || 1e-9;
+  const latSpan = maxLat - minLat || 1e-9;
 
   const canvas = document.createElement("canvas");
   canvas.width = width;
@@ -212,17 +237,16 @@ function generateMockField(indexType: string, seed: string): MockField {
   const values: number[] = [];
   const heights: number[] = [];
 
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      const idx = (y * width + x) * 4;
-      const dx = x - cx;
-      const dy = y - cy;
-      const dist = Math.hypot(dx, dy);
-      const angle = Math.atan2(dy, dx);
-      const localR = plotRadius(angle, baseRadius, seedNum);
+  for (let py = 0; py < height; py++) {
+    // Y do canvas vai de cima→baixo, mas latitude vai de sul→norte:
+    // py=0 corresponde a maxLat (norte); py=height-1 a minLat (sul).
+    const lat = maxLat - (py / (height - 1)) * latSpan;
+    for (let px = 0; px < width; px++) {
+      const idx = (py * width + px) * 4;
+      const lon = minLon + (px / (width - 1)) * lonSpan;
 
-      if (dist > localR) {
-        // Fora do talhão — transparente
+      if (!pointInPolygon(lon, lat, coordinates)) {
+        // Fora do polígono — transparente
         data[idx] = 0;
         data[idx + 1] = 0;
         data[idx + 2] = 0;
@@ -231,11 +255,8 @@ function generateMockField(indexType: string, seed: string): MockField {
         continue;
       }
 
-      // Ruído espacial dentro do talhão
-      const noise = pseudoNoise(x, y, seedNum);
-      // Normaliza ruído para [0, 1]
+      const noise = pseudoNoise(px, py, seedNum);
       const tRaw = (noise + 1) / 2;
-      // Aplica viés do índice
       const t = Math.max(0, Math.min(1, biasForIndex(indexType, tRaw)));
 
       const value = vmin + (vmax - vmin) * t;
@@ -303,7 +324,7 @@ const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve,
 
 async function mockCalculateIndex(payload: CalculateIndexPayload): Promise<IndexResultData> {
   await sleep(900);
-  const field = generateMockField(payload.index_type, payload.field_id);
+  const field = generateMockField(payload.index_type, payload.field_id, payload.coordinates);
   const statistics = calcStats(field.values);
   const histogram = calcHistogram(field.values);
 
@@ -336,7 +357,11 @@ async function mockRunExperiment(payload: ExperimentPayload): Promise<Experiment
       ? "B08" // edge detection → grayscale
       : "EVI"; // filters
 
-  const field = generateMockField(indexProxy, payload.field_id + payload.experiment_type);
+  const field = generateMockField(
+    indexProxy,
+    payload.field_id + payload.experiment_type,
+    payload.coordinates
+  );
   const stats = calcStats(field.values);
 
   return {
@@ -385,13 +410,13 @@ async function mockClassify(payload: ClassifyPayload): Promise<ClassificationRes
     nClasses = 2;
   }
 
-  // Gera grid base e converte em mapa de classes
+  // Render: cada pixel é um ponto geográfico testado contra o polígono real.
   const width = 240;
   const height = 240;
-  const cx = width / 2;
-  const cy = height / 2;
-  const baseRadius = width * 0.42;
   const seedNum = seedFromString(payload.field_id + payload.method);
+  const { minLon, maxLon, minLat, maxLat } = computeBbox(payload.coordinates);
+  const lonSpan = maxLon - minLon || 1e-9;
+  const latSpan = maxLat - minLat || 1e-9;
 
   const canvas = document.createElement("canvas");
   canvas.width = width;
@@ -403,16 +428,13 @@ async function mockClassify(payload: ClassifyPayload): Promise<ClassificationRes
   const data = imageData.data;
   const classCounts = new Array<number>(nClasses).fill(0);
 
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      const idx = (y * width + x) * 4;
-      const dx = x - cx;
-      const dy = y - cy;
-      const dist = Math.hypot(dx, dy);
-      const angle = Math.atan2(dy, dx);
-      const localR = plotRadius(angle, baseRadius, seedNum);
+  for (let py = 0; py < height; py++) {
+    const lat = maxLat - (py / (height - 1)) * latSpan;
+    for (let px = 0; px < width; px++) {
+      const idx = (py * width + px) * 4;
+      const lon = minLon + (px / (width - 1)) * lonSpan;
 
-      if (dist > localR) {
+      if (!pointInPolygon(lon, lat, payload.coordinates)) {
         data[idx] = 0;
         data[idx + 1] = 0;
         data[idx + 2] = 0;
@@ -420,7 +442,7 @@ async function mockClassify(payload: ClassifyPayload): Promise<ClassificationRes
         continue;
       }
 
-      const noise = pseudoNoise(x, y, seedNum);
+      const noise = pseudoNoise(px, py, seedNum);
       const t = (noise + 1) / 2; // [0, 1]
       const classIdx = Math.min(nClasses - 1, Math.floor(t * nClasses));
       classCounts[classIdx]++;
