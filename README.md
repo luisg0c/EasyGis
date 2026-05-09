@@ -243,6 +243,32 @@ Desenvolvido como projeto acadêmico no **ICEV — Instituto de Ensino Superior*
 
 ---
 
+## Uso de Inteligência Artificial
+
+Em respeito à transparência acadêmica, declaramos o uso de assistentes de IA (Claude, da Anthropic, e outras ferramentas equivalentes) como apoio em tarefas pontuais de alta complexidade ou alto custo de tempo durante o desenvolvimento deste projeto.
+
+**Onde a IA foi utilizada:**
+
+- Geração inicial de *boilerplate* para integração com bibliotecas geoespaciais (rasterio, pyproj, Shapely) — funções que envolvem reprojeção de coordenadas, recorte de raster por geometria e leitura de produtos `.SAFE`
+- Implementação dos 13 algoritmos do laboratório de experimentos de processamento de imagem (filtros, detecção de bordas, morfologia, segmentação)
+- Estruturação de testes automatizados (suíte pytest com fixtures sintéticas)
+- Diagramação e formatação dos documentos LaTeX/Beamer da entrega P2
+- Revisão de código pontual em trechos com manipulação numérica densa (NumPy, NaN handling, broadcasting)
+
+**Onde a IA NÃO foi utilizada:**
+
+- Decisões de produto, escopo, priorização e arquitetura (de responsabilidade da equipe e validadas com o Product Owner)
+- Definição dos requisitos funcionais e não funcionais
+- Backlog, planejamento de sprints e gestão de projeto
+- Análise crítica dos resultados de testes e validação manual da demonstração
+- Apresentação ao avaliador
+
+**Princípio adotado:** a IA é tratada como ferramenta de produtividade, equivalente a *frameworks*, *linters* ou geradores de código. Toda saída gerada por IA passou por revisão humana, foi testada, e a equipe assume total responsabilidade pela correção, segurança e adequação acadêmica do código e da documentação entregues.
+
+Esta declaração segue o princípio de honestidade acadêmica e a tendência crescente de instituições e periódicos científicos exigirem disclosure explícito do uso de IA generativa.
+
+---
+
 ## Licença
 
 Projeto educacional desenvolvido no ICEV. Uso acadêmico livre.
