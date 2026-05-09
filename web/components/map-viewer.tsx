@@ -80,7 +80,7 @@ export function MapViewer({ fields, selectedFieldId, onFieldClick, indexResult, 
       retainZoomLevel: false,
       animateZoom: true,
       keepResult: false,
-      searchLabel: 'Search for location...',
+      searchLabel: 'Buscar localização…',
     });
 
     map.addControl(searchControl);
@@ -97,7 +97,7 @@ export function MapViewer({ fields, selectedFieldId, onFieldClick, indexResult, 
           showArea: true,
           drawError: {
             color: '#e74c3c',
-            message: '<strong>Error:</strong> Shape edges cannot cross!',
+            message: '<strong>Erro:</strong> as bordas não podem se cruzar.',
           },
           shapeOptions: {
             color: '#3b82f6',
@@ -193,8 +193,8 @@ export function MapViewer({ fields, selectedFieldId, onFieldClick, indexResult, 
       polygon.bindPopup(`
         <div class="p-3 min-w-[280px]">
           <h3 class="font-bold text-lg mb-2">${escapeHtml(field.name)}</h3>
-          <p class="text-sm text-gray-600">Field ID: ${escapeHtml(field.id)}</p>
-          <p class="text-xs text-gray-500 mt-1">Click to select field</p>
+          <p class="text-sm text-gray-600">ID do talhão: ${escapeHtml(field.id)}</p>
+          <p class="text-xs text-gray-500 mt-1">Clique para selecionar</p>
         </div>
       `);
 
@@ -278,9 +278,9 @@ export function MapViewer({ fields, selectedFieldId, onFieldClick, indexResult, 
       const folderIcon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>';
       const closeIcon = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
 
-      const identifiedDate = new Date().toLocaleDateString('en-US', {
+      const identifiedDate = new Date().toLocaleDateString('pt-BR', {
+        day: '2-digit',
         month: 'short',
-        day: 'numeric',
       });
 
       // Build popup tailored to the kind of overlay being shown.
@@ -292,25 +292,25 @@ export function MapViewer({ fields, selectedFieldId, onFieldClick, indexResult, 
         popupHtml = `
           <div class="p-4 min-w-[320px] font-sans">
             <div class="flex justify-between items-start mb-3">
-              <h3 class="font-bold text-xl">Classification</h3>
+              <h3 class="font-bold text-xl">Classificação</h3>
               <span class="text-gray-300">${closeIcon}</span>
             </div>
             <div class="text-sm text-gray-500 mb-3">${escapeHtml(field.id)}</div>
             <div class="flex items-center gap-2 text-sm mb-4 text-gray-600">
-              <span class="text-gray-500">Identified:</span>
+              <span class="text-gray-500">Identificado:</span>
               <span class="flex items-center gap-1">${calendarIcon} ${escapeHtml(identifiedDate)}</span>
             </div>
             <div class="bg-gray-50 rounded-lg p-3 mb-3">
               <div class="flex items-center justify-between">
-                <span class="text-sm text-gray-600">Total area (ha)</span>
+                <span class="text-sm text-gray-600">Área total (ha)</span>
                 <span class="text-sm font-medium">${cstats.total_area.toFixed(2)}</span>
               </div>
               <div class="flex items-center justify-between mt-2">
-                <span class="text-sm text-gray-600">Classified (ha)</span>
+                <span class="text-sm text-gray-600">Classificada (ha)</span>
                 <span class="text-sm font-medium">${cstats.classified_area.toFixed(2)}</span>
               </div>
               <div class="flex items-center justify-between mt-2">
-                <span class="text-sm text-gray-600">Unclassified (%)</span>
+                <span class="text-sm text-gray-600">Não classificada (%)</span>
                 <span class="text-sm font-medium">${cstats.unclassified_percentage.toFixed(1)}</span>
               </div>
             </div>
@@ -327,19 +327,19 @@ export function MapViewer({ fields, selectedFieldId, onFieldClick, indexResult, 
 
         if (indexType === 'NDVI') {
           if (avgNDVI < 0.2) {
-            stressLevel = 'Severe Stress';
+            stressLevel = 'Estresse Severo';
             stressColor = '#dc2626';
             stressIconSvg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="#dc2626"><circle cx="12" cy="12" r="10"/></svg>';
           } else if (avgNDVI < 0.4) {
-            stressLevel = 'Moderate Stress';
+            stressLevel = 'Estresse Moderado';
             stressColor = '#ea580c';
             stressIconSvg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="#ea580c"><circle cx="12" cy="12" r="10"/></svg>';
           } else if (avgNDVI < 0.6) {
-            stressLevel = 'Mild Stress';
+            stressLevel = 'Estresse Leve';
             stressColor = '#ca8a04';
             stressIconSvg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="#ca8a04"><circle cx="12" cy="12" r="10"/></svg>';
           } else {
-            stressLevel = 'Healthy';
+            stressLevel = 'Saudável';
             stressColor = '#16a34a';
             stressIconSvg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="#16a34a"><circle cx="12" cy="12" r="10"/></svg>';
           }
@@ -353,13 +353,13 @@ export function MapViewer({ fields, selectedFieldId, onFieldClick, indexResult, 
             </div>
             <div class="text-sm text-gray-500 mb-3">${escapeHtml(field.id)}</div>
             <div class="flex items-center gap-2 text-sm mb-4 text-gray-600">
-              <span class="text-gray-500">Identified:</span>
+              <span class="text-gray-500">Identificado:</span>
               <span class="flex items-center gap-1">${calendarIcon} ${escapeHtml(identifiedDate)}</span>
             </div>
             <div class="bg-gray-50 rounded-lg p-3 mb-3">
               <div class="flex items-center justify-between">
-                <span class="text-sm text-gray-600">Area</span>
-                <span class="text-sm font-medium">${field.coordinates.length} points</span>
+                <span class="text-sm text-gray-600">Vértices</span>
+                <span class="text-sm font-medium">${field.coordinates.length} pontos</span>
               </div>
               <div class="flex items-center justify-between mt-2">
                 <span class="text-sm text-gray-600">${escapeHtml(indexType ?? '')}:</span>
@@ -368,12 +368,12 @@ export function MapViewer({ fields, selectedFieldId, onFieldClick, indexResult, 
             </div>
             <details class="mb-3">
               <summary class="cursor-pointer text-sm font-medium text-gray-700 flex items-center gap-2 py-2">
-                ${folderIcon} <span>Details</span>
+                ${folderIcon} <span>Detalhes</span>
               </summary>
               <div class="pl-6 pt-2 text-sm text-gray-600">
                 <p>Status: ${escapeHtml(stressLevel)}</p>
-                <p>Range: ${stats.min.toFixed(2)} - ${stats.max.toFixed(2)}</p>
-                <p>Std Dev: ${stats.std.toFixed(3)}</p>
+                <p>Faixa: ${stats.min.toFixed(2)} – ${stats.max.toFixed(2)}</p>
+                <p>Desvio padrão: ${stats.std.toFixed(3)}</p>
               </div>
             </details>
           </div>

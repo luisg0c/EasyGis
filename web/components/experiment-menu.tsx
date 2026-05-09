@@ -21,57 +21,57 @@ interface ExperimentMenuProps {
 
 const CATEGORIES: ExperimentCategory[] = [
   {
-    title: 'Image Filters',
+    title: 'Filtros de Imagem',
     tag: 'I',
     experiments: [
-      { type: 'gaussian_blur', title: 'Gaussian Blur', description: 'Apply Gaussian smoothing filter' },
-      { type: 'median_filter', title: 'Median Filter', description: 'Remove salt and pepper noise' },
-      { type: 'bilateral_filter', title: 'Bilateral Filter', description: 'Edge-preserving smoothing' },
+      { type: 'gaussian_blur', title: 'Borrão Gaussiano', description: 'Aplica filtro de suavização gaussiana' },
+      { type: 'median_filter', title: 'Filtro Mediana', description: 'Remove ruído sal-e-pimenta' },
+      { type: 'bilateral_filter', title: 'Filtro Bilateral', description: 'Suavização preservando bordas' },
     ],
   },
   {
-    title: 'Edge Detection',
+    title: 'Detecção de Bordas',
     tag: 'II',
     experiments: [
-      { type: 'sobel_edge', title: 'Sobel', description: 'Gradient-based edge detection' },
-      { type: 'canny_edge', title: 'Canny', description: 'Multi-stage edge detection' },
-      { type: 'laplacian_edge', title: 'Laplacian', description: 'Second-derivative edge detection' },
+      { type: 'sobel_edge', title: 'Sobel', description: 'Detecção de bordas por gradiente' },
+      { type: 'canny_edge', title: 'Canny', description: 'Detecção de bordas multi-estágio' },
+      { type: 'laplacian_edge', title: 'Laplaciano', description: 'Detecção por segunda derivada' },
     ],
   },
   {
-    title: 'Enhancement',
+    title: 'Realce',
     tag: 'III',
     experiments: [
       {
         type: 'histogram_equalization',
-        title: 'Histogram Equalization',
-        description: 'Redistribute intensity values to improve contrast',
+        title: 'Equalização de Histograma',
+        description: 'Redistribui intensidade para melhorar contraste',
       },
     ],
   },
   {
-    title: 'Morphology',
+    title: 'Morfologia',
     tag: 'IV',
     experiments: [
-      { type: 'morphology_erosion', title: 'Erosion', description: 'Shrink bright regions' },
-      { type: 'morphology_dilation', title: 'Dilation', description: 'Expand bright regions' },
-      { type: 'morphology_opening', title: 'Opening', description: 'Erosion followed by dilation' },
-      { type: 'morphology_closing', title: 'Closing', description: 'Dilation followed by erosion' },
+      { type: 'morphology_erosion', title: 'Erosão', description: 'Encolhe regiões brilhantes' },
+      { type: 'morphology_dilation', title: 'Dilatação', description: 'Expande regiões brilhantes' },
+      { type: 'morphology_opening', title: 'Abertura', description: 'Erosão seguida de dilatação' },
+      { type: 'morphology_closing', title: 'Fechamento', description: 'Dilatação seguida de erosão' },
     ],
   },
   {
-    title: 'Segmentation',
+    title: 'Segmentação',
     tag: 'V',
     experiments: [
-      { type: 'threshold_binary', title: 'Binary Threshold', description: 'Cut at fixed value' },
-      { type: 'threshold_otsu', title: 'Otsu Threshold', description: 'Auto-select optimal threshold' },
-      { type: 'threshold_adaptive', title: 'Adaptive Threshold', description: 'Local adaptive cutoff' },
+      { type: 'threshold_binary', title: 'Limiar Binário', description: 'Corte em valor fixo' },
+      { type: 'threshold_otsu', title: 'Limiar Otsu', description: 'Auto-seleciona limiar ótimo' },
+      { type: 'threshold_adaptive', title: 'Limiar Adaptativo', description: 'Corte local adaptativo' },
     ],
   },
 ];
 
 export function ExperimentMenu({ onSelectExperiment }: ExperimentMenuProps) {
-  const [expanded, setExpanded] = useState<Set<string>>(new Set(['Image Filters']));
+  const [expanded, setExpanded] = useState<Set<string>>(new Set(['Filtros de Imagem']));
 
   const toggle = (title: string) => {
     const next = new Set(expanded);

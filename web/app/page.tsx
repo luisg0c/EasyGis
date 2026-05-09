@@ -27,7 +27,7 @@ const MapViewer = dynamic(
     ssr: false,
     loading: () => (
       <div className="flex h-full items-center justify-center bg-paper-grain">
-        <p className="editorial-eyebrow text-stone">Loading cartographic surface…</p>
+        <p className="editorial-eyebrow text-stone">Carregando mapa…</p>
       </div>
     ),
   }
@@ -39,7 +39,7 @@ const Terrain3DViewer = dynamic(
     ssr: false,
     loading: () => (
       <div className="flex h-full items-center justify-center bg-paper-grain">
-        <p className="editorial-eyebrow text-stone">Loading 3-dimensional render…</p>
+        <p className="editorial-eyebrow text-stone">Carregando visualização 3D…</p>
       </div>
     ),
   }
@@ -162,9 +162,9 @@ export default function Home() {
       const result = await response.json();
       setIndexResult(result);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
       setError(errorMessage);
-      console.error('Error calculating index:', err);
+      console.error('Erro calculando índice:', err);
     } finally {
       setCalculating(false);
     }
@@ -172,7 +172,7 @@ export default function Home() {
 
   const handleOpenExperiment = (type: string, title: string, description: string) => {
     if (!selectedFieldId) {
-      alert('Please select a field first');
+      alert('Selecione um talhão primeiro');
       return;
     }
     setSelectedExperiment({ type, title, description });
@@ -209,14 +209,14 @@ export default function Home() {
       setExperimentHistory([result, ...experimentHistory]);
       setActiveTab('analytics');
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      alert(`Experiment error: ${errorMessage}`);
-      console.error('Error running experiment:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
+      alert(`Erro no experimento: ${errorMessage}`);
+      console.error('Erro executando experimento:', err);
     }
   };
 
   const selectedField = fields.find((f) => f.id === selectedFieldId);
-  const today = new Date().toLocaleDateString('en-GB', {
+  const today = new Date().toLocaleDateString('pt-BR', {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
@@ -293,15 +293,15 @@ export default function Home() {
           </div>
 
           <h1 className="mt-5 font-display text-[40px] font-extrabold leading-[0.92] tracking-tight text-moss-950">
-            Precision
+            Agricultura
             <br />
-            agriculture,
+            de precisão
             <br />
-            <span className="text-moss-700">satellite-fed.</span>
+            <span className="text-moss-700">por satélite.</span>
           </h1>
           <p className="mt-3 max-w-[320px] text-[13px] leading-relaxed text-smoke">
-            Sentinel-2 imagery, vegetation indices, and zone analytics over the plots
-            you actually manage.
+            Imagens Sentinel-2, índices de vegetação e analítica por zona sobre os
+            talhões que você gerencia.
           </p>
         </header>
 
@@ -309,12 +309,12 @@ export default function Home() {
         <div className="flex-1 overflow-y-auto px-7 py-6">
           {activeTab === 'analytics' ? (
             <div className="editorial-rise space-y-7">
-              {/* 01 · Field selector */}
+              {/* 01 · Talhão */}
               <section>
                 <div className="mb-3 flex items-center justify-between">
-                  <span className="editorial-num">01 · Field</span>
-                  <span className="font-mono text-[10px] tracking-[0.16em] text-stone">
-                    {fields.length} {fields.length === 1 ? 'plot' : 'plots'}
+                  <span className="editorial-num">01 · Talhão</span>
+                  <span className="font-mono text-[10px] tracking-widest text-stone">
+                    {fields.length} {fields.length === 1 ? 'talhão' : 'talhões'}
                   </span>
                 </div>
                 <select
@@ -323,7 +323,7 @@ export default function Home() {
                   disabled={loading || fields.length === 0}
                   className="w-full appearance-none border border-moss-100 bg-cream px-3.5 py-2.5 font-mono text-[13px] text-moss-950 transition-colors focus:border-moss-700 focus:outline-none disabled:opacity-40"
                 >
-                  <option value="">— Select a plot —</option>
+                  <option value="">— Selecione um talhão —</option>
                   {fields.map((field) => (
                     <option key={field.id} value={field.id}>
                       {field.name}
@@ -331,20 +331,20 @@ export default function Home() {
                   ))}
                 </select>
                 {selectedField && (
-                  <p className="mt-2 font-mono text-[10px] tracking-[0.1em] text-stone">
+                  <p className="mt-2 font-mono text-[10px] tracking-widest text-stone">
                     BBOX  {selectedField.bounds.south.toFixed(3)}°S  {Math.abs(selectedField.bounds.west).toFixed(3)}°W →
                     {' '}{selectedField.bounds.north.toFixed(3)}°N {Math.abs(selectedField.bounds.east).toFixed(3)}°E
                   </p>
                 )}
               </section>
 
-              {/* 02 · Index family */}
+              {/* 02 · Índices */}
               <section>
-                <div className="mb-3 editorial-rule">Index Library</div>
+                <div className="mb-3 editorial-rule">Biblioteca de Índices</div>
 
                 <div className="space-y-4">
                   <div>
-                    <p className="editorial-num mb-2">— Spectral Indices</p>
+                    <p className="editorial-num mb-2">— Índices Espectrais</p>
                     <div className="grid grid-cols-5 gap-1.5">
                       {SPECTRAL_INDICES.map((idx) => (
                         <button
@@ -360,7 +360,7 @@ export default function Home() {
                   </div>
 
                   <div>
-                    <p className="editorial-num mb-2">— RGB Composites</p>
+                    <p className="editorial-num mb-2">— Composições RGB</p>
                     <div className="grid grid-cols-2 gap-1.5">
                       {COMPOSITES.map((idx) => (
                         <button
@@ -369,14 +369,14 @@ export default function Home() {
                           onClick={() => setSelectedIndex(idx)}
                           className="index-chip"
                         >
-                          {idx === 'RGB' ? 'True Color' : 'False Color'}
+                          {idx === 'RGB' ? 'Cor Verdadeira' : 'Falsa Cor'}
                         </button>
                       ))}
                     </div>
                   </div>
 
                   <div>
-                    <p className="editorial-num mb-2">— Individual Bands</p>
+                    <p className="editorial-num mb-2">— Bandas Individuais</p>
                     <div className="grid grid-cols-6 gap-1.5">
                       {BANDS.map((band) => (
                         <button
@@ -395,14 +395,14 @@ export default function Home() {
 
               {/* 03 · Render options */}
               <section>
-                <div className="mb-3 editorial-rule">Render Options</div>
+                <div className="mb-3 editorial-rule">Opções de Renderização</div>
 
                 <div className="space-y-3">
                   <label className="flex cursor-pointer items-center justify-between border border-moss-100 bg-cream px-4 py-3 text-[13px] hover:border-moss-300 transition-colors">
                     <div>
-                      <p className="font-medium text-moss-950">Smooth Visualization</p>
-                      <p className="font-mono text-[10px] tracking-[0.1em] text-stone mt-0.5">
-                        GAUSSIAN σ = 1.5
+                      <p className="font-medium text-moss-950">Suavização Gaussiana</p>
+                      <p className="font-mono text-[10px] tracking-widest text-stone mt-0.5">
+                        GAUSSIANA σ = 1.5
                       </p>
                     </div>
                     <Switch checked={smoothEnabled} onCheckedChange={setSmoothEnabled} />
@@ -411,9 +411,9 @@ export default function Home() {
                   {indexResult && (
                     <label className="flex cursor-pointer items-center justify-between border border-moss-100 bg-cream px-4 py-3 text-[13px] hover:border-moss-300 transition-colors">
                       <div>
-                        <p className="font-medium text-moss-950">3D Terrain</p>
-                        <p className="font-mono text-[10px] tracking-[0.1em] text-stone mt-0.5">
-                          ELEVATION × VALUE
+                        <p className="font-medium text-moss-950">Terreno 3D</p>
+                        <p className="font-mono text-[10px] tracking-widest text-stone mt-0.5">
+                          ELEVAÇÃO × VALOR
                         </p>
                       </div>
                       <Switch checked={view3D} onCheckedChange={setView3D} />
@@ -432,18 +432,18 @@ export default function Home() {
                   {calculating ? (
                     <>
                       <span className="editorial-spinner" />
-                      <span>Processing</span>
+                      <span>Processando</span>
                     </>
                   ) : (
                     <>
-                      <span>Visualize {selectedIndex}</span>
+                      <span>Visualizar {selectedIndex}</span>
                       <span aria-hidden>→</span>
                     </>
                   )}
                 </button>
                 {error && (
                   <p className="mt-3 border-l-2 border-clay bg-clay/5 px-3 py-2 font-mono text-[11px] leading-relaxed text-clay">
-                    Error · {error}
+                    Erro · {error}
                   </p>
                 )}
               </section>
@@ -451,7 +451,7 @@ export default function Home() {
               {/* 05 · Result panel */}
               {experimentResult && (
                 <section>
-                  <div className="mb-3 editorial-rule">Experiment Result</div>
+                  <div className="mb-3 editorial-rule">Resultado do Experimento</div>
                   <div className="border border-moss-100 bg-cream p-4 space-y-3">
                     <p className="font-display text-base font-semibold tracking-tight text-moss-900 capitalize">
                       {experimentResult.experiment_type.replace(/_/g, ' ')}
@@ -478,27 +478,27 @@ export default function Home() {
                   </div>
                   <button
                     onClick={() => setExperimentResult(null)}
-                    className="editorial-link mt-3 font-mono text-[11px] tracking-[0.18em] uppercase text-smoke hover:text-moss-900"
+                    className="editorial-link mt-3 font-mono text-[11px] tracking-widest uppercase text-smoke hover:text-moss-900"
                   >
-                    Clear experiment
+                    Limpar experimento
                   </button>
                 </section>
               )}
 
               {indexResult && !experimentResult && (
                 <section>
-                  <div className="mb-3 editorial-rule">{selectedIndex} · Statistics</div>
+                  <div className="mb-3 editorial-rule">{selectedIndex} · Estatísticas</div>
                   <div className="grid grid-cols-3 gap-2">
                     <div className="stat-card">
-                      <p className="stat-label">Mean</p>
+                      <p className="stat-label">Média</p>
                       <p className="stat-value">{indexResult.statistics.mean.toFixed(3)}</p>
                     </div>
                     <div className="stat-card">
-                      <p className="stat-label">Min</p>
+                      <p className="stat-label">Mín</p>
                       <p className="stat-value">{indexResult.statistics.min.toFixed(3)}</p>
                     </div>
                     <div className="stat-card">
-                      <p className="stat-label">Max</p>
+                      <p className="stat-label">Máx</p>
                       <p className="stat-value">{indexResult.statistics.max.toFixed(3)}</p>
                     </div>
                   </div>
@@ -506,7 +506,7 @@ export default function Home() {
                     <IndexLegend indexType={selectedIndex} statistics={indexResult.statistics} />
                   </div>
                   <p className="mt-4 font-mono text-[10px] leading-relaxed text-stone">
-                    SOURCE PRODUCT
+                    PRODUTO DE ORIGEM
                     <br />
                     <span className="text-smoke break-all">{indexResult.product_used}</span>
                   </p>
@@ -517,25 +517,25 @@ export default function Home() {
             /* ──── Research tab ──── */
             <div className="editorial-rise space-y-7">
               <section>
-                <p className="editorial-eyebrow">— Laboratory</p>
+                <p className="editorial-eyebrow">— Laboratório</p>
                 <h2 className="mt-2 font-display text-[30px] font-extrabold leading-none tracking-tight text-moss-950">
-                  Image processing<br />
-                  <span className="text-moss-700">experiments</span>
+                  Experimentos de<br />
+                  <span className="text-moss-700">processamento</span>
                 </h2>
                 <p className="mt-2 text-[13px] leading-relaxed text-smoke">
-                  Apply filters, edge detectors, morphological operators and segmentation
-                  techniques over the selected plot&rsquo;s NIR band.
+                  Aplique filtros, detectores de borda, operadores morfológicos e técnicas
+                  de segmentação sobre a banda NIR do talhão selecionado.
                 </p>
               </section>
 
               <section>
-                <div className="mb-3 editorial-rule">Available Experiments</div>
+                <div className="mb-3 editorial-rule">Experimentos Disponíveis</div>
                 <ExperimentMenu onSelectExperiment={handleOpenExperiment} />
               </section>
 
               {experimentHistory.length > 0 && (
                 <section>
-                  <div className="mb-3 editorial-rule">Recent Runs</div>
+                  <div className="mb-3 editorial-rule">Execuções Recentes</div>
                   <div className="space-y-2">
                     {experimentHistory.slice(0, 5).map((exp, i) => (
                       <div
@@ -546,8 +546,8 @@ export default function Home() {
                           <p className="font-medium text-[13px] text-moss-950 capitalize">
                             {exp.experiment_type.replace(/_/g, ' ')}
                           </p>
-                          <span className="font-mono text-[10px] tracking-[0.1em] text-stone">
-                            {new Date(exp.timestamp).toLocaleTimeString('en-GB', {
+                          <span className="font-mono text-[10px] tracking-widest text-stone">
+                            {new Date(exp.timestamp).toLocaleTimeString('pt-BR', {
                               hour: '2-digit',
                               minute: '2-digit',
                             })}
@@ -582,7 +582,7 @@ export default function Home() {
           <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-moss-100 bg-cream/95 px-4 py-1.5 backdrop-blur-sm">
             <span className="dot h-1.5 w-1.5 rounded-full bg-lime" />
             <span className="font-mono text-[11px] tracking-[0.18em] text-moss-900 uppercase">
-              {experimentResult ? 'Experiment' : selectedIndex}
+              {experimentResult ? 'Experimento' : selectedIndex}
             </span>
             {indexResult?.product_used && (
               <span className="font-mono text-[10px] tracking-[0.1em] text-stone">
@@ -593,7 +593,7 @@ export default function Home() {
 
           {selectedField && (
             <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-moss-100 bg-cream/95 px-4 py-1.5 backdrop-blur-sm">
-              <span className="font-mono text-[10px] tracking-[0.1em] text-stone">PLOT</span>
+              <span className="font-mono text-[10px] tracking-widest text-stone">TALHÃO</span>
               <span className="font-mono text-[11px] text-moss-900">{selectedField.name}</span>
             </div>
           )}
@@ -603,7 +603,7 @@ export default function Home() {
           <div className="flex h-full items-center justify-center bg-paper-grain">
             <div className="text-center">
               <Loader2 className="mx-auto h-5 w-5 animate-spin text-moss-700" strokeWidth={1.5} />
-              <p className="mt-3 editorial-eyebrow text-stone">Loading plots</p>
+              <p className="mt-3 editorial-eyebrow text-stone">Carregando talhões</p>
             </div>
           </div>
         ) : fields.length > 0 ? (
@@ -644,13 +644,13 @@ export default function Home() {
         ) : (
           <div className="flex h-full items-center justify-center bg-paper-grain">
             <div className="text-center max-w-sm px-6">
-              <p className="editorial-eyebrow text-stone">— No plots loaded —</p>
+              <p className="editorial-eyebrow text-stone">— Nenhum talhão carregado —</p>
               <h2 className="mt-3 font-display text-2xl font-bold text-moss-900">
-                No plots to display
+                Nada para exibir
               </h2>
               <p className="mt-2 text-[13px] leading-relaxed text-smoke">
-                Place KML files in <span className="font-mono text-[12px]">data/KML Fields/</span> or
-                draw a polygon directly on the map to begin.
+                Coloque arquivos KML em <span className="font-mono text-[12px]">data/KML Fields/</span> ou
+                desenhe um polígono direto no mapa para começar.
               </p>
             </div>
           </div>

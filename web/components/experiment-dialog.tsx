@@ -31,31 +31,31 @@ interface ParamConfig {
 function getParameterConfig(experimentType: string): ParamConfig[] {
   switch (experimentType) {
     case 'gaussian_blur':
-      return [{ name: 'sigma', label: 'Sigma (Smoothing)', min: 0.5, max: 5, default: 2.0, step: 0.1 }];
+      return [{ name: 'sigma', label: 'Sigma (suavização)', min: 0.5, max: 5, default: 2.0, step: 0.1 }];
     case 'median_filter':
-      return [{ name: 'size', label: 'Kernel Size', min: 3, max: 15, default: 5, step: 2 }];
+      return [{ name: 'size', label: 'Tamanho do kernel', min: 3, max: 15, default: 5, step: 2 }];
     case 'bilateral_filter':
       return [
-        { name: 'd', label: 'Diameter', min: 3, max: 15, default: 9, step: 2 },
-        { name: 'sigma_color', label: 'Sigma Color', min: 10, max: 150, default: 75, step: 5 },
-        { name: 'sigma_space', label: 'Sigma Space', min: 10, max: 150, default: 75, step: 5 },
+        { name: 'd', label: 'Diâmetro', min: 3, max: 15, default: 9, step: 2 },
+        { name: 'sigma_color', label: 'Sigma cor', min: 10, max: 150, default: 75, step: 5 },
+        { name: 'sigma_space', label: 'Sigma espaço', min: 10, max: 150, default: 75, step: 5 },
       ];
     case 'canny_edge':
       return [
-        { name: 'low_threshold', label: 'Low Threshold', min: 10, max: 150, default: 50, step: 10 },
-        { name: 'high_threshold', label: 'High Threshold', min: 50, max: 250, default: 150, step: 10 },
+        { name: 'low_threshold', label: 'Limiar inferior', min: 10, max: 150, default: 50, step: 10 },
+        { name: 'high_threshold', label: 'Limiar superior', min: 50, max: 250, default: 150, step: 10 },
       ];
     case 'morphology_erosion':
     case 'morphology_dilation':
     case 'morphology_opening':
     case 'morphology_closing':
-      return [{ name: 'kernel_size', label: 'Kernel Size', min: 3, max: 15, default: 3, step: 2 }];
+      return [{ name: 'kernel_size', label: 'Tamanho do kernel', min: 3, max: 15, default: 3, step: 2 }];
     case 'threshold_binary':
-      return [{ name: 'threshold', label: 'Threshold', min: 0, max: 1, default: 0.5, step: 0.01 }];
+      return [{ name: 'threshold', label: 'Limiar', min: 0, max: 1, default: 0.5, step: 0.01 }];
     case 'threshold_adaptive':
       return [
-        { name: 'block_size', label: 'Block Size', min: 3, max: 25, default: 11, step: 2 },
-        { name: 'c', label: 'Constant', min: -10, max: 10, default: 2, step: 1 },
+        { name: 'block_size', label: 'Tamanho do bloco', min: 3, max: 25, default: 11, step: 2 },
+        { name: 'c', label: 'Constante', min: -10, max: 10, default: 2, step: 1 },
       ];
     default:
       return [];
@@ -85,7 +85,7 @@ export function ExperimentDialog({
       await onRun(params);
       onOpenChange(false);
     } catch (error) {
-      console.error('Experiment failed:', error);
+      console.error('Experimento falhou:', error);
     } finally {
       setRunning(false);
     }
@@ -96,7 +96,7 @@ export function ExperimentDialog({
       <DialogContent className="sm:max-w-[520px] border-moss-100 bg-cream-grain p-0 [&>button]:hidden">
         {/* Editorial header */}
         <DialogHeader className="border-b border-moss-100 px-7 pb-5 pt-6 text-left">
-          <p className="editorial-eyebrow text-stone">— Experiment Configuration</p>
+          <p className="editorial-eyebrow text-stone">— Configuração do Experimento</p>
           <DialogTitle className="mt-2 font-display text-[24px] font-extrabold tracking-tight leading-[1.05] text-moss-950">
             {experimentTitle}
           </DialogTitle>
@@ -139,7 +139,7 @@ export function ExperimentDialog({
             })
           ) : (
             <p className="font-mono text-[12px] tracking-wide text-smoke">
-              This experiment runs with default parameters.
+              Este experimento usa parâmetros padrão.
             </p>
           )}
         </div>
@@ -152,17 +152,17 @@ export function ExperimentDialog({
             disabled={running}
             className="editorial-link font-mono text-[11px] tracking-widest uppercase text-smoke transition-colors hover:text-moss-900 disabled:opacity-40"
           >
-            Cancel
+            Cancelar
           </button>
           <button onClick={handleRun} disabled={running} className="btn-ribbon">
             {running ? (
               <>
                 <span className="editorial-spinner" />
-                <span>Running</span>
+                <span>Executando</span>
               </>
             ) : (
               <>
-                <span>Run Experiment</span>
+                <span>Executar Experimento</span>
                 <span aria-hidden>→</span>
               </>
             )}

@@ -12,7 +12,7 @@ const MapViewer = dynamic(
     ssr: false,
     loading: () => (
       <div className="flex h-full items-center justify-center bg-paper-grain">
-        <p className="editorial-eyebrow text-stone">Loading map…</p>
+        <p className="editorial-eyebrow text-stone">Carregando mapa…</p>
       </div>
     ),
   }
@@ -48,23 +48,23 @@ const METHODS: {
 }[] = [
   {
     value: 'threshold',
-    label: 'Threshold',
-    description: 'Cuts the plot into Low / Medium / High vigor zones using NDVI cutoffs.',
+    label: 'Limiar',
+    description: 'Divide o talhão em zonas de vigor Baixo / Médio / Alto a partir de cortes em NDVI.',
   },
   {
     value: 'unsupervised',
-    label: 'Unsupervised',
-    description: 'K-Means clustering — groups pixels into N classes from spectral features.',
+    label: 'Não-supervisionada',
+    description: 'Agrupamento K-Means — agrupa pixels em N classes a partir de features espectrais.',
   },
   {
     value: 'supervised',
-    label: 'Supervised',
-    description: 'Crop-signature matching: soja, milho, café or cana from known ranges.',
+    label: 'Supervisionada',
+    description: 'Pareamento por assinatura de cultura: soja, milho, café ou cana a partir de faixas conhecidas.',
   },
 ];
 
 const CROPS: { value: CropType; label: string }[] = [
-  { value: 'multi', label: 'Multi-crop' },
+  { value: 'multi', label: 'Multi' },
   { value: 'soja', label: 'Soja' },
   { value: 'milho', label: 'Milho' },
   { value: 'cafe', label: 'Café' },
@@ -140,9 +140,9 @@ export default function ClassificationPage() {
       const result = await response.json();
       setClassificationResult(result);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
       setError(errorMessage);
-      console.error('Error classifying:', err);
+      console.error('Erro classificando:', err);
     } finally {
       setClassifying(false);
     }
@@ -157,34 +157,34 @@ export default function ClassificationPage() {
           <Link href="/">
             <button className="editorial-link flex items-center gap-1.5 font-mono text-[11px] tracking-widest uppercase text-smoke hover:text-moss-900">
               <ArrowLeft className="h-3 w-3" strokeWidth={2} />
-              Back to dashboard
+              Voltar ao painel
             </button>
           </Link>
-          <p className="editorial-eyebrow mt-5">— Module · Classification</p>
+          <p className="editorial-eyebrow mt-5">— Módulo · Classificação</p>
           <h1 className="mt-2 font-display text-[42px] font-extrabold leading-[0.95] tracking-tight text-moss-950">
-            Plot
+            Classificação
             <br />
-            <span className="text-moss-700">classification.</span>
+            <span className="text-moss-700">de talhões.</span>
           </h1>
           <p className="mt-3 max-w-md text-[13px] leading-relaxed text-smoke">
-            Partition agricultural plots into vigor zones, spectral clusters, or crop signatures —
-            with hectare-level reporting per class.
+            Particione talhões agrícolas em zonas de vigor, agrupamentos espectrais ou
+            assinaturas de cultura — com relatório de hectares por classe.
           </p>
         </header>
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto px-8 py-7">
           <div className="editorial-rise space-y-7">
-            {/* 01 · Field */}
+            {/* 01 · Talhão */}
             <section>
-              <p className="editorial-num mb-3">01 · Plot</p>
+              <p className="editorial-num mb-3">01 · Talhão</p>
               <select
                 value={selectedFieldId ?? ''}
                 onChange={(e) => setSelectedFieldId(e.target.value)}
                 disabled={loading || fields.length === 0}
                 className="w-full appearance-none border border-moss-100 bg-cream px-3.5 py-2.5 font-mono text-[13px] text-moss-950 transition-colors focus:border-moss-700 focus:outline-none disabled:opacity-40"
               >
-                <option value="">— Select a plot —</option>
+                <option value="">— Selecione um talhão —</option>
                 {fields.map((field) => (
                   <option key={field.id} value={field.id}>
                     {field.name}
@@ -193,9 +193,9 @@ export default function ClassificationPage() {
               </select>
             </section>
 
-            {/* 02 · Method */}
+            {/* 02 · Método */}
             <section>
-              <p className="editorial-num mb-3">02 · Method</p>
+              <p className="editorial-num mb-3">02 · Método</p>
               <div className="grid grid-cols-1 gap-2">
                 {METHODS.map((m) => (
                   <button
@@ -232,7 +232,7 @@ export default function ClassificationPage() {
             {/* 03 · Method-specific options */}
             {method === 'supervised' && (
               <section>
-                <p className="editorial-num mb-3">03 · Crop</p>
+                <p className="editorial-num mb-3">03 · Cultura</p>
                 <div className="grid grid-cols-5 gap-1.5">
                   {CROPS.map((c) => (
                     <button
@@ -250,7 +250,7 @@ export default function ClassificationPage() {
 
             {method === 'unsupervised' && (
               <section>
-                <p className="editorial-num mb-3">03 · Number of Classes</p>
+                <p className="editorial-num mb-3">03 · Número de classes</p>
                 <div className="grid grid-cols-5 gap-1.5">
                   {[2, 3, 4, 5, 6].map((n) => (
                     <button
@@ -268,12 +268,12 @@ export default function ClassificationPage() {
 
             {/* 04 · Features */}
             <section>
-              <p className="editorial-num mb-3">04 · Spectral Features</p>
+              <p className="editorial-num mb-3">04 · Features Espectrais</p>
               <div className="space-y-2">
                 {[
-                  { key: 'NDVI', label: 'Vegetation health', state: useNDVI, setter: setUseNDVI },
-                  { key: 'EVI', label: 'Atmospheric-corrected vegetation', state: useEVI, setter: setUseEVI },
-                  { key: 'SAVI', label: 'Soil-adjusted vegetation', state: useSAVI, setter: setUseSAVI },
+                  { key: 'NDVI', label: 'Saúde da vegetação', state: useNDVI, setter: setUseNDVI },
+                  { key: 'EVI', label: 'Vegetação corrigida atmosfericamente', state: useEVI, setter: setUseEVI },
+                  { key: 'SAVI', label: 'Vegetação ajustada ao solo', state: useSAVI, setter: setUseSAVI },
                 ].map(({ key, label, state, setter }) => (
                   <label
                     key={key}
@@ -304,18 +304,18 @@ export default function ClassificationPage() {
                 {classifying ? (
                   <>
                     <span className="editorial-spinner" />
-                    <span>Classifying</span>
+                    <span>Classificando</span>
                   </>
                 ) : (
                   <>
-                    <span>Run Classification</span>
+                    <span>Executar Classificação</span>
                     <span aria-hidden>→</span>
                   </>
                 )}
               </button>
               {error && (
                 <p className="mt-3 border-l-2 border-clay bg-clay/5 px-3 py-2 font-mono text-[11px] leading-relaxed text-clay">
-                  Error · {error}
+                  Erro · {error}
                 </p>
               )}
             </section>
@@ -323,18 +323,18 @@ export default function ClassificationPage() {
             {/* 06 · Results */}
             {classificationResult && (
               <section>
-                <div className="mb-3 editorial-rule">Classification Result</div>
+                <div className="mb-3 editorial-rule">Resultado da Classificação</div>
 
                 <div className="grid grid-cols-2 gap-2">
                   <div className="stat-card">
-                    <p className="stat-label">Total Area</p>
+                    <p className="stat-label">Área Total</p>
                     <p className="stat-value">
                       {classificationResult.statistics.total_area.toFixed(2)}
                       <span className="ml-1 text-stone text-sm">ha</span>
                     </p>
                   </div>
                   <div className="stat-card">
-                    <p className="stat-label">Classified</p>
+                    <p className="stat-label">Classificada</p>
                     <p className="stat-value">
                       {classificationResult.statistics.classified_area.toFixed(2)}
                       <span className="ml-1 text-stone text-sm">ha</span>
@@ -343,7 +343,7 @@ export default function ClassificationPage() {
                 </div>
 
                 <div className="mt-5">
-                  <p className="editorial-num mb-3">— Detected Classes</p>
+                  <p className="editorial-num mb-3">— Classes Detectadas</p>
                   <div className="border border-moss-100 bg-cream divide-y divide-moss-50">
                     {classificationResult.classes.map((cls, idx) => (
                       <div key={idx} className="flex items-center justify-between gap-3 px-4 py-3">
@@ -371,7 +371,7 @@ export default function ClassificationPage() {
                 </div>
 
                 <p className="mt-4 font-mono text-[10px] leading-relaxed text-stone">
-                  {new Date(classificationResult.timestamp).toLocaleString('en-GB')}
+                  {new Date(classificationResult.timestamp).toLocaleString('pt-BR')}
                   <br />
                   <span className="text-smoke break-all">{classificationResult.product_used}</span>
                 </p>
@@ -394,7 +394,7 @@ export default function ClassificationPage() {
           <div className="flex h-full items-center justify-center bg-paper-grain">
             <div className="text-center">
               <Loader2 className="mx-auto h-5 w-5 animate-spin text-moss-700" strokeWidth={1.5} />
-              <p className="mt-3 editorial-eyebrow text-stone">Loading plots</p>
+              <p className="mt-3 editorial-eyebrow text-stone">Carregando talhões</p>
             </div>
           </div>
         ) : fields.length > 0 ? (
@@ -418,11 +418,11 @@ export default function ClassificationPage() {
         ) : (
           <div className="flex h-full items-center justify-center bg-paper-grain">
             <div className="max-w-sm text-center px-6">
-              <p className="editorial-eyebrow text-stone">— No plots loaded —</p>
-              <h2 className="mt-3 font-display text-2xl font-bold text-moss-900">Nothing to classify</h2>
+              <p className="editorial-eyebrow text-stone">— Nenhum talhão carregado —</p>
+              <h2 className="mt-3 font-display text-2xl font-bold text-moss-900">Nada para classificar</h2>
               <p className="mt-2 text-[13px] leading-relaxed text-smoke">
-                Place KML files in <span className="font-mono text-[12px]">data/KML Fields/</span>{' '}
-                to begin classification.
+                Coloque arquivos KML em <span className="font-mono text-[12px]">data/KML Fields/</span>{' '}
+                para começar a classificação.
               </p>
             </div>
           </div>
