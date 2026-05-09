@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { KMLField } from '@/types';
-import { translateError } from '@/lib/utils';
+import { classify } from '@/lib/api';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -117,29 +117,18 @@ export default function ClassificationPage() {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:8001/api/classification/classify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          field_id: field.id,
-          coordinates: field.coordinates.map((c) => ({
-            longitude: c.longitude,
-            latitude: c.latitude,
-          })),
-          method,
-          crop_type: cropType,
-          n_classes: nClasses,
-          indices: { ndvi: useNDVI, evi: useEVI, savi: useSAVI },
-        }),
+      const result = await classify({
+        field_id: field.id,
+        coordinates: field.coordinates.map((c) => ({
+          longitude: c.longitude,
+          latitude: c.latitude,
+        })),
+        method,
+        crop_type: cropType,
+        n_classes: nClasses,
+        indices: { ndvi: useNDVI, evi: useEVI, savi: useSAVI },
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(translateError(errorData.detail) || 'Falha na classificação');
-      }
-
-      const result = await response.json();
-      setClassificationResult(result);
+      setClassificationResult(result as ClassificationResult);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
       setError(errorMessage);

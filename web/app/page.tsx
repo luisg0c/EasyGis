@@ -8,7 +8,7 @@ import { ExperimentMenu } from '@/components/experiment-menu';
 import { Switch } from '@/components/ui/switch';
 import { KMLField } from '@/types';
 import { IndexType } from '@/lib/spectral-indices';
-import { translateError } from '@/lib/utils';
+import { calculateIndex as apiCalculateIndex, runExperiment as apiRunExperiment, MOCK_MODE } from '@/lib/api';
 import {
   LayoutDashboard,
   Sprout,
@@ -141,26 +141,15 @@ export default function Home() {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:8001/calculate-index', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          field_id: field.id,
-          coordinates: field.coordinates.map((c) => ({
-            longitude: c.longitude,
-            latitude: c.latitude,
-          })),
-          index_type: selectedIndex,
-          smooth: smoothEnabled,
-        }),
+      const result = await apiCalculateIndex({
+        field_id: field.id,
+        coordinates: field.coordinates.map((c) => ({
+          longitude: c.longitude,
+          latitude: c.latitude,
+        })),
+        index_type: selectedIndex,
+        smooth: smoothEnabled,
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(translateError(errorData.detail) || 'Falha ao calcular índice');
-      }
-
-      const result = await response.json();
       setIndexResult(result);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
@@ -186,28 +175,17 @@ export default function Home() {
     if (!field) return;
 
     try {
-      const response = await fetch('http://localhost:8001/api/experiments/run', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          field_id: field.id,
-          coordinates: field.coordinates.map((c) => ({
-            longitude: c.longitude,
-            latitude: c.latitude,
-          })),
-          experiment_type: selectedExperiment.type,
-          parameters,
-        }),
+      const result = await apiRunExperiment({
+        field_id: field.id,
+        coordinates: field.coordinates.map((c) => ({
+          longitude: c.longitude,
+          latitude: c.latitude,
+        })),
+        experiment_type: selectedExperiment.type,
+        parameters,
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(translateError(errorData.detail) || 'Experimento falhou');
-      }
-
-      const result: ExperimentResult = await response.json();
-      setExperimentResult(result);
-      setExperimentHistory([result, ...experimentHistory]);
+      setExperimentResult(result as ExperimentResult);
+      setExperimentHistory([result as ExperimentResult, ...experimentHistory]);
       setActiveTab('analytics');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
@@ -289,6 +267,14 @@ export default function Home() {
               <p className="font-mono text-[10px] font-semibold tracking-widest uppercase text-moss-900">
                 EasyGis · v0.1
               </p>
+              {MOCK_MODE && (
+                <span
+                  className="ml-1 border border-amber/60 bg-amber/10 px-1.5 py-0.5 font-mono text-[9px] font-semibold tracking-widest uppercase text-amber"
+                  title="Dados sintéticos para apresentação — backend pytest valida o cálculo real"
+                >
+                  Demo
+                </span>
+              )}
             </div>
             <p className="font-mono text-[10px] tracking-widest text-stone">{today}</p>
           </div>
