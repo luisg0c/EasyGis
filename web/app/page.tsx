@@ -3,13 +3,9 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
-  LayoutDashboard,
   Sprout,
   Map as MapIcon,
   Layers,
-  Settings,
-  HelpCircle,
-  User,
   ArrowRight,
   TrendingUp,
   AlertTriangle,
@@ -20,6 +16,8 @@ import {
 } from 'lucide-react';
 import { KMLField } from '@/types';
 import { MOCK_MODE } from '@/lib/api';
+import { SideNav } from '@/components/side-nav';
+import { Logo } from '@/components/logo';
 
 interface ActivityItem {
   type: 'analysis' | 'import' | 'alert' | 'classification';
@@ -94,15 +92,22 @@ export default function HomePage() {
 
   // Mock-derived KPIs
   const totalFields = fields.length;
+  // Soma da área real de cada polígono (shoelace + correção de longitude por lat).
   const totalArea = fields.reduce((s, f) => {
-    // Aproximação rude: bbox em hectares (1 grau ≈ 111 km, área varia com lat)
-    const bbox = f.bounds;
-    const lonSpan = Math.abs(bbox.east - bbox.west);
-    const latSpan = Math.abs(bbox.north - bbox.south);
-    const meanLat = (bbox.north + bbox.south) / 2;
-    const lonKm = lonSpan * 111 * Math.cos((meanLat * Math.PI) / 180);
-    const latKm = latSpan * 111;
-    return s + lonKm * latKm * 100; // km² → ha
+    if (f.coordinates.length < 3) return s;
+    let sum = 0;
+    for (let i = 0; i < f.coordinates.length; i++) {
+      const j = (i + 1) % f.coordinates.length;
+      sum += f.coordinates[i].longitude * f.coordinates[j].latitude;
+      sum -= f.coordinates[j].longitude * f.coordinates[i].latitude;
+    }
+    const areaDegSq = Math.abs(sum) / 2;
+    const meanLat =
+      f.coordinates.reduce((acc, c) => acc + c.latitude, 0) / f.coordinates.length;
+    const kmPerDegLat = 111;
+    const kmPerDegLon = 111 * Math.cos((meanLat * Math.PI) / 180);
+    const areaKm2 = areaDegSq * kmPerDegLat * kmPerDegLon;
+    return s + areaKm2 * 100; // km² → ha
   }, 0);
 
   const lastNdvi = 0.67; // mock
@@ -110,43 +115,7 @@ export default function HomePage() {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-paper-grain text-charcoal">
-      {/* ──── Left rail — icon nav ──── */}
-      <aside className="flex w-14 shrink-0 flex-col items-center border-r border-moss-100 bg-cream py-6">
-        <button
-          aria-label="Início"
-          className="rounded-sm bg-moss-900 p-2.5 text-cream"
-        >
-          <LayoutDashboard className="h-[18px] w-[18px]" strokeWidth={1.5} />
-        </button>
-        <button
-          aria-label="Talhões"
-          className="rounded-sm p-2.5 text-smoke transition-colors hover:bg-moss-50 hover:text-moss-900"
-        >
-          <Sprout className="h-[18px] w-[18px]" strokeWidth={1.5} />
-        </button>
-        <Link href="/atlas" aria-label="Mapa de análise">
-          <button className="rounded-sm p-2.5 text-smoke transition-colors hover:bg-moss-50 hover:text-moss-900">
-            <MapIcon className="h-[18px] w-[18px]" strokeWidth={1.5} />
-          </button>
-        </Link>
-        <Link href="/classification" aria-label="Classificação">
-          <button className="rounded-sm p-2.5 text-smoke transition-colors hover:bg-moss-50 hover:text-moss-900">
-            <Layers className="h-[18px] w-[18px]" strokeWidth={1.5} />
-          </button>
-        </Link>
-
-        <div className="flex-1" />
-
-        <button className="rounded-sm p-2.5 text-stone transition-colors hover:text-moss-900">
-          <Settings className="h-4 w-4" strokeWidth={1.5} />
-        </button>
-        <button className="rounded-sm p-2.5 text-stone transition-colors hover:text-moss-900">
-          <HelpCircle className="h-4 w-4" strokeWidth={1.5} />
-        </button>
-        <button className="rounded-sm p-2.5 text-stone transition-colors hover:text-moss-900">
-          <User className="h-4 w-4" strokeWidth={1.5} />
-        </button>
-      </aside>
+      <SideNav active="home" />
 
       {/* ──── Main content ──── */}
       <main className="flex-1 overflow-y-auto">
@@ -154,11 +123,9 @@ export default function HomePage() {
           {/* Masthead */}
           <header className="border-b border-moss-100 pb-7">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="block h-2 w-2 rounded-full bg-lime ring-2 ring-lime/20" />
-                <p className="font-mono text-[10px] font-semibold tracking-widest uppercase text-moss-900">
-                  EasyGis · v0.1
-                </p>
+              <div className="flex items-center gap-3">
+                <Logo size="lg" />
+                <span className="ml-1 font-mono text-[10px] tracking-widest text-stone">v0.1</span>
                 {MOCK_MODE && (
                   <span
                     className="ml-1 border border-amber/60 bg-amber/10 px-1.5 py-0.5 font-mono text-[9px] font-semibold tracking-widest uppercase text-amber"
@@ -168,10 +135,13 @@ export default function HomePage() {
                   </span>
                 )}
               </div>
-              <p className="font-mono text-[10px] tracking-widest text-stone">{today}</p>
+              <div className="flex items-center gap-2">
+                <span className="block h-2 w-2 rounded-full bg-lime ring-2 ring-lime/20" />
+                <p className="font-mono text-[10px] tracking-widest text-stone">{today}</p>
+              </div>
             </div>
 
-            <h1 className="mt-5 font-display text-[44px] font-extrabold leading-[0.95] tracking-tight text-moss-950">
+            <h1 className="mt-7 font-display text-[44px] font-extrabold leading-[0.95] tracking-tight text-moss-950">
               Bom dia.
               <br />
               <span className="text-moss-700">Vamos olhar a lavoura?</span>
@@ -388,7 +358,7 @@ function KpiCard({ label, value, unit, hint, icon: Icon, tone = 'neutral' }: Kpi
 }
 
 function FieldCard({ field }: { field: KMLField }) {
-  // Mini SVG do polígono — escala simples ao box
+  // Mini SVG do polígono — escala simples ao bbox
   const { coordinates, bounds } = field;
   const lonSpan = bounds.east - bounds.west || 1;
   const latSpan = bounds.north - bounds.south || 1;
@@ -400,11 +370,18 @@ function FieldCard({ field }: { field: KMLField }) {
     })
     .join(' ');
 
-  // Aproximação de área em ha (igual lógica do KPI mas por talhão)
-  const meanLat = (bounds.north + bounds.south) / 2;
-  const lonKm = lonSpan * 111 * Math.cos((meanLat * Math.PI) / 180);
-  const latKm = latSpan * 111;
-  const areaHa = lonKm * latKm * 100;
+  // Área real do polígono via shoelace + correção de longitude por lat
+  let sum = 0;
+  for (let i = 0; i < coordinates.length; i++) {
+    const j = (i + 1) % coordinates.length;
+    sum += coordinates[i].longitude * coordinates[j].latitude;
+    sum -= coordinates[j].longitude * coordinates[i].latitude;
+  }
+  const meanLat =
+    coordinates.reduce((acc, c) => acc + c.latitude, 0) / coordinates.length;
+  const areaKm2 =
+    (Math.abs(sum) / 2) * 111 * (111 * Math.cos((meanLat * Math.PI) / 180));
+  const areaHa = areaKm2 * 100;
 
   return (
     <Link

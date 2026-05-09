@@ -9,19 +9,9 @@ import { Switch } from '@/components/ui/switch';
 import { KMLField } from '@/types';
 import { IndexType } from '@/lib/spectral-indices';
 import { calculateIndex as apiCalculateIndex, runExperiment as apiRunExperiment, MOCK_MODE } from '@/lib/api';
-import {
-  LayoutDashboard,
-  Sprout,
-  Activity,
-  BookOpen,
-  Layers,
-  Settings,
-  HelpCircle,
-  User,
-  Loader2,
-  Map as MapIcon,
-} from 'lucide-react';
-import Link from 'next/link';
+import { Loader2 } from 'lucide-react';
+import { SideNav } from '@/components/side-nav';
+import { Logo } from '@/components/logo';
 
 const MapViewer = dynamic(
   () => import('@/components/map-viewer').then((mod) => ({ default: mod.MapViewer })),
@@ -204,89 +194,28 @@ export default function Home() {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-paper-grain text-charcoal">
-      {/* ──── Left rail — icon nav ──── */}
-      <aside className="flex w-14 flex-shrink-0 flex-col items-center border-r border-moss-100 bg-cream py-6">
-        <Link href="/" aria-label="Início">
-          <button className="rounded-sm p-2.5 text-smoke transition-colors hover:bg-moss-50 hover:text-moss-900">
-            <LayoutDashboard className="h-[18px] w-[18px]" strokeWidth={1.5} />
-          </button>
-        </Link>
-        <button
-          aria-label="Talhões"
-          className="rounded-sm p-2.5 text-smoke transition-colors hover:bg-moss-50 hover:text-moss-900"
-        >
-          <Sprout className="h-[18px] w-[18px]" strokeWidth={1.5} />
-        </button>
-        <button
-          aria-label="Mapa de análise"
-          className="rounded-sm p-2.5 bg-moss-900 text-cream"
-        >
-          <MapIcon className="h-[18px] w-[18px]" strokeWidth={1.5} />
-        </button>
-        <button
-          aria-label="Analytics"
-          onClick={() => setActiveTab('analytics')}
-          className={`rounded-sm p-2.5 transition-colors ${
-            activeTab === 'analytics'
-              ? 'text-moss-900'
-              : 'text-smoke hover:bg-moss-50 hover:text-moss-900'
-          }`}
-        >
-          <Activity className="h-[18px] w-[18px]" strokeWidth={1.5} />
-        </button>
-        <button
-          aria-label="Pesquisa"
-          onClick={() => setActiveTab('research')}
-          className={`rounded-sm p-2.5 transition-colors ${
-            activeTab === 'research'
-              ? 'text-moss-900'
-              : 'text-smoke hover:bg-moss-50 hover:text-moss-900'
-          }`}
-        >
-          <BookOpen className="h-[18px] w-[18px]" strokeWidth={1.5} />
-        </button>
-        <Link href="/classification" aria-label="Classificação">
-          <button className="rounded-sm p-2.5 text-smoke transition-colors hover:bg-moss-50 hover:text-moss-900">
-            <Layers className="h-[18px] w-[18px]" strokeWidth={1.5} />
-          </button>
-        </Link>
-
-        <div className="flex-1" />
-
-        <button className="rounded-sm p-2.5 text-stone transition-colors hover:text-moss-900">
-          <Settings className="h-4 w-4" strokeWidth={1.5} />
-        </button>
-        <button className="rounded-sm p-2.5 text-stone transition-colors hover:text-moss-900">
-          <HelpCircle className="h-4 w-4" strokeWidth={1.5} />
-        </button>
-        <button className="rounded-sm p-2.5 text-stone transition-colors hover:text-moss-900">
-          <User className="h-4 w-4" strokeWidth={1.5} />
-        </button>
-      </aside>
+      <SideNav active="atlas" />
 
       {/* ──── Sidebar panel ──── */}
-      <section className="flex w-[400px] flex-shrink-0 flex-col border-r border-moss-100 bg-cream-grain overflow-hidden">
+      <section className="flex w-[400px] shrink-0 flex-col border-r border-moss-100 bg-cream-grain overflow-hidden">
         {/* Masthead */}
         <header className="border-b border-moss-100 px-7 py-5">
           <div className="flex items-center justify-between">
+            <Logo size="md" />
             <div className="flex items-center gap-2">
-              <span className="block h-2 w-2 rounded-full bg-lime ring-2 ring-lime/20" />
-              <p className="font-mono text-[10px] font-semibold tracking-widest uppercase text-moss-900">
-                EasyGis · v0.1
-              </p>
               {MOCK_MODE && (
                 <span
-                  className="ml-1 border border-amber/60 bg-amber/10 px-1.5 py-0.5 font-mono text-[9px] font-semibold tracking-widest uppercase text-amber"
+                  className="border border-amber/60 bg-amber/10 px-1.5 py-0.5 font-mono text-[9px] font-semibold tracking-widest uppercase text-amber"
                   title="Dados sintéticos para apresentação — backend pytest valida o cálculo real"
                 >
                   Demo
                 </span>
               )}
+              <p className="font-mono text-[10px] tracking-widest text-stone">{today}</p>
             </div>
-            <p className="font-mono text-[10px] tracking-widest text-stone">{today}</p>
           </div>
 
-          <h1 className="mt-5 font-display text-[40px] font-extrabold leading-[0.92] tracking-tight text-moss-950">
+          <h1 className="mt-6 font-display text-[34px] font-extrabold leading-[0.95] tracking-tight text-moss-950">
             Agricultura
             <br />
             de precisão
@@ -298,6 +227,37 @@ export default function Home() {
             talhões que você gerencia.
           </p>
         </header>
+
+        {/* Toggle: Analytics ↔ Pesquisa */}
+        <nav
+          aria-label="Modo do painel"
+          className="grid grid-cols-2 border-b border-moss-100"
+        >
+          <button
+            type="button"
+            onClick={() => setActiveTab('analytics')}
+            aria-pressed={activeTab === 'analytics'}
+            className={`flex items-center justify-center gap-2 py-3 font-mono text-[11px] font-semibold tracking-widest uppercase transition-colors ${
+              activeTab === 'analytics'
+                ? 'bg-cream text-moss-900 border-b-2 border-moss-900'
+                : 'text-stone hover:text-moss-900 border-b-2 border-transparent'
+            }`}
+          >
+            Análise
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('research')}
+            aria-pressed={activeTab === 'research'}
+            className={`flex items-center justify-center gap-2 py-3 font-mono text-[11px] font-semibold tracking-widest uppercase transition-colors ${
+              activeTab === 'research'
+                ? 'bg-cream text-moss-900 border-b-2 border-moss-900'
+                : 'text-stone hover:text-moss-900 border-b-2 border-transparent'
+            }`}
+          >
+            Pesquisa
+          </button>
+        </nav>
 
         {/* Scroll body */}
         <div className="flex-1 overflow-y-auto px-7 py-6">

@@ -6,6 +6,8 @@ import { KMLField } from '@/types';
 import { classify } from '@/lib/api';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { SideNav } from '@/components/side-nav';
+import { Logo } from '@/components/logo';
 
 const MapViewer = dynamic(
   () => import('@/components/map-viewer').then((mod) => ({ default: mod.MapViewer })),
@@ -140,18 +142,23 @@ export default function ClassificationPage() {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-paper-grain text-charcoal">
+      <SideNav active="classification" />
+
       {/* ──── Left panel — controls ──── */}
-      <section className="flex w-1/2 flex-col border-r border-moss-100 bg-cream-grain">
+      <section className="flex flex-1 flex-col border-r border-moss-100 bg-cream-grain max-w-[640px]">
         {/* Masthead */}
         <header className="border-b border-moss-100 px-8 py-5">
-          <Link href="/atlas">
-            <button className="editorial-link flex items-center gap-1.5 font-mono text-[11px] tracking-widest uppercase text-smoke hover:text-moss-900">
-              <ArrowLeft className="h-3 w-3" strokeWidth={2} />
-              Voltar ao mapa
-            </button>
-          </Link>
-          <p className="editorial-eyebrow mt-5">— Módulo · Classificação</p>
-          <h1 className="mt-2 font-display text-[42px] font-extrabold leading-[0.95] tracking-tight text-moss-950">
+          <div className="flex items-center justify-between">
+            <Logo size="md" />
+            <Link href="/atlas">
+              <button className="editorial-link flex items-center gap-1.5 font-mono text-[11px] tracking-widest uppercase text-smoke hover:text-moss-900">
+                <ArrowLeft className="h-3 w-3" strokeWidth={2} />
+                Voltar ao mapa
+              </button>
+            </Link>
+          </div>
+          <p className="editorial-eyebrow mt-6">— Módulo · Classificação</p>
+          <h1 className="mt-2 font-display text-[36px] font-extrabold leading-[0.95] tracking-tight text-moss-950">
             Classificação
             <br />
             <span className="text-moss-700">de talhões.</span>
@@ -379,7 +386,7 @@ export default function ClassificationPage() {
       </section>
 
       {/* ──── Right panel — map ──── */}
-      <section className="relative w-1/2">
+      <section className="relative flex-1">
         {loading ? (
           <div className="flex h-full items-center justify-center bg-paper-grain">
             <div className="text-center">

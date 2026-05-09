@@ -165,6 +165,34 @@ function computeBbox(coords: Coordinate[]) {
   return { minLon, maxLon, minLat, maxLat };
 }
 
+/**
+ * Área aproximada do polígono em hectares.
+ *
+ * Usa shoelace sobre coordenadas geográficas (lon/lat) e converte
+ * graus² → km² aplicando a correção de longitude por cosseno da latitude
+ * média (1° lat ≈ 111 km; 1° lon ≈ 111·cos(lat) km).
+ */
+function polygonAreaHa(coords: Coordinate[]): number {
+  if (coords.length < 3) return 0;
+
+  // Shoelace em lon/lat (graus²)
+  let sum = 0;
+  for (let i = 0; i < coords.length; i++) {
+    const j = (i + 1) % coords.length;
+    sum += coords[i].longitude * coords[j].latitude;
+    sum -= coords[j].longitude * coords[i].latitude;
+  }
+  const areaDegSq = Math.abs(sum) / 2;
+
+  // Latitude média para a correção de escala
+  const meanLat = coords.reduce((s, c) => s + c.latitude, 0) / coords.length;
+  const kmPerDegLat = 111.0;
+  const kmPerDegLon = 111.0 * Math.cos((meanLat * Math.PI) / 180);
+
+  const areaKm2 = areaDegSq * kmPerDegLat * kmPerDegLon;
+  return areaKm2 * 100; // 1 km² = 100 ha
+}
+
 function pointInPolygon(lon: number, lat: number, polygon: Coordinate[]): boolean {
   let inside = false;
   for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
@@ -458,17 +486,21 @@ async function mockClassify(payload: ClassifyPayload): Promise<ClassificationRes
   ctx.putImageData(imageData, 0, 0);
   const imageBase64 = canvas.toDataURL("image/png").replace(/^data:image\/png;base64,/, "");
 
-  // Cada pixel ≈ 100 m² (10×10 m do Sentinel-2) → 0,01 ha
-  const PIXEL_AREA_HA = 0.01;
+  // Área real do polígono em ha (shoelace + correção de longitude por lat).
+  // Distribuímos essa área entre as classes proporcionalmente ao nº de pixels
+  // de cada uma — assim os hectares ficam fiéis ao tamanho real do talhão.
   const totalClassified = classCounts.reduce((s, c) => s + c, 0);
-  const totalArea = totalClassified * PIXEL_AREA_HA;
+  const totalArea = polygonAreaHa(payload.coordinates);
 
-  const classes = classNames.map((name, i) => ({
-    name,
-    color: classColors[i],
-    percentage: totalClassified === 0 ? 0 : (classCounts[i] / totalClassified) * 100,
-    area_hectares: classCounts[i] * PIXEL_AREA_HA,
-  }));
+  const classes = classNames.map((name, i) => {
+    const fraction = totalClassified === 0 ? 0 : classCounts[i] / totalClassified;
+    return {
+      name,
+      color: classColors[i],
+      percentage: fraction * 100,
+      area_hectares: fraction * totalArea,
+    };
+  });
 
   return {
     field_id: payload.field_id,
