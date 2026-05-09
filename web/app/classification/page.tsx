@@ -144,10 +144,10 @@ export default function ClassificationPage() {
       <section className="flex w-1/2 flex-col border-r border-moss-100 bg-cream-grain">
         {/* Masthead */}
         <header className="border-b border-moss-100 px-8 py-5">
-          <Link href="/">
+          <Link href="/atlas">
             <button className="editorial-link flex items-center gap-1.5 font-mono text-[11px] tracking-widest uppercase text-smoke hover:text-moss-900">
               <ArrowLeft className="h-3 w-3" strokeWidth={2} />
-              Voltar ao painel
+              Voltar ao mapa
             </button>
           </Link>
           <p className="editorial-eyebrow mt-5">— Módulo · Classificação</p>

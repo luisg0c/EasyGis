@@ -1,244 +1,135 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
-import { IndexInsight } from '@/components/index-insight';
-import { ExperimentDialog } from '@/components/experiment-dialog';
-import { ExperimentMenu } from '@/components/experiment-menu';
-import { Switch } from '@/components/ui/switch';
-import { KMLField } from '@/types';
-import { IndexType } from '@/lib/spectral-indices';
-import { calculateIndex as apiCalculateIndex, runExperiment as apiRunExperiment, MOCK_MODE } from '@/lib/api';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import {
   LayoutDashboard,
   Sprout,
-  Activity,
-  BookOpen,
+  Map as MapIcon,
   Layers,
   Settings,
   HelpCircle,
   User,
+  ArrowRight,
+  TrendingUp,
+  AlertTriangle,
+  Sparkles,
+  Activity,
+  Upload,
   Loader2,
 } from 'lucide-react';
-import Link from 'next/link';
+import { KMLField } from '@/types';
+import { MOCK_MODE } from '@/lib/api';
 
-const MapViewer = dynamic(
-  () => import('@/components/map-viewer').then((mod) => ({ default: mod.MapViewer })),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex h-full items-center justify-center bg-paper-grain">
-        <p className="editorial-eyebrow text-stone">Carregando mapa…</p>
-      </div>
-    ),
-  }
-);
-
-const Terrain3DViewer = dynamic(
-  () => import('@/components/terrain-3d-viewer').then((mod) => ({ default: mod.Terrain3DViewer })),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex h-full items-center justify-center bg-paper-grain">
-        <p className="editorial-eyebrow text-stone">Carregando visualização 3D…</p>
-      </div>
-    ),
-  }
-);
-
-import type { SpectralStatistics, ElevationData, MapOverlayResult } from '@/types';
-
-interface IndexResult {
-  statistics: SpectralStatistics;
-  histogram: { bins: number[]; counts: number[] };
-  image_base64: string;
-  product_used: string;
-  elevation_data?: ElevationData;
+interface ActivityItem {
+  type: 'analysis' | 'import' | 'alert' | 'classification';
+  title: string;
+  detail: string;
+  when: string;
 }
 
-interface ExperimentResult {
-  field_id: string;
-  experiment_type: string;
-  parameters: Record<string, unknown>;
-  image_base64: string;
-  statistics: Record<string, unknown>;
-  timestamp: string;
-  product_used: string;
-}
-
-type SidebarTab = 'analytics' | 'research';
-
-const SPECTRAL_INDICES: IndexType[] = ['NDVI', 'EVI', 'SAVI', 'NDWI', 'NDBI'];
-const COMPOSITES: IndexType[] = ['RGB', 'FALSE_COLOR'];
-const BANDS: IndexType[] = [
-  'B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B8A', 'B09', 'B11', 'B12',
+const RECENT_ACTIVITY: ActivityItem[] = [
+  {
+    type: 'analysis',
+    title: 'NDVI calculado',
+    detail: 'crop field 1 · NDVI médio 0,67 · vigor saudável',
+    when: 'há 2 horas',
+  },
+  {
+    type: 'classification',
+    title: 'Classificação por limiar',
+    detail: 'crop field 1 · 3 zonas detectadas · 4,82 ha total',
+    when: 'há 5 horas',
+  },
+  {
+    type: 'analysis',
+    title: 'EVI calculado',
+    detail: 'crop field 1 · EVI médio 0,52',
+    when: 'ontem · 14:32',
+  },
+  {
+    type: 'alert',
+    title: 'Atenção: heterogeneidade detectada',
+    detail: 'crop field 1 · σ = 0,18 · sugerido manejo por zonas',
+    when: 'ontem · 09:15',
+  },
 ];
 
-export default function Home() {
+const ACTIVITY_ICONS = {
+  analysis: TrendingUp,
+  import: Upload,
+  alert: AlertTriangle,
+  classification: Layers,
+};
+
+const ACTIVITY_COLORS = {
+  analysis: 'text-moss-700',
+  import: 'text-stone',
+  alert: 'text-amber',
+  classification: 'text-moss-900',
+};
+
+export default function HomePage() {
   const [fields, setFields] = useState<KMLField[]>([]);
-  const [selectedFieldId, setSelectedFieldId] = useState<string | undefined>();
-  const [selectedIndex, setSelectedIndex] = useState<IndexType>('NDVI');
   const [loading, setLoading] = useState(true);
-  const [calculating, setCalculating] = useState(false);
-  const [indexResult, setIndexResult] = useState<IndexResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [smoothEnabled, setSmoothEnabled] = useState(false);
-  const [view3D, setView3D] = useState(false);
-  const [activeTab, setActiveTab] = useState<SidebarTab>('analytics');
-  const [experimentDialogOpen, setExperimentDialogOpen] = useState(false);
-  const [selectedExperiment, setSelectedExperiment] = useState<{
-    type: string;
-    title: string;
-    description: string;
-  } | null>(null);
-  const [experimentResult, setExperimentResult] = useState<ExperimentResult | null>(null);
-  const [experimentHistory, setExperimentHistory] = useState<ExperimentResult[]>([]);
 
   useEffect(() => {
+    const fetchFields = async () => {
+      try {
+        const res = await fetch('/api/fields');
+        const data = await res.json();
+        setFields(data.fields || []);
+      } catch (err) {
+        console.error('Erro carregando talhões:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchFields();
   }, []);
 
-  const fetchFields = async () => {
-    try {
-      const response = await fetch('/api/fields');
-      const data = await response.json();
-      setFields(data.fields || []);
-      if (data.fields?.length > 0) {
-        setSelectedFieldId(data.fields[0].id);
-      }
-    } catch (err) {
-      console.error('Error fetching fields:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const today = new Date()
+    .toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+    .toUpperCase();
 
-  const handleNewField = (coordinates: { latitude: number; longitude: number }[]) => {
-    const lats = coordinates.map((c) => c.latitude);
-    const lons = coordinates.map((c) => c.longitude);
-    const newFieldId = `field-${Date.now()}`;
-    const newField: KMLField = {
-      id: newFieldId,
-      name: `New Field ${fields.length + 1}`,
-      coordinates,
-      bounds: {
-        north: Math.max(...lats),
-        south: Math.min(...lats),
-        east: Math.max(...lons),
-        west: Math.min(...lons),
-      },
-    };
-    setFields([...fields, newField]);
-    setSelectedFieldId(newFieldId);
-  };
+  // Mock-derived KPIs
+  const totalFields = fields.length;
+  const totalArea = fields.reduce((s, f) => {
+    // Aproximação rude: bbox em hectares (1 grau ≈ 111 km, área varia com lat)
+    const bbox = f.bounds;
+    const lonSpan = Math.abs(bbox.east - bbox.west);
+    const latSpan = Math.abs(bbox.north - bbox.south);
+    const meanLat = (bbox.north + bbox.south) / 2;
+    const lonKm = lonSpan * 111 * Math.cos((meanLat * Math.PI) / 180);
+    const latKm = latSpan * 111;
+    return s + lonKm * latKm * 100; // km² → ha
+  }, 0);
 
-  const calculateIndex = async () => {
-    if (!selectedFieldId) return;
-    const field = fields.find((f) => f.id === selectedFieldId);
-    if (!field) return;
-
-    setCalculating(true);
-    setError(null);
-
-    try {
-      const result = await apiCalculateIndex({
-        field_id: field.id,
-        coordinates: field.coordinates.map((c) => ({
-          longitude: c.longitude,
-          latitude: c.latitude,
-        })),
-        index_type: selectedIndex,
-        smooth: smoothEnabled,
-      });
-      setIndexResult(result);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
-      setError(errorMessage);
-      console.error('Erro calculando índice:', err);
-    } finally {
-      setCalculating(false);
-    }
-  };
-
-  const handleOpenExperiment = (type: string, title: string, description: string) => {
-    if (!selectedFieldId) {
-      alert('Selecione um talhão primeiro');
-      return;
-    }
-    setSelectedExperiment({ type, title, description });
-    setExperimentDialogOpen(true);
-  };
-
-  const handleRunExperiment = async (parameters: Record<string, number>) => {
-    if (!selectedFieldId || !selectedExperiment) return;
-    const field = fields.find((f) => f.id === selectedFieldId);
-    if (!field) return;
-
-    try {
-      const result = await apiRunExperiment({
-        field_id: field.id,
-        coordinates: field.coordinates.map((c) => ({
-          longitude: c.longitude,
-          latitude: c.latitude,
-        })),
-        experiment_type: selectedExperiment.type,
-        parameters,
-      });
-      setExperimentResult(result as ExperimentResult);
-      setExperimentHistory([result as ExperimentResult, ...experimentHistory]);
-      setActiveTab('analytics');
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
-      alert(`Erro no experimento: ${errorMessage}`);
-      console.error('Erro executando experimento:', err);
-    }
-  };
-
-  const selectedField = fields.find((f) => f.id === selectedFieldId);
-  const today = new Date().toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).toUpperCase();
+  const lastNdvi = 0.67; // mock
+  const activeAlerts: number = 1;
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-paper-grain text-charcoal">
       {/* ──── Left rail — icon nav ──── */}
-      <aside className="flex w-14 flex-shrink-0 flex-col items-center border-r border-moss-100 bg-cream py-6">
-        <Link href="/" aria-label="Dashboard">
-          <button className="rounded-sm p-2.5 text-moss-900 transition-colors hover:bg-moss-50">
-            <LayoutDashboard className="h-[18px] w-[18px]" strokeWidth={1.5} />
-          </button>
-        </Link>
+      <aside className="flex w-14 shrink-0 flex-col items-center border-r border-moss-100 bg-cream py-6">
         <button
-          aria-label="Fields"
+          aria-label="Início"
+          className="rounded-sm bg-moss-900 p-2.5 text-cream"
+        >
+          <LayoutDashboard className="h-[18px] w-[18px]" strokeWidth={1.5} />
+        </button>
+        <button
+          aria-label="Talhões"
           className="rounded-sm p-2.5 text-smoke transition-colors hover:bg-moss-50 hover:text-moss-900"
         >
           <Sprout className="h-[18px] w-[18px]" strokeWidth={1.5} />
         </button>
-        <button
-          aria-label="Analytics"
-          onClick={() => setActiveTab('analytics')}
-          className={`rounded-sm p-2.5 transition-colors ${
-            activeTab === 'analytics'
-              ? 'bg-moss-900 text-cream'
-              : 'text-smoke hover:bg-moss-50 hover:text-moss-900'
-          }`}
-        >
-          <Activity className="h-[18px] w-[18px]" strokeWidth={1.5} />
-        </button>
-        <button
-          aria-label="Research"
-          onClick={() => setActiveTab('research')}
-          className={`rounded-sm p-2.5 transition-colors ${
-            activeTab === 'research'
-              ? 'bg-moss-900 text-cream'
-              : 'text-smoke hover:bg-moss-50 hover:text-moss-900'
-          }`}
-        >
-          <BookOpen className="h-[18px] w-[18px]" strokeWidth={1.5} />
-        </button>
-        <Link href="/classification" aria-label="Classification">
+        <Link href="/atlas" aria-label="Mapa de análise">
+          <button className="rounded-sm p-2.5 text-smoke transition-colors hover:bg-moss-50 hover:text-moss-900">
+            <MapIcon className="h-[18px] w-[18px]" strokeWidth={1.5} />
+          </button>
+        </Link>
+        <Link href="/classification" aria-label="Classificação">
           <button className="rounded-sm p-2.5 text-smoke transition-colors hover:bg-moss-50 hover:text-moss-900">
             <Layers className="h-[18px] w-[18px]" strokeWidth={1.5} />
           </button>
@@ -257,404 +148,331 @@ export default function Home() {
         </button>
       </aside>
 
-      {/* ──── Sidebar panel ──── */}
-      <section className="flex w-[400px] flex-shrink-0 flex-col border-r border-moss-100 bg-cream-grain overflow-hidden">
-        {/* Masthead */}
-        <header className="border-b border-moss-100 px-7 py-5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="block h-2 w-2 rounded-full bg-lime ring-2 ring-lime/20" />
-              <p className="font-mono text-[10px] font-semibold tracking-widest uppercase text-moss-900">
-                EasyGis · v0.1
-              </p>
-              {MOCK_MODE && (
-                <span
-                  className="ml-1 border border-amber/60 bg-amber/10 px-1.5 py-0.5 font-mono text-[9px] font-semibold tracking-widest uppercase text-amber"
-                  title="Dados sintéticos para apresentação — backend pytest valida o cálculo real"
-                >
-                  Demo
-                </span>
-              )}
-            </div>
-            <p className="font-mono text-[10px] tracking-widest text-stone">{today}</p>
-          </div>
-
-          <h1 className="mt-5 font-display text-[40px] font-extrabold leading-[0.92] tracking-tight text-moss-950">
-            Agricultura
-            <br />
-            de precisão
-            <br />
-            <span className="text-moss-700">por satélite.</span>
-          </h1>
-          <p className="mt-3 max-w-[320px] text-[13px] leading-relaxed text-smoke">
-            Imagens Sentinel-2, índices de vegetação e analítica por zona sobre os
-            talhões que você gerencia.
-          </p>
-        </header>
-
-        {/* Scroll body */}
-        <div className="flex-1 overflow-y-auto px-7 py-6">
-          {activeTab === 'analytics' ? (
-            <div className="editorial-rise space-y-7">
-              {/* 01 · Talhão */}
-              <section>
-                <div className="mb-3 flex items-center justify-between">
-                  <span className="editorial-num">01 · Talhão</span>
-                  <span className="font-mono text-[10px] tracking-widest text-stone">
-                    {fields.length} {fields.length === 1 ? 'talhão' : 'talhões'}
-                  </span>
-                </div>
-                <select
-                  value={selectedFieldId ?? ''}
-                  onChange={(e) => setSelectedFieldId(e.target.value)}
-                  disabled={loading || fields.length === 0}
-                  className="w-full appearance-none border border-moss-100 bg-cream px-3.5 py-2.5 font-mono text-[13px] text-moss-950 transition-colors focus:border-moss-700 focus:outline-none disabled:opacity-40"
-                >
-                  <option value="">— Selecione um talhão —</option>
-                  {fields.map((field) => (
-                    <option key={field.id} value={field.id}>
-                      {field.name}
-                    </option>
-                  ))}
-                </select>
-                {selectedField && (
-                  <p className="mt-2 font-mono text-[10px] tracking-widest text-stone">
-                    BBOX  {selectedField.bounds.south.toFixed(3)}°S  {Math.abs(selectedField.bounds.west).toFixed(3)}°W →
-                    {' '}{selectedField.bounds.north.toFixed(3)}°N {Math.abs(selectedField.bounds.east).toFixed(3)}°E
-                  </p>
-                )}
-              </section>
-
-              {/* 02 · Índices */}
-              <section>
-                <div className="mb-3 editorial-rule">Biblioteca de Índices</div>
-
-                <div className="space-y-4">
-                  <div>
-                    <p className="editorial-num mb-2">— Índices Espectrais</p>
-                    <div className="grid grid-cols-5 gap-1.5">
-                      {SPECTRAL_INDICES.map((idx) => (
-                        <button
-                          key={idx}
-                          data-active={selectedIndex === idx}
-                          onClick={() => setSelectedIndex(idx)}
-                          className="index-chip"
-                        >
-                          {idx}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <p className="editorial-num mb-2">— Composições RGB</p>
-                    <div className="grid grid-cols-2 gap-1.5">
-                      {COMPOSITES.map((idx) => (
-                        <button
-                          key={idx}
-                          data-active={selectedIndex === idx}
-                          onClick={() => setSelectedIndex(idx)}
-                          className="index-chip"
-                        >
-                          {idx === 'RGB' ? 'Cor Verdadeira' : 'Falsa Cor'}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <p className="editorial-num mb-2">— Bandas Individuais</p>
-                    <div className="grid grid-cols-6 gap-1.5">
-                      {BANDS.map((band) => (
-                        <button
-                          key={band}
-                          data-active={selectedIndex === band}
-                          onClick={() => setSelectedIndex(band)}
-                          className="index-chip"
-                        >
-                          {band}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </section>
-
-              {/* 03 · Render options */}
-              <section>
-                <div className="mb-3 editorial-rule">Opções de Renderização</div>
-
-                <div className="space-y-3">
-                  <label className="flex cursor-pointer items-center justify-between border border-moss-100 bg-cream px-4 py-3 text-[13px] hover:border-moss-300 transition-colors">
-                    <div>
-                      <p className="font-medium text-moss-950">Suavização Gaussiana</p>
-                      <p className="font-mono text-[10px] tracking-widest text-stone mt-0.5">
-                        GAUSSIANA σ = 1.5
-                      </p>
-                    </div>
-                    <Switch checked={smoothEnabled} onCheckedChange={setSmoothEnabled} />
-                  </label>
-
-                  {indexResult && (
-                    <label className="flex cursor-pointer items-center justify-between border border-moss-100 bg-cream px-4 py-3 text-[13px] hover:border-moss-300 transition-colors">
-                      <div>
-                        <p className="font-medium text-moss-950">Terreno 3D</p>
-                        <p className="font-mono text-[10px] tracking-widest text-stone mt-0.5">
-                          ELEVAÇÃO × VALOR
-                        </p>
-                      </div>
-                      <Switch checked={view3D} onCheckedChange={setView3D} />
-                    </label>
-                  )}
-                </div>
-              </section>
-
-              {/* 04 · Compute action */}
-              <section>
-                <button
-                  onClick={calculateIndex}
-                  disabled={!selectedFieldId || calculating}
-                  className="btn-ribbon w-full"
-                >
-                  {calculating ? (
-                    <>
-                      <span className="editorial-spinner" />
-                      <span>Processando</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Visualizar {selectedIndex}</span>
-                      <span aria-hidden>→</span>
-                    </>
-                  )}
-                </button>
-                {error && (
-                  <p className="mt-3 border-l-2 border-clay bg-clay/5 px-3 py-2 font-mono text-[11px] leading-relaxed text-clay">
-                    Erro · {error}
-                  </p>
-                )}
-              </section>
-
-              {/* 05 · Result panel */}
-              {experimentResult && (
-                <section>
-                  <div className="mb-3 editorial-rule">Resultado do Experimento</div>
-                  <div className="border border-moss-100 bg-cream p-4 space-y-3">
-                    <p className="font-display text-base font-semibold tracking-tight text-moss-900 capitalize">
-                      {experimentResult.experiment_type.replace(/_/g, ' ')}
-                    </p>
-                    <div className="space-y-1 font-mono text-[11px] text-smoke">
-                      {Object.entries(experimentResult.parameters).map(([key, value]) => (
-                        <div key={key} className="flex justify-between">
-                          <span className="text-stone">{key.toUpperCase()}</span>
-                          <span>{typeof value === 'number' ? value.toFixed(2) : String(value ?? '')}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="grid grid-cols-3 gap-2 pt-1">
-                      {(['mean', 'min', 'max'] as const).map((k) => {
-                        const v = experimentResult.statistics[k];
-                        return typeof v === 'number' ? (
-                          <div key={k} className="stat-card">
-                            <p className="stat-label">{k}</p>
-                            <p className="stat-value">{v.toFixed(3)}</p>
-                          </div>
-                        ) : null;
-                      })}
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setExperimentResult(null)}
-                    className="editorial-link mt-3 font-mono text-[11px] tracking-widest uppercase text-smoke hover:text-moss-900"
-                  >
-                    Limpar experimento
-                  </button>
-                </section>
-              )}
-
-              {indexResult && !experimentResult && (
-                <section>
-                  <div className="mb-3 editorial-rule">{selectedIndex} · Estatísticas</div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="stat-card">
-                      <p className="stat-label">Média</p>
-                      <p className="stat-value">{indexResult.statistics.mean.toFixed(3)}</p>
-                    </div>
-                    <div className="stat-card">
-                      <p className="stat-label">Mín</p>
-                      <p className="stat-value">{indexResult.statistics.min.toFixed(3)}</p>
-                    </div>
-                    <div className="stat-card">
-                      <p className="stat-label">Máx</p>
-                      <p className="stat-value">{indexResult.statistics.max.toFixed(3)}</p>
-                    </div>
-                  </div>
-                  <div className="mt-4">
-                    <IndexInsight indexType={selectedIndex} statistics={indexResult.statistics} />
-                  </div>
-                  <p className="mt-4 font-mono text-[10px] leading-relaxed text-stone">
-                    PRODUTO DE ORIGEM
-                    <br />
-                    <span className="text-smoke break-all">{indexResult.product_used}</span>
-                  </p>
-                </section>
-              )}
-            </div>
-          ) : (
-            /* ──── Research tab ──── */
-            <div className="editorial-rise space-y-7">
-              <section>
-                <p className="editorial-eyebrow">— Laboratório</p>
-                <h2 className="mt-2 font-display text-[30px] font-extrabold leading-none tracking-tight text-moss-950">
-                  Experimentos de<br />
-                  <span className="text-moss-700">processamento</span>
-                </h2>
-                <p className="mt-2 text-[13px] leading-relaxed text-smoke">
-                  Aplique filtros, detectores de borda, operadores morfológicos e técnicas
-                  de segmentação sobre a banda NIR do talhão selecionado.
+      {/* ──── Main content ──── */}
+      <main className="flex-1 overflow-y-auto">
+        <div className="mx-auto max-w-6xl px-10 py-10">
+          {/* Masthead */}
+          <header className="border-b border-moss-100 pb-7">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="block h-2 w-2 rounded-full bg-lime ring-2 ring-lime/20" />
+                <p className="font-mono text-[10px] font-semibold tracking-widest uppercase text-moss-900">
+                  EasyGis · v0.1
                 </p>
-              </section>
+                {MOCK_MODE && (
+                  <span
+                    className="ml-1 border border-amber/60 bg-amber/10 px-1.5 py-0.5 font-mono text-[9px] font-semibold tracking-widest uppercase text-amber"
+                    title="Dados sintéticos para apresentação"
+                  >
+                    Demo
+                  </span>
+                )}
+              </div>
+              <p className="font-mono text-[10px] tracking-widest text-stone">{today}</p>
+            </div>
 
-              <section>
-                <div className="mb-3 editorial-rule">Experimentos Disponíveis</div>
-                <ExperimentMenu onSelectExperiment={handleOpenExperiment} />
-              </section>
+            <h1 className="mt-5 font-display text-[44px] font-extrabold leading-[0.95] tracking-tight text-moss-950">
+              Bom dia.
+              <br />
+              <span className="text-moss-700">Vamos olhar a lavoura?</span>
+            </h1>
+            <p className="mt-3 max-w-xl text-[14px] leading-relaxed text-smoke">
+              Visão geral dos seus talhões, atividade recente de análises e atalhos para as
+              ferramentas de sensoriamento remoto.
+            </p>
+          </header>
 
-              {experimentHistory.length > 0 && (
-                <section>
-                  <div className="mb-3 editorial-rule">Execuções Recentes</div>
-                  <div className="space-y-2">
-                    {experimentHistory.slice(0, 5).map((exp, i) => (
-                      <div
-                        key={i}
-                        className="border border-moss-100 bg-cream px-4 py-3"
-                      >
-                        <div className="flex items-baseline justify-between">
-                          <p className="font-medium text-[13px] text-moss-950 capitalize">
-                            {exp.experiment_type.replace(/_/g, ' ')}
-                          </p>
-                          <span className="font-mono text-[10px] tracking-widest text-stone">
-                            {new Date(exp.timestamp).toLocaleTimeString('pt-BR', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </span>
-                        </div>
-                        <p className="mt-1 font-mono text-[11px] text-smoke">
-                          {Object.entries(exp.parameters)
-                            .map(([k, v]) => `${k}=${typeof v === 'number' ? v.toFixed(2) : v}`)
-                            .join('  ·  ')}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </section>
+          {/* KPIs */}
+          <section className="mt-8 editorial-rise">
+            <div className="grid grid-cols-4 gap-3">
+              <KpiCard
+                label="Talhões"
+                value={loading ? '—' : String(totalFields)}
+                hint={`${loading ? '—' : totalFields} ativos`}
+                icon={Sprout}
+              />
+              <KpiCard
+                label="Área total"
+                value={loading ? '—' : totalArea.toFixed(1)}
+                unit="ha"
+                hint="todos os talhões"
+                icon={MapIcon}
+              />
+              <KpiCard
+                label="Último NDVI"
+                value={lastNdvi.toFixed(2)}
+                hint="média · vigor saudável"
+                icon={TrendingUp}
+                tone="good"
+              />
+              <KpiCard
+                label="Alertas"
+                value={String(activeAlerts)}
+                hint={activeAlerts === 0 ? 'nenhum' : 'pendente'}
+                icon={AlertTriangle}
+                tone={activeAlerts > 0 ? 'warning' : 'neutral'}
+              />
+            </div>
+          </section>
+
+          <div className="mt-10 grid grid-cols-3 gap-8">
+            {/* Talhões */}
+            <section className="col-span-2">
+              <div className="mb-4 flex items-baseline justify-between">
+                <p className="editorial-eyebrow">— Seus talhões</p>
+                <Link
+                  href="/atlas"
+                  className="editorial-link font-mono text-[11px] tracking-widest uppercase text-moss-700 hover:text-moss-900"
+                >
+                  Ver no mapa →
+                </Link>
+              </div>
+
+              {loading ? (
+                <div className="flex h-32 items-center justify-center border border-moss-100 bg-cream">
+                  <Loader2
+                    className="h-4 w-4 animate-spin text-moss-700"
+                    strokeWidth={1.5}
+                  />
+                </div>
+              ) : fields.length === 0 ? (
+                <div className="border border-dashed border-moss-300 bg-cream px-6 py-10 text-center">
+                  <Sprout
+                    className="mx-auto h-6 w-6 text-stone"
+                    strokeWidth={1.5}
+                  />
+                  <p className="mt-3 font-display text-lg font-bold text-moss-900">
+                    Nenhum talhão cadastrado
+                  </p>
+                  <p className="mt-1 text-[13px] text-smoke">
+                    Coloque arquivos KML em{' '}
+                    <span className="font-mono text-[12px]">data/KML Fields/</span>.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  {fields.map((field) => (
+                    <FieldCard key={field.id} field={field} />
+                  ))}
+
+                  {/* Add new */}
+                  <Link
+                    href="/atlas"
+                    className="group flex flex-col items-center justify-center border border-dashed border-moss-300 bg-cream px-4 py-8 text-center transition-colors hover:border-moss-700 hover:bg-moss-50"
+                  >
+                    <span className="flex h-10 w-10 items-center justify-center rounded-full border border-moss-300 bg-paper transition-colors group-hover:border-moss-700">
+                      <ArrowRight
+                        className="h-4 w-4 text-moss-700 transition-transform group-hover:translate-x-0.5"
+                        strokeWidth={2}
+                      />
+                    </span>
+                    <p className="mt-3 font-display text-sm font-semibold text-moss-900">
+                      Desenhar novo talhão
+                    </p>
+                    <p className="mt-1 text-[11px] text-smoke">
+                      No mapa, com leaflet-draw
+                    </p>
+                  </Link>
+                </div>
               )}
-            </div>
-          )}
-        </div>
+            </section>
 
-        {/* Footer */}
-        <footer className="border-t border-moss-100 px-7 py-3">
-          <p className="font-mono text-[10px] tracking-widest text-stone">
-            EasyGis · Sentinel-2 · 2026.1
-          </p>
-        </footer>
-      </section>
-
-      {/* ──── Map / 3D viewport ──── */}
-      <section className="relative flex-1 overflow-hidden">
-        {/* Floating chrome — index label + 3D pill */}
-        <div className="pointer-events-none absolute left-0 right-0 top-0 z-[400] flex items-start justify-between px-6 pt-5">
-          <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-moss-100 bg-cream/95 px-4 py-1.5 backdrop-blur-sm">
-            <span className="dot h-1.5 w-1.5 rounded-full bg-lime" />
-            <span className="font-mono text-[11px] tracking-[0.18em] text-moss-900 uppercase">
-              {experimentResult ? 'Experimento' : selectedIndex}
-            </span>
-            {indexResult?.product_used && (
-              <span className="font-mono text-[10px] tracking-[0.1em] text-stone">
-                · {indexResult.product_used.split('_')[2]?.slice(0, 8) ?? '—'}
-              </span>
-            )}
+            {/* Atividade recente */}
+            <section>
+              <p className="mb-4 editorial-eyebrow">— Atividade recente</p>
+              <div className="border border-moss-100 bg-cream divide-y divide-moss-50">
+                {RECENT_ACTIVITY.map((item, i) => {
+                  const Icon = ACTIVITY_ICONS[item.type];
+                  const colorClass = ACTIVITY_COLORS[item.type];
+                  return (
+                    <div key={i} className="flex gap-3 px-4 py-3.5">
+                      <div className="mt-0.5 shrink-0">
+                        <Icon
+                          className={`h-3.5 w-3.5 ${colorClass}`}
+                          strokeWidth={2}
+                        />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[13px] font-medium leading-tight text-moss-950">
+                          {item.title}
+                        </p>
+                        <p className="mt-1 text-[11.5px] leading-relaxed text-smoke">
+                          {item.detail}
+                        </p>
+                        <p className="mt-1 font-mono text-[10px] text-stone">{item.when}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
           </div>
 
-          {selectedField && (
-            <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-moss-100 bg-cream/95 px-4 py-1.5 backdrop-blur-sm">
-              <span className="font-mono text-[10px] tracking-widest text-stone">TALHÃO</span>
-              <span className="font-mono text-[11px] text-moss-900">{selectedField.name}</span>
+          {/* Quick actions */}
+          <section className="mt-10 editorial-rise">
+            <p className="mb-4 editorial-eyebrow">— Ações rápidas</p>
+            <div className="grid grid-cols-3 gap-3">
+              <QuickAction
+                href="/atlas"
+                title="Calcular índice"
+                description="Visualizar NDVI, EVI, SAVI, NDWI ou NDBI sobre um talhão."
+                icon={TrendingUp}
+              />
+              <QuickAction
+                href="/classification"
+                title="Classificar talhão"
+                description="Particionar em zonas de vigor, K-Means ou cultura."
+                icon={Layers}
+              />
+              <QuickAction
+                href="/atlas"
+                title="Lab. de experimentos"
+                description="Filtros, detecção de bordas e segmentação sobre Sentinel-2."
+                icon={Activity}
+              />
             </div>
-          )}
-        </div>
+          </section>
 
-        {loading ? (
-          <div className="flex h-full items-center justify-center bg-paper-grain">
-            <div className="text-center">
-              <Loader2 className="mx-auto h-5 w-5 animate-spin text-moss-700" strokeWidth={1.5} />
-              <p className="mt-3 editorial-eyebrow text-stone">Carregando talhões</p>
-            </div>
-          </div>
-        ) : fields.length > 0 ? (
-          view3D && indexResult && indexResult.elevation_data && selectedFieldId ? (
-            <Terrain3DViewer
-              imageData={indexResult.image_base64}
-              elevationScale={100}
-            />
-          ) : (
-            <MapViewer
-              fields={fields}
-              selectedFieldId={selectedFieldId}
-              onFieldClick={setSelectedFieldId}
-              indexResult={
-                experimentResult
-                  ? ({
-                      kind: 'spectral',
-                      statistics: {
-                        min: Number(experimentResult.statistics.min ?? 0),
-                        max: Number(experimentResult.statistics.max ?? 0),
-                        mean: Number(experimentResult.statistics.mean ?? 0),
-                        median: Number(experimentResult.statistics.median ?? 0),
-                        std: Number(experimentResult.statistics.std ?? 0),
-                        count: Number(experimentResult.statistics.count ?? 0),
-                      },
-                      histogram: { bins: [], counts: [] },
-                      image_base64: experimentResult.image_base64,
-                      product_used: experimentResult.product_used,
-                    } satisfies MapOverlayResult)
-                  : indexResult
-                  ? ({ kind: 'spectral', ...indexResult } satisfies MapOverlayResult)
-                  : null
-              }
-              indexType={experimentResult ? ('EXPERIMENT' as IndexType) : selectedIndex}
-              onNewField={handleNewField}
-            />
-          )
-        ) : (
-          <div className="flex h-full items-center justify-center bg-paper-grain">
-            <div className="text-center max-w-sm px-6">
-              <p className="editorial-eyebrow text-stone">— Nenhum talhão carregado —</p>
-              <h2 className="mt-3 font-display text-2xl font-bold text-moss-900">
-                Nada para exibir
-              </h2>
-              <p className="mt-2 text-[13px] leading-relaxed text-smoke">
-                Coloque arquivos KML em <span className="font-mono text-[12px]">data/KML Fields/</span> ou
-                desenhe um polígono direto no mapa para começar.
+          {/* Footer */}
+          <footer className="mt-12 border-t border-moss-100 pt-4">
+            <div className="flex items-center justify-between">
+              <p className="font-mono text-[10px] tracking-widest text-stone">
+                EasyGis · Sentinel-2 · 2026.1
+              </p>
+              <p className="flex items-center gap-1.5 font-mono text-[10px] tracking-widest text-stone">
+                <Sparkles className="h-2.5 w-2.5" strokeWidth={2} />
+                Powered by Copernicus
               </p>
             </div>
-          </div>
-        )}
-      </section>
+          </footer>
+        </div>
+      </main>
+    </div>
+  );
+}
 
-      {/* Experiment Dialog */}
-      {selectedExperiment && (
-        <ExperimentDialog
-          open={experimentDialogOpen}
-          onOpenChange={setExperimentDialogOpen}
-          experimentType={selectedExperiment.type}
-          experimentTitle={selectedExperiment.title}
-          experimentDescription={selectedExperiment.description}
-          onRun={handleRunExperiment}
-        />
+// ── Sub-components ──────────────────────────────────────────────────────
+
+interface KpiCardProps {
+  label: string;
+  value: string;
+  unit?: string;
+  hint?: string;
+  icon: typeof Sprout;
+  tone?: 'neutral' | 'good' | 'warning';
+}
+
+function KpiCard({ label, value, unit, hint, icon: Icon, tone = 'neutral' }: KpiCardProps) {
+  const toneClasses = {
+    neutral: 'text-moss-950',
+    good: 'text-moss-700',
+    warning: 'text-amber',
+  };
+  return (
+    <div className="border border-moss-100 bg-cream px-4 py-3.5">
+      <div className="flex items-center justify-between">
+        <p className="font-mono text-[10px] tracking-widest uppercase text-stone">{label}</p>
+        <Icon className="h-3.5 w-3.5 text-stone" strokeWidth={1.5} />
+      </div>
+      <p
+        className={`mt-2 font-display text-[28px] font-extrabold tabular-nums leading-none tracking-tight ${toneClasses[tone]}`}
+      >
+        {value}
+        {unit && <span className="ml-1 text-base font-medium text-stone">{unit}</span>}
+      </p>
+      {hint && (
+        <p className="mt-2 font-mono text-[10px] tracking-wide text-stone">{hint}</p>
       )}
     </div>
+  );
+}
+
+function FieldCard({ field }: { field: KMLField }) {
+  // Mini SVG do polígono — escala simples ao box
+  const { coordinates, bounds } = field;
+  const lonSpan = bounds.east - bounds.west || 1;
+  const latSpan = bounds.north - bounds.south || 1;
+  const points = coordinates
+    .map((c) => {
+      const x = ((c.longitude - bounds.west) / lonSpan) * 100;
+      const y = 100 - ((c.latitude - bounds.south) / latSpan) * 100;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(' ');
+
+  // Aproximação de área em ha (igual lógica do KPI mas por talhão)
+  const meanLat = (bounds.north + bounds.south) / 2;
+  const lonKm = lonSpan * 111 * Math.cos((meanLat * Math.PI) / 180);
+  const latKm = latSpan * 111;
+  const areaHa = lonKm * latKm * 100;
+
+  return (
+    <Link
+      href="/atlas"
+      className="group flex flex-col border border-moss-100 bg-cream transition-all hover:border-moss-700"
+    >
+      <div className="aspect-video overflow-hidden bg-paper">
+        <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" className="h-full w-full">
+          {/* Background grid */}
+          <defs>
+            <pattern id={`grid-${field.id}`} width="10" height="10" patternUnits="userSpaceOnUse">
+              <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#DDE5DD" strokeWidth="0.3" />
+            </pattern>
+          </defs>
+          <rect width="100" height="100" fill={`url(#grid-${field.id})`} />
+          <polygon
+            points={points}
+            fill="#A4C3B2"
+            fillOpacity="0.4"
+            stroke="#1B3A2F"
+            strokeWidth="0.8"
+            strokeLinejoin="round"
+            className="transition-all group-hover:fill-moss-300/70"
+          />
+        </svg>
+      </div>
+      <div className="flex items-baseline justify-between border-t border-moss-100 px-4 py-3">
+        <div>
+          <p className="text-[13px] font-medium text-moss-950">{field.name}</p>
+          <p className="mt-0.5 font-mono text-[10px] text-stone">
+            {areaHa.toFixed(1)} ha · {field.coordinates.length} vértices
+          </p>
+        </div>
+        <ArrowRight
+          className="h-3.5 w-3.5 text-stone transition-all group-hover:translate-x-0.5 group-hover:text-moss-900"
+          strokeWidth={2}
+        />
+      </div>
+    </Link>
+  );
+}
+
+interface QuickActionProps {
+  href: string;
+  title: string;
+  description: string;
+  icon: typeof Sprout;
+}
+
+function QuickAction({ href, title, description, icon: Icon }: QuickActionProps) {
+  return (
+    <Link
+      href={href}
+      className="group flex items-start gap-3 border border-moss-100 bg-cream px-4 py-4 transition-all hover:border-moss-700 hover:bg-moss-50"
+    >
+      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center bg-moss-900 text-cream transition-colors group-hover:bg-moss-950">
+        <Icon className="h-4 w-4" strokeWidth={1.5} />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="font-display text-[15px] font-bold leading-tight tracking-tight text-moss-950">
+          {title}
+        </p>
+        <p className="mt-1 text-[11.5px] leading-relaxed text-smoke">{description}</p>
+      </div>
+      <ArrowRight
+        className="mt-1 h-3.5 w-3.5 shrink-0 text-stone transition-transform group-hover:translate-x-0.5 group-hover:text-moss-900"
+        strokeWidth={2}
+      />
+    </Link>
   );
 }
