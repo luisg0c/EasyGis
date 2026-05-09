@@ -1,7 +1,7 @@
 export interface KMLCoordinate {
   longitude: number;
   latitude: number;
-  altitude: number;
+  altitude?: number;
 }
 
 export interface KMLField {
@@ -41,6 +41,58 @@ export interface NDVIData {
   };
   imageData?: string; // Base64 encoded image
 }
+
+/**
+ * Statistics returned by the spectral-index endpoint (NDVI/EVI/SAVI/...).
+ * Mirrors `IndexResult.statistics` from `api/main.py`.
+ */
+export interface SpectralStatistics {
+  min: number;
+  max: number;
+  mean: number;
+  median: number;
+  std: number;
+  count: number;
+}
+
+/**
+ * Statistics returned by the classification endpoint.
+ * Mirrors `ClassificationResult.statistics` from `api/main.py`.
+ */
+export interface ClassificationStatistics {
+  total_area: number;
+  classified_area: number;
+  unclassified_percentage: number;
+}
+
+export interface ElevationData {
+  width: number;
+  height: number;
+  heights: number[];
+  min_value: number;
+  max_value: number;
+}
+
+/**
+ * Discriminated union for results that may be rendered as an overlay on the map.
+ * The `kind` field selects the proper statistics shape, eliminating the need
+ * for `as any` casts on the consumer side.
+ */
+export type MapOverlayResult =
+  | {
+      kind: 'spectral';
+      statistics: SpectralStatistics;
+      histogram: { bins: number[]; counts: number[] };
+      image_base64: string;
+      product_used: string;
+      elevation_data?: ElevationData;
+    }
+  | {
+      kind: 'classification';
+      statistics: ClassificationStatistics;
+      image_base64: string;
+      product_used: string;
+    };
 
 export interface Band {
   name: string;

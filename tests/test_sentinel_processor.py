@@ -93,6 +93,39 @@ class TestEVI:
         assert evi_default[0, 0] != evi_custom[0, 0]
 
 
+class TestSAVI:
+    """RF: Cálculo do índice SAVI (Soil-Adjusted Vegetation Index)"""
+
+    def test_savi_in_valid_range(self, processor, synthetic_nir_band, synthetic_red_band):
+        """CT-SAVI.1: SAVI deve ser limitado a [-1, 1]"""
+        savi = processor.calculate_savi(synthetic_nir_band, synthetic_red_band)
+        assert savi.min() >= -1.0
+        assert savi.max() <= 1.0
+
+    def test_savi_formula_with_default_L(self, processor):
+        """CT-SAVI.2: Fórmula correta com L=0.5: ((NIR-Red)/(NIR+Red+L))*(1+L)"""
+        nir = np.array([[8000.0]])
+        red = np.array([[2000.0]])
+        # SAVI = ((8000-2000)/(8000+2000+0.5)) * 1.5 = (6000/10000.5) * 1.5 ≈ 0.89996
+        savi = processor.calculate_savi(nir, red)
+        assert savi[0, 0] == pytest.approx(0.89996, abs=1e-4)
+
+    def test_savi_with_L_zero_equals_ndvi(self, processor):
+        """CT-SAVI.3: Com L=0, SAVI degenera para NDVI"""
+        nir = np.array([[5000.0]])
+        red = np.array([[2000.0]])
+        savi_l0 = processor.calculate_savi(nir, red, L=0.0)
+        ndvi = processor.calculate_ndvi(nir.astype(np.uint16), red.astype(np.uint16))
+        assert savi_l0[0, 0] == pytest.approx(ndvi[0, 0], abs=1e-6)
+
+    def test_savi_handles_zero_denominator(self, processor):
+        """CT-SAVI.4: Denominador zero (com L=0) → NaN, não crash"""
+        nir = np.zeros((3, 3), dtype=np.uint16)
+        red = np.zeros((3, 3), dtype=np.uint16)
+        savi = processor.calculate_savi(nir, red, L=0.0)
+        assert np.all(np.isnan(savi))
+
+
 class TestStatistics:
     """RF-10: Estatísticas descritivas"""
 

@@ -188,6 +188,36 @@ class SentinelProcessor:
 
         return evi
 
+    def calculate_savi(
+        self,
+        nir_band: np.ndarray,
+        red_band: np.ndarray,
+        L: float = 0.5,
+    ) -> np.ndarray:
+        """
+        Calculate SAVI (Soil Adjusted Vegetation Index).
+
+        SAVI = ((NIR - Red) / (NIR + Red + L)) * (1 + L)
+
+        Args:
+            nir_band: Near-infrared band (B08).
+            red_band: Red band (B04).
+            L: Soil-brightness correction factor (0 = NDVI; 0.5 default for moderate cover; 1 = very low cover).
+
+        Returns:
+            SAVI array clipped to [-1, 1].
+        """
+        nir = nir_band.astype(np.float32)
+        red = red_band.astype(np.float32)
+
+        denominator = nir + red + L
+        denominator[denominator == 0] = np.nan
+
+        savi = ((nir - red) / denominator) * (1.0 + L)
+        savi = np.clip(savi, -1, 1)
+
+        return savi
+
     def calculate_statistics(self, data: np.ndarray) -> Dict[str, float]:
         """
         Calculate statistics for index array

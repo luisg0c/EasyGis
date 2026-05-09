@@ -2,9 +2,11 @@
 FastAPI Backend for Remote Sensing Analysis
 Provides endpoints for calculating spectral indices from Sentinel-2 data
 """
+import logging
+import re
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 from typing import List, Optional
 from pathlib import Path
 import base64
@@ -15,6 +17,13 @@ from shapely.geometry import Polygon
 from scipy.ndimage import gaussian_filter
 
 from api.sentinel_processor import SentinelProcessor
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
+
+# Sentinel-2 Level-2A product naming convention.
+# Example: S2A_MSIL2A_20240115T123456_N0510_R102_T23LMH_20240115T172223.SAFE
+SAFE_PRODUCT_PATTERN = re.compile(r"^S2[AB]_MSIL2A_[A-Za-z0-9_]+\.SAFE$")
 
 app = FastAPI(
     title="Remote Sensing API",
@@ -36,16 +45,25 @@ PRODUCTS_DIR = Path(__file__).parent.parent / "data" / "products"
 
 
 class Coordinate(BaseModel):
-    longitude: float
-    latitude: float
+    longitude: float = Field(..., ge=-180.0, le=180.0)
+    latitude: float = Field(..., ge=-90.0, le=90.0)
 
 
 class CalculateIndexRequest(BaseModel):
-    field_id: str
-    coordinates: List[Coordinate]
+    field_id: str = Field(..., min_length=1, max_length=200)
+    coordinates: List[Coordinate] = Field(..., min_length=3)
     index_type: str  # 'NDVI', 'EVI', 'SAVI', 'NDWI', 'NDBI', 'RGB', 'FALSE_COLOR', 'B01'-'B12'
     product_name: Optional[str] = None  # If None, uses most recent
     smooth: bool = False  # Apply Gaussian smoothing filter
+
+    @field_validator("product_name")
+    @classmethod
+    def validate_product_name(cls, v: Optional[str]) -> Optional[str]:
+        if v is None or v == "":
+            return None
+        if not SAFE_PRODUCT_PATTERN.match(v):
+            raise ValueError("Invalid Sentinel-2 product name")
+        return v
 
 
 class IndexResult(BaseModel):
@@ -59,12 +77,26 @@ class IndexResult(BaseModel):
 
 
 def find_sentinel_product(product_name: Optional[str] = None) -> Path:
-    """Find Sentinel-2 product directory"""
+    """
+    Find Sentinel-2 product directory inside PRODUCTS_DIR.
+
+    Validates the product name against the official SAFE pattern and ensures
+    the resolved path stays inside PRODUCTS_DIR (rejects path traversal).
+    """
     if product_name:
-        product_path = PRODUCTS_DIR / product_name
-        if not product_path.exists():
-            raise HTTPException(status_code=404, detail=f"Product {product_name} not found")
-        return product_path
+        if not SAFE_PRODUCT_PATTERN.match(product_name):
+            raise HTTPException(status_code=400, detail="Invalid product name format")
+
+        candidate = (PRODUCTS_DIR / product_name).resolve()
+        try:
+            candidate.relative_to(PRODUCTS_DIR.resolve())
+        except ValueError:
+            # Resolved path escapes the products directory.
+            raise HTTPException(status_code=400, detail="Invalid product name")
+
+        if not candidate.exists() or not candidate.is_dir():
+            raise HTTPException(status_code=404, detail="Product not found")
+        return candidate
 
     # Find most recent product
     products = list(PRODUCTS_DIR.glob("S2*_MSIL2A_*.SAFE"))
@@ -77,9 +109,17 @@ def find_sentinel_product(product_name: Optional[str] = None) -> Path:
 
 
 def coordinates_to_polygon(coordinates: List[Coordinate]) -> Polygon:
-    """Convert coordinate list to Shapely Polygon"""
+    """
+    Convert a coordinate list to a valid Shapely Polygon.
+
+    Raises HTTP 400 if the resulting polygon is empty, degenerate or self-intersecting.
+    Pydantic already enforces min_length=3 and lat/lon bounds upstream.
+    """
     coords = [(c.longitude, c.latitude) for c in coordinates]
-    return Polygon(coords)
+    polygon = Polygon(coords)
+    if polygon.is_empty or not polygon.is_valid:
+        raise HTTPException(status_code=400, detail="Invalid polygon geometry")
+    return polygon
 
 
 def apply_smooth_filter(data: np.ndarray, sigma: float = 1.5) -> np.ndarray:
@@ -159,46 +199,92 @@ def generate_elevation_data(data: np.ndarray, downsample_factor: int = 4) -> dic
     }
 
 
-def single_band_to_image(band_data: np.ndarray, band_name: str = 'Band', smooth: bool = False) -> str:
+def _normalize_to_uint8(data: np.ndarray, valid_mask: np.ndarray) -> np.ndarray:
     """
-    Convert single band to grayscale image with transparency
+    Normalize array to uint8 [0, 255] using percentile stretch on valid pixels.
+    Returns zeros if there are no valid pixels or vmin == vmax (constant image).
+    """
+    out = np.zeros(data.shape, dtype=np.uint8)
+    if not np.any(valid_mask):
+        return out
+
+    valid = data[valid_mask].astype(np.float32)
+    vmin, vmax = np.percentile(valid, [2, 98])
+    if vmax <= vmin:
+        return out
+
+    stretched = np.clip((data[valid_mask].astype(np.float32) - vmin) / (vmax - vmin) * 255.0, 0, 255)
+    out[valid_mask] = stretched.astype(np.uint8)
+    return out
+
+
+def generate_colored_image(data: np.ndarray, colormap: str = 'viridis', smooth: bool = False) -> str:
+    """
+    Convert array to RGBA PNG using OpenCV colormap, with transparency for invalid pixels.
 
     Args:
-        band_data: Band array (with NaN for no-data areas)
-        band_name: Name of the band
-        smooth: Apply Gaussian smoothing filter
+        data: 2D array (NaN marks no-data).
+        colormap: 'viridis' | 'jet' | 'hot' | 'turbo' | 'magma' | 'inferno' | 'plasma'.
+        smooth: Apply Gaussian smoothing before colorization.
 
     Returns:
-        Base64 encoded PNG image with alpha channel
+        Base64-encoded PNG (RGBA).
     """
-    # Apply smoothing if requested
+    import cv2
+
+    if smooth:
+        data = apply_smooth_filter(data, sigma=1.5)
+
+    valid_mask = ~np.isnan(data) & (data != 0)
+    height, width = data.shape
+
+    cmap_table = {
+        'viridis': cv2.COLORMAP_VIRIDIS,
+        'jet': cv2.COLORMAP_JET,
+        'hot': cv2.COLORMAP_HOT,
+        'turbo': cv2.COLORMAP_TURBO,
+        'magma': cv2.COLORMAP_MAGMA,
+        'inferno': cv2.COLORMAP_INFERNO,
+        'plasma': cv2.COLORMAP_PLASMA,
+    }
+    cv2_cmap = cmap_table.get(colormap, cv2.COLORMAP_VIRIDIS)
+
+    # Normalize valid pixels to uint8
+    data_uint8 = _normalize_to_uint8(data, valid_mask)
+
+    # OpenCV returns BGR — convert to RGB
+    colored_bgr = cv2.applyColorMap(data_uint8, cv2_cmap)
+    colored_rgb = cv2.cvtColor(colored_bgr, cv2.COLOR_BGR2RGB)
+
+    # Build RGBA: copy RGB and set alpha=255 where valid, 0 elsewhere
+    colored = np.zeros((height, width, 4), dtype=np.uint8)
+    colored[..., :3] = colored_rgb
+    colored[..., 3] = np.where(valid_mask, 255, 0)
+
+    img = Image.fromarray(colored, mode='RGBA')
+    buffer = io.BytesIO()
+    img.save(buffer, format='PNG')
+    buffer.seek(0)
+    return base64.b64encode(buffer.read()).decode('utf-8')
+
+
+def single_band_to_image(band_data: np.ndarray, band_name: str = 'Band', smooth: bool = False) -> str:
+    """
+    Convert single band to grayscale RGBA PNG (transparent outside valid pixels).
+
+    Vectorized — uses _normalize_to_uint8 + numpy stacking instead of per-pixel loops.
+    """
     if smooth:
         band_data = apply_smooth_filter(band_data, sigma=1.5)
 
     height, width = band_data.shape
-
-    # Create mask for valid data
     valid_mask = ~np.isnan(band_data) & (band_data != 0)
 
-    # Normalize to 0-255 range
-    valid_data = band_data[valid_mask]
-    if len(valid_data) > 0:
-        vmin, vmax = np.percentile(valid_data, [2, 98])  # Stretch contrast
-        normalized = np.zeros_like(band_data, dtype=np.float32)
-        normalized[valid_mask] = np.clip((band_data[valid_mask] - vmin) / (vmax - vmin) * 255, 0, 255)
-    else:
-        normalized = np.zeros_like(band_data, dtype=np.float32)
+    gray = _normalize_to_uint8(band_data, valid_mask)
+    alpha = np.where(valid_mask, np.uint8(255), np.uint8(0))
 
-    # Create RGBA image
-    colored = np.zeros((height, width, 4), dtype=np.uint8)
-
-    for i in range(height):
-        for j in range(width):
-            if valid_mask[i, j]:
-                val = int(normalized[i, j])
-                colored[i, j] = [val, val, val, 255]  # Grayscale
-            else:
-                colored[i, j] = [0, 0, 0, 0]  # Transparent
+    # Stack R = G = B = gray, plus alpha channel
+    colored = np.stack([gray, gray, gray, alpha], axis=-1)
 
     img = Image.fromarray(colored, mode='RGBA')
     buffer = io.BytesIO()
@@ -209,54 +295,24 @@ def single_band_to_image(band_data: np.ndarray, band_name: str = 'Band', smooth:
 
 def rgb_composite_to_image(red: np.ndarray, green: np.ndarray, blue: np.ndarray, smooth: bool = False) -> str:
     """
-    Create RGB composite image with transparency
-
-    Args:
-        red, green, blue: Band arrays
-        smooth: Apply Gaussian smoothing filter
-
-    Returns:
-        Base64 encoded PNG image
+    RGB composite (true color or false color) as RGBA PNG. Vectorized.
     """
-    # Apply smoothing if requested
     if smooth:
         red = apply_smooth_filter(red, sigma=1.5)
         green = apply_smooth_filter(green, sigma=1.5)
         blue = apply_smooth_filter(blue, sigma=1.5)
 
-    height, width = red.shape
+    valid_mask = (
+        ~np.isnan(red) & ~np.isnan(green) & ~np.isnan(blue)
+        & (red != 0) & (green != 0) & (blue != 0)
+    )
 
-    # Create mask for valid data
-    valid_mask = ~np.isnan(red) & ~np.isnan(green) & ~np.isnan(blue) & \
-                 (red != 0) & (green != 0) & (blue != 0)
+    r = _normalize_to_uint8(red, valid_mask)
+    g = _normalize_to_uint8(green, valid_mask)
+    b = _normalize_to_uint8(blue, valid_mask)
+    alpha = np.where(valid_mask, np.uint8(255), np.uint8(0))
 
-    # Normalize each band
-    def normalize_band(band):
-        norm = np.zeros_like(band, dtype=np.float32)
-        if np.any(valid_mask):
-            valid_data = band[valid_mask]
-            vmin, vmax = np.percentile(valid_data, [2, 98])
-            norm[valid_mask] = np.clip((band[valid_mask] - vmin) / (vmax - vmin) * 255, 0, 255)
-        return norm
-
-    r_norm = normalize_band(red)
-    g_norm = normalize_band(green)
-    b_norm = normalize_band(blue)
-
-    # Create RGBA image
-    colored = np.zeros((height, width, 4), dtype=np.uint8)
-
-    for i in range(height):
-        for j in range(width):
-            if valid_mask[i, j]:
-                colored[i, j] = [
-                    int(r_norm[i, j]),
-                    int(g_norm[i, j]),
-                    int(b_norm[i, j]),
-                    255
-                ]
-            else:
-                colored[i, j] = [0, 0, 0, 0]
+    colored = np.stack([r, g, b, alpha], axis=-1)
 
     img = Image.fromarray(colored, mode='RGBA')
     buffer = io.BytesIO()
@@ -267,52 +323,44 @@ def rgb_composite_to_image(red: np.ndarray, green: np.ndarray, blue: np.ndarray,
 
 def ndvi_to_image(ndvi: np.ndarray, colormap: str = 'RdYlGn', smooth: bool = False) -> str:
     """
-    Convert NDVI array to colored image with transparency and encode as base64
-
-    Args:
-        ndvi: NDVI array (with NaN for no-data areas)
-        colormap: Matplotlib colormap name
-        smooth: Apply Gaussian smoothing filter
-
-    Returns:
-        Base64 encoded PNG image with alpha channel
+    Convert NDVI array to colored RGBA PNG with the brown→yellow→green gradient.
+    Vectorized: uses 3 boolean masks instead of per-pixel loops.
     """
-    # Apply smoothing if requested
     if smooth:
         ndvi = apply_smooth_filter(ndvi, sigma=1.5)
 
-    height, width = ndvi.shape
-
-    # Create mask for valid data (non-NaN and non-zero)
     valid_mask = ~np.isnan(ndvi) & (ndvi != 0)
 
-    # Normalize NDVI to 0-255 range
-    ndvi_normalized = np.zeros_like(ndvi, dtype=np.float32)
-    ndvi_normalized[valid_mask] = (ndvi[valid_mask] + 1) / 2 * 255
-    ndvi_normalized = ndvi_normalized.astype(np.uint8)
+    # Map NDVI [-1, 1] → [0, 255] for valid pixels
+    val = np.zeros_like(ndvi, dtype=np.float32)
+    val[valid_mask] = (ndvi[valid_mask] + 1.0) / 2.0 * 255.0
+    val = val.astype(np.uint8)
 
-    # Create RGBA image (with alpha channel for transparency)
-    colored = np.zeros((height, width, 4), dtype=np.uint8)
+    r = np.zeros_like(val)
+    g = np.zeros_like(val)
+    b = np.zeros_like(val)
 
-    # Simple green-yellow-red gradient for valid pixels
-    for i in range(height):
-        for j in range(width):
-            if valid_mask[i, j]:
-                val = ndvi_normalized[i, j]
-                if val < 85:  # Low NDVI - brown/red
-                    colored[i, j] = [min(139 + val, 255), 69, 19, 255]
-                elif val < 170:  # Medium NDVI - yellow/green
-                    colored[i, j] = [max(255 - val, 0), 255, 0, 255]
-                else:  # High NDVI - green
-                    colored[i, j] = [0, val, 0, 255]
-            else:
-                # Transparent for invalid pixels
-                colored[i, j] = [0, 0, 0, 0]
+    # Tier 1: low NDVI (val < 85) — brown shades
+    m1 = valid_mask & (val < 85)
+    r[m1] = np.minimum(139 + val[m1].astype(np.int16), 255).astype(np.uint8)
+    g[m1] = 69
+    b[m1] = 19
 
-    # Convert to PIL Image with alpha channel
+    # Tier 2: mid NDVI (85 ≤ val < 170) — yellow → green
+    m2 = valid_mask & (val >= 85) & (val < 170)
+    r[m2] = np.maximum(255 - val[m2].astype(np.int16), 0).astype(np.uint8)
+    g[m2] = 255
+    # b stays 0
+
+    # Tier 3: high NDVI (val ≥ 170) — green shades
+    m3 = valid_mask & (val >= 170)
+    g[m3] = val[m3]
+    # r and b stay 0
+
+    alpha = np.where(valid_mask, np.uint8(255), np.uint8(0))
+    colored = np.stack([r, g, b, alpha], axis=-1)
+
     img = Image.fromarray(colored, mode='RGBA')
-
-    # Encode as base64 PNG
     buffer = io.BytesIO()
     img.save(buffer, format='PNG')
     buffer.seek(0)
@@ -508,10 +556,14 @@ def calculate_index(request: CalculateIndexRequest):
             elevation_data=elevation_data
         )
 
+    except HTTPException:
+        raise
     except FileNotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Processing error: {str(e)}")
+        logger.warning("calculate_index: missing file: %s", e)
+        raise HTTPException(status_code=404, detail="Required Sentinel-2 file not found")
+    except Exception:
+        logger.exception("calculate_index: unexpected error")
+        raise HTTPException(status_code=500, detail="Internal processing error")
 
 
 @app.get("/health")
@@ -525,11 +577,20 @@ def health_check():
 # ========================================
 
 class ExperimentRequest(BaseModel):
-    field_id: str
-    coordinates: List[Coordinate]
+    field_id: str = Field(..., min_length=1, max_length=200)
+    coordinates: List[Coordinate] = Field(..., min_length=3)
     experiment_type: str
     parameters: dict
     product_name: Optional[str] = None
+
+    @field_validator("product_name")
+    @classmethod
+    def validate_product_name(cls, v: Optional[str]) -> Optional[str]:
+        if v is None or v == "":
+            return None
+        if not SAFE_PRODUCT_PATTERN.match(v):
+            raise ValueError("Invalid Sentinel-2 product name")
+        return v
 
 
 class ExperimentResult(BaseModel):
@@ -543,9 +604,9 @@ class ExperimentResult(BaseModel):
 
 
 @app.post("/api/experiments/run")
-async def run_experiment(request: ExperimentRequest):
+def run_experiment(request: ExperimentRequest):
     """Run an image processing experiment on a field"""
-    from datetime import datetime
+    from datetime import datetime, timezone
     from scipy.ndimage import median_filter, gaussian_filter
     from scipy.ndimage import sobel, laplace
     from skimage import filters
@@ -768,12 +829,15 @@ async def run_experiment(request: ExperimentRequest):
             parameters=request.parameters,
             image_base64=image_base64,
             statistics=statistics,
-            timestamp=datetime.utcnow().isoformat(),
+            timestamp=datetime.now(timezone.utc).isoformat(),
             product_used=product_path.name
         )
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Experiment error: {str(e)}")
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("run_experiment: unexpected error")
+        raise HTTPException(status_code=500, detail="Internal experiment error")
 
 
 # ========================================
@@ -781,13 +845,22 @@ async def run_experiment(request: ExperimentRequest):
 # ========================================
 
 class ClassificationRequest(BaseModel):
-    field_id: str
-    coordinates: List[Coordinate]
+    field_id: str = Field(..., min_length=1, max_length=200)
+    coordinates: List[Coordinate] = Field(..., min_length=3)
     method: str  # 'supervised', 'unsupervised', 'threshold'
     crop_type: Optional[str] = 'multi'  # 'soja', 'milho', 'cafe', 'cana', 'multi'
-    n_classes: int = 3
+    n_classes: int = Field(default=3, ge=2, le=6)
     indices: dict = {'ndvi': True, 'evi': True, 'savi': True}
     product_name: Optional[str] = None
+
+    @field_validator("product_name")
+    @classmethod
+    def validate_product_name(cls, v: Optional[str]) -> Optional[str]:
+        if v is None or v == "":
+            return None
+        if not SAFE_PRODUCT_PATTERN.match(v):
+            raise ValueError("Invalid Sentinel-2 product name")
+        return v
 
 
 class CropClass(BaseModel):
@@ -809,9 +882,9 @@ class ClassificationResult(BaseModel):
 
 
 @app.post("/api/classification/classify")
-async def classify_crops(request: ClassificationRequest):
+def classify_crops(request: ClassificationRequest):
     """Classify crop types in agricultural fields"""
-    from datetime import datetime
+    from datetime import datetime, timezone
     from sklearn.cluster import KMeans
     from sklearn.ensemble import RandomForestClassifier
     import cv2
@@ -833,7 +906,7 @@ async def classify_crops(request: ClassificationRequest):
             nir_band, nir_meta = processor.read_band('B08', '10m')
             red_cropped, _ = processor.crop_to_geometry(red_band, red_meta, polygon)
             nir_cropped, _ = processor.crop_to_geometry(nir_band, nir_meta, polygon)
-            ndvi = processor.calculate_ndvi(red_cropped, nir_cropped)
+            ndvi = processor.calculate_ndvi(nir_cropped, red_cropped)
             indices_data.append(ndvi)
             indices_names.append('NDVI')
 
@@ -846,7 +919,7 @@ async def classify_crops(request: ClassificationRequest):
 
             blue_band, blue_meta = processor.read_band('B02', '10m')
             blue_cropped, _ = processor.crop_to_geometry(blue_band, blue_meta, polygon)
-            evi = processor.calculate_evi(red_cropped, nir_cropped, blue_cropped)
+            evi = processor.calculate_evi(nir_cropped, red_cropped, blue_cropped)
             indices_data.append(evi)
             indices_names.append('EVI')
 
@@ -857,7 +930,7 @@ async def classify_crops(request: ClassificationRequest):
                 red_cropped, _ = processor.crop_to_geometry(red_band, red_meta, polygon)
                 nir_cropped, _ = processor.crop_to_geometry(nir_band, nir_meta, polygon)
 
-            savi = processor.calculate_savi(red_cropped, nir_cropped)
+            savi = processor.calculate_savi(nir_cropped, red_cropped)
             indices_data.append(savi)
             indices_names.append('SAVI')
 
@@ -1039,9 +1112,12 @@ async def classify_crops(request: ClassificationRequest):
             classes=classes,
             image_base64=image_base64,
             statistics=statistics,
-            timestamp=datetime.utcnow().isoformat(),
+            timestamp=datetime.now(timezone.utc).isoformat(),
             product_used=product_path.name
         )
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Classification error: {str(e)}")
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("classify_crops: unexpected error")
+        raise HTTPException(status_code=500, detail="Internal classification error")

@@ -13,7 +13,7 @@ interface ExperimentDialogProps {
   experimentType: string;
   experimentTitle: string;
   experimentDescription: string;
-  onRun: (params: Record<string, any>) => Promise<void>;
+  onRun: (params: Record<string, number>) => Promise<void>;
 }
 
 export function ExperimentDialog({
@@ -25,7 +25,7 @@ export function ExperimentDialog({
   onRun,
 }: ExperimentDialogProps) {
   const [running, setRunning] = useState(false);
-  const [parameters, setParameters] = useState<Record<string, any>>({});
+  const [parameters, setParameters] = useState<Record<string, number>>({});
 
   const getParameterConfig = () => {
     switch (experimentType) {
@@ -74,7 +74,7 @@ export function ExperimentDialog({
   const handleRun = async () => {
     setRunning(true);
     try {
-      const params: Record<string, any> = {};
+      const params: Record<string, number> = {};
       paramConfig.forEach(param => {
         params[param.name] = parameters[param.name] ?? param.default;
       });

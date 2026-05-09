@@ -123,8 +123,6 @@ export default function ClassificationPage() {
     }
   };
 
-  const selectedField = fields.find((f) => f.id === selectedFieldId);
-
   return (
     <div className="flex w-screen h-screen overflow-hidden">
       {/* Left side - Controls and Results (50%) */}
@@ -378,12 +376,16 @@ export default function ClassificationPage() {
             fields={fields}
             selectedFieldId={selectedFieldId}
             onFieldClick={setSelectedFieldId}
-            indexResult={classificationResult ? {
-              statistics: classificationResult.statistics as any,
-              histogram: { bins: [], counts: [] },
-              image_base64: classificationResult.image_base64,
-              product_used: classificationResult.product_used,
-            } : null}
+            indexResult={
+              classificationResult
+                ? {
+                    kind: 'classification',
+                    statistics: classificationResult.statistics,
+                    image_base64: classificationResult.image_base64,
+                    product_used: classificationResult.product_used,
+                  }
+                : null
+            }
             indexType="CLASSIFICATION"
             onNewField={() => {}}
           />

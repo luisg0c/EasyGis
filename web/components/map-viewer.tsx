@@ -1,38 +1,22 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
 import 'leaflet-draw';
-import { KMLField } from '@/types';
+import { KMLField, MapOverlayResult } from '@/types';
 import { IndexType } from '@/lib/spectral-indices';
+import { escapeHtml } from '@/lib/utils';
 import { GeoSearchControl, OpenStreetMapProvider } from 'leaflet-geosearch';
 import 'leaflet-geosearch/dist/geosearch.css';
-
-interface IndexResult {
-  statistics: {
-    min: number;
-    max: number;
-    mean: number;
-    median: number;
-    std: number;
-    count: number;
-  };
-  histogram: {
-    bins: number[];
-    counts: number[];
-  };
-  image_base64: string;
-  product_used: string;
-}
 
 interface MapViewerProps {
   fields: KMLField[];
   selectedFieldId?: string;
   onFieldClick?: (fieldId: string) => void;
-  indexResult?: IndexResult | null;
-  indexType?: IndexType;
+  indexResult?: MapOverlayResult | null;
+  indexType?: IndexType | 'CLASSIFICATION';
   onNewField?: (coordinates: { latitude: number; longitude: number }[]) => void;
 }
 
@@ -82,8 +66,13 @@ export function MapViewer({ fields, selectedFieldId, onFieldClick, indexResult, 
 
     // Add search control
     const provider = new OpenStreetMapProvider();
-    const searchControl = new (GeoSearchControl as any)({
-      provider: provider,
+    // leaflet-geosearch's typings export the control as a value, not a constructor;
+    // this assertion narrows it to the actual class signature.
+    const SearchCtrl = GeoSearchControl as unknown as new (
+      opts: Record<string, unknown>
+    ) => L.Control;
+    const searchControl = new SearchCtrl({
+      provider,
       style: 'bar',
       showMarker: true,
       showPopup: false,
@@ -148,14 +137,14 @@ export function MapViewer({ fields, selectedFieldId, onFieldClick, indexResult, 
 
     const map = mapRef.current;
 
-    const handleDrawCreated = (event: any) => {
-      const layer = event.layer;
+    const handleDrawCreated = (event: L.LeafletEvent) => {
+      const drawEvent = event as L.DrawEvents.Created;
+      const layer = drawEvent.layer;
       drawnItemsRef.current.addLayer(layer);
 
-      // Extract coordinates
       if (layer instanceof L.Polygon || layer instanceof L.Rectangle) {
         const latLngs = layer.getLatLngs()[0] as L.LatLng[];
-        const coordinates = latLngs.map((latLng: L.LatLng) => ({
+        const coordinates = latLngs.map((latLng) => ({
           latitude: latLng.lat,
           longitude: latLng.lng,
         }));
@@ -203,8 +192,8 @@ export function MapViewer({ fields, selectedFieldId, onFieldClick, indexResult, 
       // Basic popup - will be updated when index is available
       polygon.bindPopup(`
         <div class="p-3 min-w-[280px]">
-          <h3 class="font-bold text-lg mb-2">${field.name}</h3>
-          <p class="text-sm text-gray-600">Field ID: ${field.id}</p>
+          <h3 class="font-bold text-lg mb-2">${escapeHtml(field.name)}</h3>
+          <p class="text-sm text-gray-600">Field ID: ${escapeHtml(field.id)}</p>
           <p class="text-xs text-gray-500 mt-1">Click to select field</p>
         </div>
       `);
@@ -284,94 +273,114 @@ export function MapViewer({ fields, selectedFieldId, onFieldClick, indexResult, 
 
       // Update popup with index information
       const field = selectedField;
-      const stats = indexResult.statistics;
-
-      // Determine stress level based on NDVI value
-      const avgNDVI = stats.mean;
-      let stressLevel = 'Unknown';
-      let stressColor = '#6b7280';
-      let stressIconSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>';
-
-      if (indexType === 'NDVI') {
-        if (avgNDVI < 0.2) {
-          stressLevel = 'Severe Stress';
-          stressColor = '#dc2626';
-          stressIconSvg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="#dc2626"><circle cx="12" cy="12" r="10"/></svg>';
-        } else if (avgNDVI < 0.4) {
-          stressLevel = 'Moderate Stress';
-          stressColor = '#ea580c';
-          stressIconSvg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="#ea580c"><circle cx="12" cy="12" r="10"/></svg>';
-        } else if (avgNDVI < 0.6) {
-          stressLevel = 'Mild Stress';
-          stressColor = '#ca8a04';
-          stressIconSvg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="#ca8a04"><circle cx="12" cy="12" r="10"/></svg>';
-        } else {
-          stressLevel = 'Healthy';
-          stressColor = '#16a34a';
-          stressIconSvg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="#16a34a"><circle cx="12" cy="12" r="10"/></svg>';
-        }
-      }
-
-      // Get current date for "Identified" field
-      const identifiedDate = new Date().toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric'
-      });
 
       const calendarIcon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>';
       const folderIcon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>';
-      const bellOffIcon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6.3 5.3a10.8 10.8 0 0 0-.3 6.6c.3 1.7.8 3.5 1.4 5.3 1.3.5 2.8.9 4.4.9s3-.3 4.4-.9c.6-1.8 1-3.6 1.4-5.3.1-2.2-.2-4.4-.3-6.6"></path><path d="m2 2 20 20"></path><path d="M8.7 8.7a2 2 0 0 0 2.8 2.8"></path></svg>';
-      const trashIcon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>';
       const closeIcon = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
 
-      selectedPolygon.bindPopup(`
-        <div class="p-4 min-w-[320px] font-sans">
-          <div class="flex justify-between items-start mb-3">
-            <h3 class="font-bold text-xl">${stressLevel}</h3>
-            <button class="text-gray-400 hover:text-gray-600" onclick="this.closest('.leaflet-popup').style.display='none'">${closeIcon}</button>
-          </div>
+      const identifiedDate = new Date().toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+      });
 
-          <div class="text-sm text-gray-500 mb-3">
-            ${field.id}
-          </div>
+      // Build popup tailored to the kind of overlay being shown.
+      let popupHtml: string;
 
-          <div class="flex items-center gap-2 text-sm mb-4 text-gray-600">
-            <span class="text-gray-500">Identified:</span>
-            <span class="flex items-center gap-1">${calendarIcon} ${identifiedDate}</span>
-          </div>
-
-          <div class="bg-gray-50 rounded-lg p-3 mb-3">
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-gray-600">Area</span>
-              <span class="text-sm font-medium">${field.coordinates.length} points</span>
+      if (indexResult.kind === 'classification') {
+        // Classification overlay: show area breakdown, no spectral stress level.
+        const cstats = indexResult.statistics;
+        popupHtml = `
+          <div class="p-4 min-w-[320px] font-sans">
+            <div class="flex justify-between items-start mb-3">
+              <h3 class="font-bold text-xl">Classification</h3>
+              <span class="text-gray-300">${closeIcon}</span>
             </div>
-            <div class="flex items-center justify-between mt-2">
-              <span class="text-sm text-gray-600">${indexType}:</span>
-              <span class="text-lg font-bold flex items-center gap-2" style="color: ${stressColor}">${stressIconSvg} ${avgNDVI.toFixed(2)}</span>
+            <div class="text-sm text-gray-500 mb-3">${escapeHtml(field.id)}</div>
+            <div class="flex items-center gap-2 text-sm mb-4 text-gray-600">
+              <span class="text-gray-500">Identified:</span>
+              <span class="flex items-center gap-1">${calendarIcon} ${escapeHtml(identifiedDate)}</span>
+            </div>
+            <div class="bg-gray-50 rounded-lg p-3 mb-3">
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-gray-600">Total area (ha)</span>
+                <span class="text-sm font-medium">${cstats.total_area.toFixed(2)}</span>
+              </div>
+              <div class="flex items-center justify-between mt-2">
+                <span class="text-sm text-gray-600">Classified (ha)</span>
+                <span class="text-sm font-medium">${cstats.classified_area.toFixed(2)}</span>
+              </div>
+              <div class="flex items-center justify-between mt-2">
+                <span class="text-sm text-gray-600">Unclassified (%)</span>
+                <span class="text-sm font-medium">${cstats.unclassified_percentage.toFixed(1)}</span>
+              </div>
             </div>
           </div>
+        `;
+      } else {
+        // Spectral overlay: NDVI / EVI / SAVI / RGB / band visualization.
+        const stats = indexResult.statistics;
+        const avgNDVI = stats.mean;
 
-          <details class="mb-3">
-            <summary class="cursor-pointer text-sm font-medium text-gray-700 flex items-center gap-2 py-2">
-              ${folderIcon} <span>Soil Issue</span>
-            </summary>
-            <div class="pl-6 pt-2 text-sm text-gray-600">
-              <p>Status: ${stressLevel}</p>
-              <p>Range: ${stats.min.toFixed(2)} - ${stats.max.toFixed(2)}</p>
-              <p>Std Dev: ${stats.std.toFixed(3)}</p>
+        let stressLevel = 'Unknown';
+        let stressColor = '#6b7280';
+        let stressIconSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>';
+
+        if (indexType === 'NDVI') {
+          if (avgNDVI < 0.2) {
+            stressLevel = 'Severe Stress';
+            stressColor = '#dc2626';
+            stressIconSvg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="#dc2626"><circle cx="12" cy="12" r="10"/></svg>';
+          } else if (avgNDVI < 0.4) {
+            stressLevel = 'Moderate Stress';
+            stressColor = '#ea580c';
+            stressIconSvg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="#ea580c"><circle cx="12" cy="12" r="10"/></svg>';
+          } else if (avgNDVI < 0.6) {
+            stressLevel = 'Mild Stress';
+            stressColor = '#ca8a04';
+            stressIconSvg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="#ca8a04"><circle cx="12" cy="12" r="10"/></svg>';
+          } else {
+            stressLevel = 'Healthy';
+            stressColor = '#16a34a';
+            stressIconSvg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="#16a34a"><circle cx="12" cy="12" r="10"/></svg>';
+          }
+        }
+
+        popupHtml = `
+          <div class="p-4 min-w-[320px] font-sans">
+            <div class="flex justify-between items-start mb-3">
+              <h3 class="font-bold text-xl">${escapeHtml(stressLevel)}</h3>
+              <span class="text-gray-300">${closeIcon}</span>
             </div>
-          </details>
-
-          <div class="flex gap-2 pt-2 border-t">
-            <button class="flex-1 flex items-center justify-center gap-2 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded transition-colors">
-              ${bellOffIcon} <span>Mute</span>
-            </button>
-            <button class="flex-1 flex items-center justify-center gap-2 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded transition-colors">
-              ${trashIcon} <span>Delete</span>
-            </button>
+            <div class="text-sm text-gray-500 mb-3">${escapeHtml(field.id)}</div>
+            <div class="flex items-center gap-2 text-sm mb-4 text-gray-600">
+              <span class="text-gray-500">Identified:</span>
+              <span class="flex items-center gap-1">${calendarIcon} ${escapeHtml(identifiedDate)}</span>
+            </div>
+            <div class="bg-gray-50 rounded-lg p-3 mb-3">
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-gray-600">Area</span>
+                <span class="text-sm font-medium">${field.coordinates.length} points</span>
+              </div>
+              <div class="flex items-center justify-between mt-2">
+                <span class="text-sm text-gray-600">${escapeHtml(indexType ?? '')}:</span>
+                <span class="text-lg font-bold flex items-center gap-2" style="color: ${stressColor}">${stressIconSvg} ${avgNDVI.toFixed(2)}</span>
+              </div>
+            </div>
+            <details class="mb-3">
+              <summary class="cursor-pointer text-sm font-medium text-gray-700 flex items-center gap-2 py-2">
+                ${folderIcon} <span>Details</span>
+              </summary>
+              <div class="pl-6 pt-2 text-sm text-gray-600">
+                <p>Status: ${escapeHtml(stressLevel)}</p>
+                <p>Range: ${stats.min.toFixed(2)} - ${stats.max.toFixed(2)}</p>
+                <p>Std Dev: ${stats.std.toFixed(3)}</p>
+              </div>
+            </details>
           </div>
-        </div>
-      `);
+        `;
+      }
+
+      selectedPolygon.bindPopup(popupHtml);
     }
 
   }, [indexResult, selectedFieldId, fields, indexType]);

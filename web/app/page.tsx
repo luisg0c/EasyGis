@@ -12,7 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { KMLField } from '@/types';
 import { IndexType } from '@/lib/spectral-indices';
-import { Grid3x3, Wheat, Activity, MapPin, Settings, HelpCircle, User, Search, BookOpen, Layers } from 'lucide-react';
+import { Grid3x3, Wheat, Activity, MapPin, Settings, HelpCircle, User, BookOpen, Layers } from 'lucide-react';
 import Link from 'next/link';
 
 const MapViewer = dynamic(() => import('@/components/map-viewer').then(mod => ({ default: mod.MapViewer })), {
@@ -25,36 +25,25 @@ const Terrain3DViewer = dynamic(() => import('@/components/terrain-3d-viewer').t
   loading: () => <div className="flex items-center justify-center h-full"><p className="text-muted-foreground">Loading 3D view...</p></div>
 });
 
+import type { SpectralStatistics, ElevationData, MapOverlayResult } from '@/types';
+
 interface IndexResult {
-  statistics: {
-    min: number;
-    max: number;
-    mean: number;
-    median: number;
-    std: number;
-    count: number;
-  };
+  statistics: SpectralStatistics;
   histogram: {
     bins: number[];
     counts: number[];
   };
   image_base64: string;
   product_used: string;
-  elevation_data?: {
-    width: number;
-    height: number;
-    heights: number[];
-    min_value: number;
-    max_value: number;
-  };
+  elevation_data?: ElevationData;
 }
 
 interface ExperimentResult {
   field_id: string;
   experiment_type: string;
-  parameters: Record<string, any>;
+  parameters: Record<string, unknown>;
   image_base64: string;
-  statistics: Record<string, any>;
+  statistics: Record<string, unknown>;
   timestamp: string;
   product_used: string;
 }
@@ -101,19 +90,25 @@ export default function Home() {
   };
 
   const handleNewField = (coordinates: { latitude: number; longitude: number }[]) => {
-    // Generate a temporary ID for the new field
+    // Compute bounds from the drawn polygon (required by KMLField).
+    const lats = coordinates.map((c) => c.latitude);
+    const lons = coordinates.map((c) => c.longitude);
+
     const newFieldId = `field-${Date.now()}`;
     const newField: KMLField = {
       id: newFieldId,
       name: `New Field ${fields.length + 1}`,
-      coordinates: coordinates,
+      coordinates,
+      bounds: {
+        north: Math.max(...lats),
+        south: Math.min(...lats),
+        east: Math.max(...lons),
+        west: Math.min(...lons),
+      },
     };
 
-    // Add to fields list
     setFields([...fields, newField]);
     setSelectedFieldId(newFieldId);
-
-    console.log('New field created:', newField);
   };
 
   const calculateIndex = async () => {
@@ -167,7 +162,7 @@ export default function Home() {
     setExperimentDialogOpen(true);
   };
 
-  const handleRunExperiment = async (parameters: Record<string, any>) => {
+  const handleRunExperiment = async (parameters: Record<string, number>) => {
     if (!selectedFieldId || !selectedExperiment) return;
 
     const field = fields.find((f) => f.id === selectedFieldId);
@@ -207,8 +202,6 @@ export default function Home() {
       console.error('Error running experiment:', err);
     }
   };
-
-  const selectedField = fields.find((f) => f.id === selectedFieldId);
 
   return (
     <div className="flex w-screen h-screen overflow-hidden">
@@ -387,26 +380,28 @@ export default function Home() {
                   <div className="text-xs font-medium mb-1">{experimentResult.experiment_type.replace(/_/g, ' ').toUpperCase()}</div>
                   <div className="text-xs text-muted-foreground">
                     {Object.entries(experimentResult.parameters).map(([key, value]) => (
-                      <div key={key}>{key}: {typeof value === 'number' ? value.toFixed(2) : value}</div>
+                      <div key={key}>
+                        {key}: {typeof value === 'number' ? value.toFixed(2) : String(value ?? '')}
+                      </div>
                     ))}
                   </div>
                 </div>
                 <div className="space-y-2">
                   <div className="text-xs text-muted-foreground">Statistics</div>
                   <div className="grid grid-cols-3 gap-2">
-                    {experimentResult.statistics.mean !== undefined && (
+                    {typeof experimentResult.statistics.mean === 'number' && (
                       <div className="p-2 border rounded">
                         <div className="text-xs text-muted-foreground">Mean</div>
                         <div className="text-sm font-medium">{experimentResult.statistics.mean.toFixed(3)}</div>
                       </div>
                     )}
-                    {experimentResult.statistics.min !== undefined && (
+                    {typeof experimentResult.statistics.min === 'number' && (
                       <div className="p-2 border rounded">
                         <div className="text-xs text-muted-foreground">Min</div>
                         <div className="text-sm font-medium">{experimentResult.statistics.min.toFixed(3)}</div>
                       </div>
                     )}
-                    {experimentResult.statistics.max !== undefined && (
+                    {typeof experimentResult.statistics.max === 'number' && (
                       <div className="p-2 border rounded">
                         <div className="text-xs text-muted-foreground">Max</div>
                         <div className="text-sm font-medium">{experimentResult.statistics.max.toFixed(3)}</div>
@@ -597,13 +592,29 @@ export default function Home() {
               fields={fields}
               selectedFieldId={selectedFieldId}
               onFieldClick={setSelectedFieldId}
-              indexResult={experimentResult ? {
-                statistics: experimentResult.statistics,
-                histogram: { bins: [], counts: [] },
-                image_base64: experimentResult.image_base64,
-                product_used: experimentResult.product_used,
-              } : indexResult}
-              indexType={experimentResult ? 'EXPERIMENT' as IndexType : selectedIndex}
+              indexResult={
+                experimentResult
+                  ? ({
+                      kind: 'spectral',
+                      // Experiments don't share the strict spectral schema; coerce
+                      // numeric stats to keep the popup happy and skip what we don't have.
+                      statistics: {
+                        min: Number(experimentResult.statistics.min ?? 0),
+                        max: Number(experimentResult.statistics.max ?? 0),
+                        mean: Number(experimentResult.statistics.mean ?? 0),
+                        median: Number(experimentResult.statistics.median ?? 0),
+                        std: Number(experimentResult.statistics.std ?? 0),
+                        count: Number(experimentResult.statistics.count ?? 0),
+                      },
+                      histogram: { bins: [], counts: [] },
+                      image_base64: experimentResult.image_base64,
+                      product_used: experimentResult.product_used,
+                    } satisfies MapOverlayResult)
+                  : indexResult
+                  ? ({ kind: 'spectral', ...indexResult } satisfies MapOverlayResult)
+                  : null
+              }
+              indexType={experimentResult ? ('EXPERIMENT' as IndexType) : selectedIndex}
               onNewField={handleNewField}
             />
           )
