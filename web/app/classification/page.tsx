@@ -116,7 +116,7 @@ export default function ClassificationPage() {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:8000/api/classification/classify', {
+      const response = await fetch('http://localhost:8001/api/classification/classify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -157,13 +157,14 @@ export default function ClassificationPage() {
           <Link href="/">
             <button className="editorial-link flex items-center gap-1.5 font-mono text-[11px] tracking-widest uppercase text-smoke hover:text-moss-900">
               <ArrowLeft className="h-3 w-3" strokeWidth={2} />
-              Back to Atlas
+              Back to dashboard
             </button>
           </Link>
-          <p className="editorial-eyebrow mt-5">— Section II / Classification —</p>
-          <h1 className="mt-2 font-display text-[40px] leading-[0.95] tracking-tight text-moss-950">
-            A taxonomy
-            <span className="italic text-moss-700"> of plots</span>
+          <p className="editorial-eyebrow mt-5">— Module · Classification</p>
+          <h1 className="mt-2 font-display text-[42px] font-extrabold leading-[0.95] tracking-tight text-moss-950">
+            Plot
+            <br />
+            <span className="text-moss-700">classification.</span>
           </h1>
           <p className="mt-3 max-w-md text-[13px] leading-relaxed text-smoke">
             Partition agricultural plots into vigor zones, spectral clusters, or crop signatures —
@@ -207,7 +208,7 @@ export default function ClassificationPage() {
                     }`}
                   >
                     <div className="flex items-baseline justify-between">
-                      <p className="font-display text-lg italic">{m.label}</p>
+                      <p className="font-display text-base font-bold tracking-tight">{m.label}</p>
                       <span
                         className={`font-mono text-[10px] tracking-widest uppercase ${
                           method === m.value ? 'text-moss-300' : 'text-stone'
@@ -382,7 +383,7 @@ export default function ClassificationPage() {
         {/* Footer */}
         <footer className="border-t border-moss-100 px-8 py-3">
           <p className="font-mono text-[10px] tracking-widest text-stone">
-            ICEV · Remote Sensing Atlas · 2026.1
+            EasyGis · Sentinel-2 · 2026.1
           </p>
         </footer>
       </section>
@@ -417,8 +418,8 @@ export default function ClassificationPage() {
         ) : (
           <div className="flex h-full items-center justify-center bg-paper-grain">
             <div className="max-w-sm text-center px-6">
-              <p className="editorial-eyebrow text-stone">— No plots indexed —</p>
-              <h2 className="mt-3 font-display text-2xl italic text-moss-900">Empty atlas</h2>
+              <p className="editorial-eyebrow text-stone">— No plots loaded —</p>
+              <h2 className="mt-3 font-display text-2xl font-bold text-moss-900">Nothing to classify</h2>
               <p className="mt-2 text-[13px] leading-relaxed text-smoke">
                 Place KML files in <span className="font-mono text-[12px]">data/KML Fields/</span>{' '}
                 to begin classification.

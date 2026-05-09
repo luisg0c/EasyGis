@@ -28,7 +28,7 @@ export function IndexLegend({ indexType, statistics }: IndexLegendProps) {
       {/* Header — index identity */}
       <div className="border-b border-moss-100 px-4 py-3.5">
         <p className="editorial-eyebrow text-stone">{indexType}</p>
-        <h3 className="mt-1 font-display text-[19px] italic leading-tight text-moss-950">
+        <h3 className="mt-1 font-display text-[16px] font-bold leading-tight tracking-tight text-moss-950">
           {index.name}
         </h3>
         <p className="mt-1.5 text-[12px] leading-relaxed text-smoke">{index.description}</p>

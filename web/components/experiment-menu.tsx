@@ -94,7 +94,7 @@ export function ExperimentMenu({ onSelectExperiment }: ExperimentMenuProps) {
                 <span className="font-mono text-[10px] tabular-nums tracking-widest text-stone">
                   {cat.tag}
                 </span>
-                <p className="font-display text-[18px] italic text-moss-950">{cat.title}</p>
+                <p className="font-display text-[15px] font-bold tracking-tight text-moss-950">{cat.title}</p>
               </div>
               <div className="flex items-center gap-2">
                 <span className="font-mono text-[10px] tracking-widest text-stone">

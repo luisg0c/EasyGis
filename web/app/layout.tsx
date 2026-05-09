@@ -1,7 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Instrument_Serif, JetBrains_Mono } from "next/font/google";
+import { Geist, Manrope, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
+/**
+ * Geist Sans — body / UI. Clean, geometric humanist sans.
+ */
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -9,20 +12,19 @@ const geistSans = Geist({
 });
 
 /**
- * Instrument Serif — display font: characterful editorial serif with a beautiful
- * italic. Used for headings, eyebrow titles, and quote-like callouts.
+ * Manrope — display font. Modern, technical, geometric sans with a slight
+ * humanist edge. Heavier weights work as confident agritech display.
  */
-const instrumentSerif = Instrument_Serif({
-  variable: "--font-instrument-serif",
-  weight: "400",
-  style: ["normal", "italic"],
+const manrope = Manrope({
+  variable: "--font-manrope",
+  weight: ["500", "600", "700", "800"],
   subsets: ["latin"],
   display: "swap",
 });
 
 /**
- * JetBrains Mono — technical/data font. Used for stats, labels (small caps),
- * coordinates, and code-like surfaces.
+ * JetBrains Mono — technical/data font. Used for stats, coordinates, and
+ * numeric metadata.
  */
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains-mono",
@@ -32,22 +34,22 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "ICEV Remote Sensing Software",
-    template: "%s · ICEV Remote Sensing",
+    default: "EasyGis — Remote Sensing for Precision Agriculture",
+    template: "%s · EasyGis",
   },
   description:
     "Plataforma web de sensoriamento remoto para agricultura de precisão. Processa imagens Sentinel-2 sobre talhões agrícolas e calcula índices de vegetação (NDVI, EVI, SAVI, NDWI, NDBI).",
-  applicationName: "ICEV Remote Sensing Software",
+  applicationName: "EasyGis",
   keywords: [
     "sensoriamento remoto",
     "Sentinel-2",
     "NDVI",
     "agricultura de precisão",
-    "ICEV",
+    "EasyGis",
   ],
-  authors: [{ name: "Equipe ICEV Remote Sensing" }],
+  authors: [{ name: "EasyGis" }],
   openGraph: {
-    title: "ICEV Remote Sensing Software",
+    title: "EasyGis — Remote Sensing",
     description:
       "Plataforma de análise de imagens Sentinel-2 para agricultura de precisão.",
     type: "website",
@@ -69,7 +71,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body
-        className={`${geistSans.variable} ${instrumentSerif.variable} ${jetbrainsMono.variable} antialiased`}
+        className={`${geistSans.variable} ${manrope.variable} ${jetbrainsMono.variable} antialiased`}
       >
         {children}
       </body>

@@ -140,7 +140,7 @@ export default function Home() {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:8000/calculate-index', {
+      const response = await fetch('http://localhost:8001/calculate-index', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -185,7 +185,7 @@ export default function Home() {
     if (!field) return;
 
     try {
-      const response = await fetch('http://localhost:8000/api/experiments/run', {
+      const response = await fetch('http://localhost:8001/api/experiments/run', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -282,18 +282,26 @@ export default function Home() {
       <section className="flex w-[400px] flex-shrink-0 flex-col border-r border-moss-100 bg-cream-grain overflow-hidden">
         {/* Masthead */}
         <header className="border-b border-moss-100 px-7 py-5">
-          <div className="flex items-baseline justify-between">
-            <p className="editorial-eyebrow">— Vol. I, Issue 01 —</p>
-            <p className="font-mono text-[10px] tracking-[0.18em] text-stone">{today}</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="block h-2 w-2 rounded-full bg-lime ring-2 ring-lime/20" />
+              <p className="font-mono text-[10px] font-semibold tracking-widest uppercase text-moss-900">
+                EasyGis · v0.1
+              </p>
+            </div>
+            <p className="font-mono text-[10px] tracking-widest text-stone">{today}</p>
           </div>
-          <h1 className="mt-3 font-display text-[34px] leading-[0.95] tracking-tight text-moss-950">
-            Remote
-            <span className="italic text-moss-700"> Sensing </span>
-            Atlas
+
+          <h1 className="mt-5 font-display text-[40px] font-extrabold leading-[0.92] tracking-tight text-moss-950">
+            Precision
+            <br />
+            agriculture,
+            <br />
+            <span className="text-moss-700">satellite-fed.</span>
           </h1>
-          <p className="mt-2.5 max-w-[320px] text-[13px] leading-relaxed text-smoke">
-            Sentinel-2 imagery interpreted over agricultural plots — with a cartographer&rsquo;s
-            attention to detail.
+          <p className="mt-3 max-w-[320px] text-[13px] leading-relaxed text-smoke">
+            Sentinel-2 imagery, vegetation indices, and zone analytics over the plots
+            you actually manage.
           </p>
         </header>
 
@@ -445,7 +453,7 @@ export default function Home() {
                 <section>
                   <div className="mb-3 editorial-rule">Experiment Result</div>
                   <div className="border border-moss-100 bg-cream p-4 space-y-3">
-                    <p className="font-display text-lg italic text-moss-900">
+                    <p className="font-display text-base font-semibold tracking-tight text-moss-900 capitalize">
                       {experimentResult.experiment_type.replace(/_/g, ' ')}
                     </p>
                     <div className="space-y-1 font-mono text-[11px] text-smoke">
@@ -510,9 +518,9 @@ export default function Home() {
             <div className="editorial-rise space-y-7">
               <section>
                 <p className="editorial-eyebrow">— Laboratory</p>
-                <h2 className="mt-2 font-display text-[28px] leading-[1.05] text-moss-950">
-                  Image processing
-                  <span className="italic text-moss-700"> experiments</span>
+                <h2 className="mt-2 font-display text-[30px] font-extrabold leading-none tracking-tight text-moss-950">
+                  Image processing<br />
+                  <span className="text-moss-700">experiments</span>
                 </h2>
                 <p className="mt-2 text-[13px] leading-relaxed text-smoke">
                   Apply filters, edge detectors, morphological operators and segmentation
@@ -561,8 +569,8 @@ export default function Home() {
 
         {/* Footer */}
         <footer className="border-t border-moss-100 px-7 py-3">
-          <p className="font-mono text-[10px] tracking-[0.16em] text-stone">
-            ICEV · Remote Sensing Atlas · 2026.1
+          <p className="font-mono text-[10px] tracking-widest text-stone">
+            EasyGis · Sentinel-2 · 2026.1
           </p>
         </footer>
       </section>
@@ -636,13 +644,13 @@ export default function Home() {
         ) : (
           <div className="flex h-full items-center justify-center bg-paper-grain">
             <div className="text-center max-w-sm px-6">
-              <p className="editorial-eyebrow text-stone">— No plots indexed —</p>
-              <h2 className="mt-3 font-display text-2xl italic text-moss-900">
-                Empty atlas
+              <p className="editorial-eyebrow text-stone">— No plots loaded —</p>
+              <h2 className="mt-3 font-display text-2xl font-bold text-moss-900">
+                No plots to display
               </h2>
               <p className="mt-2 text-[13px] leading-relaxed text-smoke">
                 Place KML files in <span className="font-mono text-[12px]">data/KML Fields/</span> or
-                draw a polygon directly on the map below to begin.
+                draw a polygon directly on the map to begin.
               </p>
             </div>
           </div>

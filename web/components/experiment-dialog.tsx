@@ -97,7 +97,7 @@ export function ExperimentDialog({
         {/* Editorial header */}
         <DialogHeader className="border-b border-moss-100 px-7 pb-5 pt-6 text-left">
           <p className="editorial-eyebrow text-stone">— Experiment Configuration</p>
-          <DialogTitle className="mt-2 font-display text-[26px] font-normal italic leading-[1.05] text-moss-950">
+          <DialogTitle className="mt-2 font-display text-[24px] font-extrabold tracking-tight leading-[1.05] text-moss-950">
             {experimentTitle}
           </DialogTitle>
           <DialogDescription className="mt-2 text-[13px] leading-relaxed text-smoke">
@@ -138,7 +138,7 @@ export function ExperimentDialog({
               );
             })
           ) : (
-            <p className="text-[13px] italic text-smoke">
+            <p className="font-mono text-[12px] tracking-wide text-smoke">
               This experiment runs with default parameters.
             </p>
           )}

@@ -12,7 +12,7 @@
   /* Type stack */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-jetbrains-mono);
-  --font-display: var(--font-instrument-serif);
+  --font-display: var(--font-manrope);
 
   /* Paleta — moss greens */
   --color-moss-950: #0E1F18;
@@ -144,11 +144,12 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* Display serif italic é a alma da identidade — preservar style */
+  /* Display: peso forte, tracking apertado — agritech profissional */
   .font-display {
-    font-family: var(--font-display), Georgia, serif;
-    font-feature-settings: "liga", "dlig", "salt";
-    letter-spacing: -0.02em;
+    font-family: var(--font-display), system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    font-feature-settings: "ss01", "ss02";
   }
 }
 
