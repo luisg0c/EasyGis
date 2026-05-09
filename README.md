@@ -211,20 +211,18 @@ uv run pytest tests/ -v --cov=api --cov-report=term-missing
 | Documento | Descrição |
 |---|---|
 | [`docs/README.md`](docs/README.md) | Índice geral da documentação |
-| [`docs/01-documento-visao-produto.md`](docs/01-documento-visao-produto.md) | Problema, solução, usuários-alvo |
-| [`docs/02-backlog-produto.md`](docs/02-backlog-produto.md) | 33 histórias em 6 épicos (priorização MoSCoW) |
-| [`docs/03-especificacao-requisitos-SRS.md`](docs/03-especificacao-requisitos-SRS.md) | 20 RFs + 8 RNFs (IEEE 830) |
-| [`docs/04-diagramas-arquitetura.md`](docs/04-diagramas-arquitetura.md) | 8 diagramas (alto nível, componentes, deployment, sequência, fluxo de dados) |
-| [`docs/05-prototipo-interface.md`](docs/05-prototipo-interface.md) | Wireframes |
-| [`docs/06-plano-projeto-inicial.md`](docs/06-plano-projeto-inicial.md) | Cronograma, atribuições, riscos |
-| [`docs/p2/00-ENTREGA-P2.pdf`](docs/p2/00-ENTREGA-P2.pdf) | Mapeamento dos entregáveis P2 + decisões DA-06 a DA-11 |
-| [`docs/p2/07-manual-usuario.pdf`](docs/p2/07-manual-usuario.pdf) | Manual leigo |
-| [`docs/p2/apresentacao-p2.pdf`](docs/p2/apresentacao-p2.pdf) | Slides Beamer (16 slides, tema escuro) |
+| [`docs/tp1/documento-unificado.pdf`](docs/tp1/documento-unificado.pdf) | **TP1 consolidado** — visão de produto, backlog (33 histórias / 6 épicos), SRS (20 RFs + 8 RNFs / IEEE 830), 8 diagramas de arquitetura, protótipo de interface e plano de projeto |
+| [`docs/p2/00-ENTREGA-P2.pdf`](docs/p2/00-ENTREGA-P2.pdf) | Mapeamento dos entregáveis P2 + decisões de design DA-06 a DA-11 |
+| [`docs/p2/07-manual-usuario.pdf`](docs/p2/07-manual-usuario.pdf) | Manual do usuário (linguagem leiga) |
+| [`docs/p2/08-plano-de-testes.pdf`](docs/p2/08-plano-de-testes.pdf) | Plano de testes — 28 casos + matriz de rastreabilidade |
+| [`docs/p2/09-relatorio-de-testes.pdf`](docs/p2/09-relatorio-de-testes.pdf) | Relatório de execução — 28/28 passando + evidências |
+| [`docs/p2/apresentacao-p2.pdf`](docs/p2/apresentacao-p2.pdf) | Slides de apresentação (16 slides, tema escuro) |
 
-### Compilar PDFs do zero
+### Recompilar os PDFs
 
 ```bash
-cd docs/p2 && make p2
+cd docs/p2 && make p2          # 5 PDFs da entrega P2
+cd docs/tp1 && pdflatex documento-unificado.tex && pdflatex documento-unificado.tex
 ```
 
 ---
