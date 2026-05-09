@@ -9,7 +9,6 @@ import {
   ArrowRight,
   TrendingUp,
   AlertTriangle,
-  Sparkles,
   Activity,
   Upload,
   Loader2,
@@ -305,15 +304,9 @@ export default function HomePage() {
 
           {/* Footer */}
           <footer className="mt-12 border-t border-moss-100 pt-4">
-            <div className="flex items-center justify-between">
-              <p className="font-mono text-[10px] tracking-widest text-stone">
-                EasyGis · Sentinel-2 · 2026.1
-              </p>
-              <p className="flex items-center gap-1.5 font-mono text-[10px] tracking-widest text-stone">
-                <Sparkles className="h-2.5 w-2.5" strokeWidth={2} />
-                Powered by Copernicus
-              </p>
-            </div>
+            <p className="font-mono text-[10px] tracking-widest text-stone">
+              EasyGis · Sentinel-2 · 2026.1
+            </p>
           </footer>
         </div>
       </main>
