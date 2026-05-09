@@ -1,7 +1,5 @@
 'use client';
 
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { IndexType, SPECTRAL_INDICES } from '@/lib/spectral-indices';
 
 interface IndexLegendProps {
@@ -14,71 +12,75 @@ interface IndexLegendProps {
   };
 }
 
+const NDVI_GUIDE: { range: string; meaning: string; tone: string }[] = [
+  { range: '< 0',     meaning: 'Water, bare soil',          tone: 'text-stone' },
+  { range: '0.0–0.2', meaning: 'Sparse vegetation',         tone: 'text-clay' },
+  { range: '0.2–0.4', meaning: 'Moderate vegetation',       tone: 'text-amber' },
+  { range: '0.4–0.6', meaning: 'Healthy vegetation',        tone: 'text-moss-600' },
+  { range: '> 0.6',   meaning: 'Very healthy vegetation',   tone: 'text-moss-900' },
+];
+
 export function IndexLegend({ indexType, statistics }: IndexLegendProps) {
   const index = SPECTRAL_INDICES[indexType];
 
   return (
-    <Card className="p-4">
-      <div className="space-y-4">
-        <div>
-          <h3 className="font-semibold text-lg">{index.name}</h3>
-          <p className="text-sm text-muted-foreground">{index.description}</p>
-          <p className="text-xs text-muted-foreground mt-1 font-mono">
-            {index.formula}
-          </p>
-        </div>
+    <div className="border border-moss-100 bg-cream">
+      {/* Header — index identity */}
+      <div className="border-b border-moss-100 px-4 py-3.5">
+        <p className="editorial-eyebrow text-stone">{indexType}</p>
+        <h3 className="mt-1 font-display text-[19px] italic leading-tight text-moss-950">
+          {index.name}
+        </h3>
+        <p className="mt-1.5 text-[12px] leading-relaxed text-smoke">{index.description}</p>
+        <p className="mt-2 font-mono text-[10px] tracking-tight text-stone break-all">
+          {index.formula}
+        </p>
+      </div>
 
-        <div>
-          <p className="text-sm font-medium mb-2">Color Scale</p>
-          <div className="h-6 rounded overflow-hidden flex">
-            {index.colorScale.map((color, i) => (
-              <div
-                key={i}
-                style={{ backgroundColor: color }}
-                className="flex-1"
-              />
+      {/* Color scale */}
+      <div className="px-4 py-3.5">
+        <p className="editorial-num mb-2">— Color Scale</p>
+        <div className="flex h-3 overflow-hidden border border-moss-100">
+          {index.colorScale.map((color, i) => (
+            <div key={i} style={{ backgroundColor: color }} className="flex-1" />
+          ))}
+        </div>
+        <div className="mt-1.5 flex justify-between font-mono text-[10px] tabular-nums text-stone">
+          <span>{index.range[0].toFixed(1)}</span>
+          <span>{index.range[1].toFixed(1)}</span>
+        </div>
+      </div>
+
+      {/* NDVI interpretation guide */}
+      {indexType === 'NDVI' && (
+        <div className="border-t border-moss-100 px-4 py-3.5">
+          <p className="editorial-num mb-2">— Interpretation</p>
+          <ul className="space-y-1.5">
+            {NDVI_GUIDE.map(({ range, meaning, tone }) => (
+              <li key={range} className="flex items-baseline justify-between gap-3 text-[12px]">
+                <span className={`font-mono text-[11px] tabular-nums ${tone}`}>{range}</span>
+                <span className="text-smoke">{meaning}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Stats footer */}
+      {statistics && (
+        <div className="border-t border-moss-100 bg-paper px-4 py-3">
+          <div className="grid grid-cols-4 gap-2">
+            {(['min', 'mean', 'median', 'max'] as const).map((k) => (
+              <div key={k} className="text-center">
+                <p className="font-mono text-[9px] tracking-widest uppercase text-stone">{k}</p>
+                <p className="mt-1 font-mono text-[12px] tabular-nums text-moss-950">
+                  {statistics[k].toFixed(2)}
+                </p>
+              </div>
             ))}
           </div>
-          <div className="flex justify-between text-xs text-muted-foreground mt-1">
-            <span>{index.range[0].toFixed(1)}</span>
-            <span>{index.range[1].toFixed(1)}</span>
-          </div>
         </div>
-
-        {statistics && (
-          <div>
-            <p className="text-sm font-medium mb-2">Statistics</p>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <p className="text-xs text-muted-foreground">Min</p>
-                <Badge variant="outline">{statistics.min.toFixed(3)}</Badge>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Max</p>
-                <Badge variant="outline">{statistics.max.toFixed(3)}</Badge>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Mean</p>
-                <Badge variant="outline">{statistics.mean.toFixed(3)}</Badge>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Median</p>
-                <Badge variant="outline">{statistics.median.toFixed(3)}</Badge>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {indexType === 'NDVI' && (
-          <div className="text-xs space-y-1 text-muted-foreground">
-            <p><span className="font-semibold">&lt; 0:</span> Water, bare soil</p>
-            <p><span className="font-semibold">0.0 - 0.2:</span> Sparse vegetation</p>
-            <p><span className="font-semibold">0.2 - 0.4:</span> Moderate vegetation</p>
-            <p><span className="font-semibold">0.4 - 0.6:</span> Healthy vegetation</p>
-            <p><span className="font-semibold">&gt; 0.6:</span> Very healthy vegetation</p>
-          </div>
-        )}
-      </div>
-    </Card>
+      )}
+    </div>
   );
 }

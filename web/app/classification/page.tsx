@@ -2,20 +2,21 @@
 
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { KMLField } from '@/types';
-import { ArrowLeft, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
-const MapViewer = dynamic(() => import('@/components/map-viewer').then(mod => ({ default: mod.MapViewer })), {
-  ssr: false,
-  loading: () => <div className="flex items-center justify-center h-full"><p className="text-muted-foreground">Loading map...</p></div>
-});
+const MapViewer = dynamic(
+  () => import('@/components/map-viewer').then((mod) => ({ default: mod.MapViewer })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-full items-center justify-center bg-paper-grain">
+        <p className="editorial-eyebrow text-stone">Loading map…</p>
+      </div>
+    ),
+  }
+);
 
 interface ClassificationResult {
   field_id: string;
@@ -40,16 +41,47 @@ interface ClassificationResult {
 type ClassificationMethod = 'supervised' | 'unsupervised' | 'threshold';
 type CropType = 'soja' | 'milho' | 'cafe' | 'cana' | 'multi';
 
+const METHODS: {
+  value: ClassificationMethod;
+  label: string;
+  description: string;
+}[] = [
+  {
+    value: 'threshold',
+    label: 'Threshold',
+    description: 'Cuts the plot into Low / Medium / High vigor zones using NDVI cutoffs.',
+  },
+  {
+    value: 'unsupervised',
+    label: 'Unsupervised',
+    description: 'K-Means clustering — groups pixels into N classes from spectral features.',
+  },
+  {
+    value: 'supervised',
+    label: 'Supervised',
+    description: 'Crop-signature matching: soja, milho, café or cana from known ranges.',
+  },
+];
+
+const CROPS: { value: CropType; label: string }[] = [
+  { value: 'multi', label: 'Multi-crop' },
+  { value: 'soja', label: 'Soja' },
+  { value: 'milho', label: 'Milho' },
+  { value: 'cafe', label: 'Café' },
+  { value: 'cana', label: 'Cana' },
+];
+
 export default function ClassificationPage() {
   const [fields, setFields] = useState<KMLField[]>([]);
   const [selectedFieldId, setSelectedFieldId] = useState<string | undefined>();
   const [loading, setLoading] = useState(true);
   const [classifying, setClassifying] = useState(false);
-  const [classificationResult, setClassificationResult] = useState<ClassificationResult | null>(null);
+  const [classificationResult, setClassificationResult] = useState<ClassificationResult | null>(
+    null
+  );
   const [error, setError] = useState<string | null>(null);
 
-  // Classification parameters
-  const [method, setMethod] = useState<ClassificationMethod>('supervised');
+  const [method, setMethod] = useState<ClassificationMethod>('threshold');
   const [cropType, setCropType] = useState<CropType>('multi');
   const [nClasses, setNClasses] = useState<number>(3);
   const [useNDVI, setUseNDVI] = useState(true);
@@ -68,8 +100,8 @@ export default function ClassificationPage() {
       if (data.fields?.length > 0) {
         setSelectedFieldId(data.fields[0].id);
       }
-    } catch (error) {
-      console.error('Error fetching fields:', error);
+    } catch (err) {
+      console.error('Error fetching fields:', err);
     } finally {
       setLoading(false);
     }
@@ -77,7 +109,6 @@ export default function ClassificationPage() {
 
   const handleClassify = async () => {
     if (!selectedFieldId) return;
-
     const field = fields.find((f) => f.id === selectedFieldId);
     if (!field) return;
 
@@ -87,23 +118,17 @@ export default function ClassificationPage() {
     try {
       const response = await fetch('http://localhost:8000/api/classification/classify', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           field_id: field.id,
           coordinates: field.coordinates.map((c) => ({
             longitude: c.longitude,
             latitude: c.latitude,
           })),
-          method: method,
+          method,
           crop_type: cropType,
           n_classes: nClasses,
-          indices: {
-            ndvi: useNDVI,
-            evi: useEVI,
-            savi: useSAVI,
-          },
+          indices: { ndvi: useNDVI, evi: useEVI, savi: useSAVI },
         }),
       });
 
@@ -124,252 +149,252 @@ export default function ClassificationPage() {
   };
 
   return (
-    <div className="flex w-screen h-screen overflow-hidden">
-      {/* Left side - Controls and Results (50%) */}
-      <div className="w-1/2 flex flex-col border-r bg-background">
-        {/* Header */}
-        <div className="border-b px-6 py-4">
-          <div className="flex items-center gap-3 mb-2">
-            <Link href="/">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back
-              </Button>
-            </Link>
-          </div>
-          <h1 className="text-2xl font-bold">Crop Classification</h1>
-          <p className="text-sm text-muted-foreground">
-            Classify agricultural areas using machine learning
+    <div className="flex h-screen w-screen overflow-hidden bg-paper-grain text-charcoal">
+      {/* ──── Left panel — controls ──── */}
+      <section className="flex w-1/2 flex-col border-r border-moss-100 bg-cream-grain">
+        {/* Masthead */}
+        <header className="border-b border-moss-100 px-8 py-5">
+          <Link href="/">
+            <button className="editorial-link flex items-center gap-1.5 font-mono text-[11px] tracking-widest uppercase text-smoke hover:text-moss-900">
+              <ArrowLeft className="h-3 w-3" strokeWidth={2} />
+              Back to Atlas
+            </button>
+          </Link>
+          <p className="editorial-eyebrow mt-5">— Section II / Classification —</p>
+          <h1 className="mt-2 font-display text-[40px] leading-[0.95] tracking-tight text-moss-950">
+            A taxonomy
+            <span className="italic text-moss-700"> of plots</span>
+          </h1>
+          <p className="mt-3 max-w-md text-[13px] leading-relaxed text-smoke">
+            Partition agricultural plots into vigor zones, spectral clusters, or crop signatures —
+            with hectare-level reporting per class.
           </p>
-        </div>
+        </header>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
-          {/* Field Selection */}
-          <Card className="p-4 space-y-3">
-            <div>
-              <Label className="text-sm font-semibold">Select Field</Label>
-              <p className="text-xs text-muted-foreground mb-2">
-                Choose the area to classify
-              </p>
-            </div>
-            <Select value={selectedFieldId} onValueChange={setSelectedFieldId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a field" />
-              </SelectTrigger>
-              <SelectContent>
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto px-8 py-7">
+          <div className="editorial-rise space-y-7">
+            {/* 01 · Field */}
+            <section>
+              <p className="editorial-num mb-3">01 · Plot</p>
+              <select
+                value={selectedFieldId ?? ''}
+                onChange={(e) => setSelectedFieldId(e.target.value)}
+                disabled={loading || fields.length === 0}
+                className="w-full appearance-none border border-moss-100 bg-cream px-3.5 py-2.5 font-mono text-[13px] text-moss-950 transition-colors focus:border-moss-700 focus:outline-none disabled:opacity-40"
+              >
+                <option value="">— Select a plot —</option>
                 {fields.map((field) => (
-                  <SelectItem key={field.id} value={field.id}>
+                  <option key={field.id} value={field.id}>
                     {field.name}
-                  </SelectItem>
+                  </option>
                 ))}
-              </SelectContent>
-            </Select>
-          </Card>
+              </select>
+            </section>
 
-          {/* Classification Method */}
-          <Card className="p-4 space-y-3">
-            <div>
-              <Label className="text-sm font-semibold">Classification Method</Label>
-              <p className="text-xs text-muted-foreground mb-2">
-                Select the algorithm to use
-              </p>
-            </div>
-            <Tabs value={method} onValueChange={(v) => setMethod(v as ClassificationMethod)}>
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="supervised">Supervised</TabsTrigger>
-                <TabsTrigger value="unsupervised">Unsupervised</TabsTrigger>
-                <TabsTrigger value="threshold">Threshold</TabsTrigger>
-              </TabsList>
-            </Tabs>
+            {/* 02 · Method */}
+            <section>
+              <p className="editorial-num mb-3">02 · Method</p>
+              <div className="grid grid-cols-1 gap-2">
+                {METHODS.map((m) => (
+                  <button
+                    key={m.value}
+                    onClick={() => setMethod(m.value)}
+                    className={`group border px-4 py-3.5 text-left transition-all ${
+                      method === m.value
+                        ? 'border-moss-900 bg-moss-900 text-cream'
+                        : 'border-moss-100 bg-cream text-charcoal hover:border-moss-500'
+                    }`}
+                  >
+                    <div className="flex items-baseline justify-between">
+                      <p className="font-display text-lg italic">{m.label}</p>
+                      <span
+                        className={`font-mono text-[10px] tracking-widest uppercase ${
+                          method === m.value ? 'text-moss-300' : 'text-stone'
+                        }`}
+                      >
+                        {m.value}
+                      </span>
+                    </div>
+                    <p
+                      className={`mt-1 text-[12px] leading-relaxed ${
+                        method === m.value ? 'text-moss-100' : 'text-smoke'
+                      }`}
+                    >
+                      {m.description}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </section>
 
+            {/* 03 · Method-specific options */}
             {method === 'supervised' && (
-              <div className="text-xs text-muted-foreground bg-blue-50 dark:bg-blue-950 p-3 rounded-lg">
-                Uses Random Forest with pre-trained crop signatures for accurate classification
-              </div>
+              <section>
+                <p className="editorial-num mb-3">03 · Crop</p>
+                <div className="grid grid-cols-5 gap-1.5">
+                  {CROPS.map((c) => (
+                    <button
+                      key={c.value}
+                      data-active={cropType === c.value}
+                      onClick={() => setCropType(c.value)}
+                      className="index-chip"
+                    >
+                      {c.label}
+                    </button>
+                  ))}
+                </div>
+              </section>
             )}
+
             {method === 'unsupervised' && (
-              <div className="text-xs text-muted-foreground bg-purple-50 dark:bg-purple-950 p-3 rounded-lg">
-                Uses K-Means clustering to automatically identify {nClasses} distinct crop types
-              </div>
-            )}
-            {method === 'threshold' && (
-              <div className="text-xs text-muted-foreground bg-green-50 dark:bg-green-950 p-3 rounded-lg">
-                Uses spectral index thresholds to separate crop types based on vegetation health
-              </div>
-            )}
-          </Card>
-
-          {/* Crop Type Selection */}
-          {method === 'supervised' && (
-            <Card className="p-4 space-y-3">
-              <div>
-                <Label className="text-sm font-semibold">Target Crop</Label>
-                <p className="text-xs text-muted-foreground mb-2">
-                  Specify which crop to identify
-                </p>
-              </div>
-              <Select value={cropType} onValueChange={(v) => setCropType(v as CropType)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="soja">Soja (Soybean)</SelectItem>
-                  <SelectItem value="milho">Milho (Corn)</SelectItem>
-                  <SelectItem value="cafe">Café (Coffee)</SelectItem>
-                  <SelectItem value="cana">Cana (Sugarcane)</SelectItem>
-                  <SelectItem value="multi">Multi-crop</SelectItem>
-                </SelectContent>
-              </Select>
-            </Card>
-          )}
-
-          {/* Number of Classes */}
-          {method === 'unsupervised' && (
-            <Card className="p-4 space-y-3">
-              <div>
-                <Label className="text-sm font-semibold">Number of Classes</Label>
-                <p className="text-xs text-muted-foreground mb-2">
-                  How many crop types to identify
-                </p>
-              </div>
-              <Select value={nClasses.toString()} onValueChange={(v) => setNClasses(parseInt(v))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="2">2 classes</SelectItem>
-                  <SelectItem value="3">3 classes</SelectItem>
-                  <SelectItem value="4">4 classes</SelectItem>
-                  <SelectItem value="5">5 classes</SelectItem>
-                  <SelectItem value="6">6 classes</SelectItem>
-                </SelectContent>
-              </Select>
-            </Card>
-          )}
-
-          {/* Spectral Indices */}
-          <Card className="p-4 space-y-3">
-            <div>
-              <Label className="text-sm font-semibold">Spectral Indices</Label>
-              <p className="text-xs text-muted-foreground mb-2">
-                Select features for classification
-              </p>
-            </div>
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={useNDVI}
-                  onChange={(e) => setUseNDVI(e.target.checked)}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm">NDVI (Vegetation Health)</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={useEVI}
-                  onChange={(e) => setUseEVI(e.target.checked)}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm">EVI (Enhanced Vegetation)</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={useSAVI}
-                  onChange={(e) => setUseSAVI(e.target.checked)}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm">SAVI (Soil Adjusted)</span>
-              </label>
-            </div>
-          </Card>
-
-          {/* Classify Button */}
-          <Button
-            className="w-full"
-            size="lg"
-            disabled={!selectedFieldId || classifying}
-            onClick={handleClassify}
-          >
-            {classifying && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {classifying ? 'Classifying...' : 'Run Classification'}
-          </Button>
-
-          {error && (
-            <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {/* Results */}
-          {classificationResult && (
-            <Card className="p-4 space-y-4">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-green-600" />
-                <Label className="text-sm font-semibold">Classification Results</Label>
-              </div>
-
-              {/* Statistics */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 border rounded-lg">
-                  <div className="text-xs text-muted-foreground">Total Area</div>
-                  <div className="text-lg font-semibold">
-                    {classificationResult.statistics.total_area.toFixed(2)} ha
-                  </div>
+              <section>
+                <p className="editorial-num mb-3">03 · Number of Classes</p>
+                <div className="grid grid-cols-5 gap-1.5">
+                  {[2, 3, 4, 5, 6].map((n) => (
+                    <button
+                      key={n}
+                      data-active={nClasses === n}
+                      onClick={() => setNClasses(n)}
+                      className="index-chip"
+                    >
+                      {n}
+                    </button>
+                  ))}
                 </div>
-                <div className="p-3 border rounded-lg">
-                  <div className="text-xs text-muted-foreground">Classified</div>
-                  <div className="text-lg font-semibold">
-                    {classificationResult.statistics.classified_area.toFixed(2)} ha
-                  </div>
-                </div>
-              </div>
+              </section>
+            )}
 
-              {/* Classes */}
+            {/* 04 · Features */}
+            <section>
+              <p className="editorial-num mb-3">04 · Spectral Features</p>
               <div className="space-y-2">
-                <div className="text-xs font-medium text-muted-foreground">Detected Classes</div>
-                {classificationResult.classes.map((cls, idx) => (
-                  <div key={idx} className="p-3 border rounded-lg space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="w-4 h-4 rounded"
-                          style={{ backgroundColor: cls.color }}
-                        />
-                        <span className="font-medium text-sm">{cls.name}</span>
-                      </div>
-                      <Badge variant="secondary">{cls.percentage.toFixed(1)}%</Badge>
+                {[
+                  { key: 'NDVI', label: 'Vegetation health', state: useNDVI, setter: setUseNDVI },
+                  { key: 'EVI', label: 'Atmospheric-corrected vegetation', state: useEVI, setter: setUseEVI },
+                  { key: 'SAVI', label: 'Soil-adjusted vegetation', state: useSAVI, setter: setUseSAVI },
+                ].map(({ key, label, state, setter }) => (
+                  <label
+                    key={key}
+                    className="flex cursor-pointer items-center justify-between border border-moss-100 bg-cream px-4 py-3 transition-colors hover:border-moss-300"
+                  >
+                    <div>
+                      <p className="font-mono text-[12px] font-medium text-moss-950">{key}</p>
+                      <p className="mt-0.5 text-[11px] text-smoke">{label}</p>
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      Area: {cls.area_hectares.toFixed(2)} hectares
-                    </div>
-                  </div>
+                    <input
+                      type="checkbox"
+                      checked={state}
+                      onChange={(e) => setter(e.target.checked)}
+                      className="h-4 w-4 cursor-pointer accent-moss-900"
+                    />
+                  </label>
                 ))}
               </div>
+            </section>
 
-              {/* Actions */}
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="flex-1">
-                  Export Report
-                </Button>
-                <Button variant="outline" size="sm" className="flex-1">
-                  Save Classification
-                </Button>
-              </div>
-            </Card>
-          )}
+            {/* 05 · Action */}
+            <section>
+              <button
+                onClick={handleClassify}
+                disabled={!selectedFieldId || classifying}
+                className="btn-ribbon w-full"
+              >
+                {classifying ? (
+                  <>
+                    <span className="editorial-spinner" />
+                    <span>Classifying</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Run Classification</span>
+                    <span aria-hidden>→</span>
+                  </>
+                )}
+              </button>
+              {error && (
+                <p className="mt-3 border-l-2 border-clay bg-clay/5 px-3 py-2 font-mono text-[11px] leading-relaxed text-clay">
+                  Error · {error}
+                </p>
+              )}
+            </section>
+
+            {/* 06 · Results */}
+            {classificationResult && (
+              <section>
+                <div className="mb-3 editorial-rule">Classification Result</div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="stat-card">
+                    <p className="stat-label">Total Area</p>
+                    <p className="stat-value">
+                      {classificationResult.statistics.total_area.toFixed(2)}
+                      <span className="ml-1 text-stone text-sm">ha</span>
+                    </p>
+                  </div>
+                  <div className="stat-card">
+                    <p className="stat-label">Classified</p>
+                    <p className="stat-value">
+                      {classificationResult.statistics.classified_area.toFixed(2)}
+                      <span className="ml-1 text-stone text-sm">ha</span>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-5">
+                  <p className="editorial-num mb-3">— Detected Classes</p>
+                  <div className="border border-moss-100 bg-cream divide-y divide-moss-50">
+                    {classificationResult.classes.map((cls, idx) => (
+                      <div key={idx} className="flex items-center justify-between gap-3 px-4 py-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span
+                            className="h-6 w-1.5 shrink-0"
+                            style={{ backgroundColor: cls.color }}
+                          />
+                          <div className="min-w-0">
+                            <p className="text-[13px] font-medium text-moss-950 truncate">
+                              {cls.name}
+                            </p>
+                            <p className="font-mono text-[10px] text-stone">
+                              {cls.area_hectares.toFixed(2)} ha
+                            </p>
+                          </div>
+                        </div>
+                        <span className="font-mono text-[14px] tabular-nums text-moss-900 shrink-0">
+                          {cls.percentage.toFixed(1)}
+                          <span className="ml-0.5 text-[10px] text-stone">%</span>
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <p className="mt-4 font-mono text-[10px] leading-relaxed text-stone">
+                  {new Date(classificationResult.timestamp).toLocaleString('en-GB')}
+                  <br />
+                  <span className="text-smoke break-all">{classificationResult.product_used}</span>
+                </p>
+              </section>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Right side - Map (50%) */}
-      <div className="w-1/2 relative">
+        {/* Footer */}
+        <footer className="border-t border-moss-100 px-8 py-3">
+          <p className="font-mono text-[10px] tracking-widest text-stone">
+            ICEV · Remote Sensing Atlas · 2026.1
+          </p>
+        </footer>
+      </section>
+
+      {/* ──── Right panel — map ──── */}
+      <section className="relative w-1/2">
         {loading ? (
-          <div className="flex items-center justify-center h-full bg-muted">
-            <p className="text-muted-foreground">Loading map...</p>
+          <div className="flex h-full items-center justify-center bg-paper-grain">
+            <div className="text-center">
+              <Loader2 className="mx-auto h-5 w-5 animate-spin text-moss-700" strokeWidth={1.5} />
+              <p className="mt-3 editorial-eyebrow text-stone">Loading plots</p>
+            </div>
           </div>
         ) : fields.length > 0 ? (
           <MapViewer
@@ -390,16 +415,18 @@ export default function ClassificationPage() {
             onNewField={() => {}}
           />
         ) : (
-          <div className="flex items-center justify-center h-full bg-muted">
-            <div className="text-center space-y-2">
-              <p className="text-muted-foreground">No fields found</p>
-              <p className="text-sm text-muted-foreground">
-                Make sure KML files are in data/KML Fields directory
+          <div className="flex h-full items-center justify-center bg-paper-grain">
+            <div className="max-w-sm text-center px-6">
+              <p className="editorial-eyebrow text-stone">— No plots indexed —</p>
+              <h2 className="mt-3 font-display text-2xl italic text-moss-900">Empty atlas</h2>
+              <p className="mt-2 text-[13px] leading-relaxed text-smoke">
+                Place KML files in <span className="font-mono text-[12px]">data/KML Fields/</span>{' '}
+                to begin classification.
               </p>
             </div>
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }

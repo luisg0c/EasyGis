@@ -5,34 +5,51 @@ import dynamic from 'next/dynamic';
 import { IndexLegend } from '@/components/index-legend';
 import { ExperimentDialog } from '@/components/experiment-dialog';
 import { ExperimentMenu } from '@/components/experiment-menu';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { KMLField } from '@/types';
 import { IndexType } from '@/lib/spectral-indices';
-import { Grid3x3, Wheat, Activity, MapPin, Settings, HelpCircle, User, BookOpen, Layers } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Sprout,
+  Activity,
+  BookOpen,
+  Layers,
+  Settings,
+  HelpCircle,
+  User,
+  Loader2,
+} from 'lucide-react';
 import Link from 'next/link';
 
-const MapViewer = dynamic(() => import('@/components/map-viewer').then(mod => ({ default: mod.MapViewer })), {
-  ssr: false,
-  loading: () => <div className="flex items-center justify-center h-full"><p className="text-muted-foreground">Loading map...</p></div>
-});
+const MapViewer = dynamic(
+  () => import('@/components/map-viewer').then((mod) => ({ default: mod.MapViewer })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-full items-center justify-center bg-paper-grain">
+        <p className="editorial-eyebrow text-stone">Loading cartographic surface…</p>
+      </div>
+    ),
+  }
+);
 
-const Terrain3DViewer = dynamic(() => import('@/components/terrain-3d-viewer').then(mod => ({ default: mod.Terrain3DViewer })), {
-  ssr: false,
-  loading: () => <div className="flex items-center justify-center h-full"><p className="text-muted-foreground">Loading 3D view...</p></div>
-});
+const Terrain3DViewer = dynamic(
+  () => import('@/components/terrain-3d-viewer').then((mod) => ({ default: mod.Terrain3DViewer })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-full items-center justify-center bg-paper-grain">
+        <p className="editorial-eyebrow text-stone">Loading 3-dimensional render…</p>
+      </div>
+    ),
+  }
+);
 
 import type { SpectralStatistics, ElevationData, MapOverlayResult } from '@/types';
 
 interface IndexResult {
   statistics: SpectralStatistics;
-  histogram: {
-    bins: number[];
-    counts: number[];
-  };
+  histogram: { bins: number[]; counts: number[] };
   image_base64: string;
   product_used: string;
   elevation_data?: ElevationData;
@@ -49,6 +66,12 @@ interface ExperimentResult {
 }
 
 type SidebarTab = 'analytics' | 'research';
+
+const SPECTRAL_INDICES: IndexType[] = ['NDVI', 'EVI', 'SAVI', 'NDWI', 'NDBI'];
+const COMPOSITES: IndexType[] = ['RGB', 'FALSE_COLOR'];
+const BANDS: IndexType[] = [
+  'B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B8A', 'B09', 'B11', 'B12',
+];
 
 export default function Home() {
   const [fields, setFields] = useState<KMLField[]>([]);
@@ -82,18 +105,16 @@ export default function Home() {
       if (data.fields?.length > 0) {
         setSelectedFieldId(data.fields[0].id);
       }
-    } catch (error) {
-      console.error('Error fetching fields:', error);
+    } catch (err) {
+      console.error('Error fetching fields:', err);
     } finally {
       setLoading(false);
     }
   };
 
   const handleNewField = (coordinates: { latitude: number; longitude: number }[]) => {
-    // Compute bounds from the drawn polygon (required by KMLField).
     const lats = coordinates.map((c) => c.latitude);
     const lons = coordinates.map((c) => c.longitude);
-
     const newFieldId = `field-${Date.now()}`;
     const newField: KMLField = {
       id: newFieldId,
@@ -106,14 +127,12 @@ export default function Home() {
         west: Math.min(...lons),
       },
     };
-
     setFields([...fields, newField]);
     setSelectedFieldId(newFieldId);
   };
 
   const calculateIndex = async () => {
     if (!selectedFieldId) return;
-
     const field = fields.find((f) => f.id === selectedFieldId);
     if (!field) return;
 
@@ -123,9 +142,7 @@ export default function Home() {
     try {
       const response = await fetch('http://localhost:8000/calculate-index', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           field_id: field.id,
           coordinates: field.coordinates.map((c) => ({
@@ -164,16 +181,13 @@ export default function Home() {
 
   const handleRunExperiment = async (parameters: Record<string, number>) => {
     if (!selectedFieldId || !selectedExperiment) return;
-
     const field = fields.find((f) => f.id === selectedFieldId);
     if (!field) return;
 
     try {
       const response = await fetch('http://localhost:8000/api/experiments/run', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           field_id: field.id,
           coordinates: field.coordinates.map((c) => ({
@@ -181,7 +195,7 @@ export default function Home() {
             latitude: c.latitude,
           })),
           experiment_type: selectedExperiment.type,
-          parameters: parameters,
+          parameters,
         }),
       });
 
@@ -193,8 +207,6 @@ export default function Home() {
       const result: ExperimentResult = await response.json();
       setExperimentResult(result);
       setExperimentHistory([result, ...experimentHistory]);
-
-      // Switch to analytics tab to show result
       setActiveTab('analytics');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
@@ -203,388 +215,393 @@ export default function Home() {
     }
   };
 
+  const selectedField = fields.find((f) => f.id === selectedFieldId);
+  const today = new Date().toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).toUpperCase();
+
   return (
-    <div className="flex w-screen h-screen overflow-hidden">
-      {/* Left side - Navigation and Sidebar */}
-      <div className="flex flex-shrink-0">
-        {/* Icon navigation bar */}
-        <div className="w-14 bg-background border-r flex flex-col items-center py-4 space-y-4">
-          <button className="p-3 hover:bg-accent rounded-lg transition-colors" title="Dashboard">
-            <Grid3x3 className="w-5 h-5" />
+    <div className="flex h-screen w-screen overflow-hidden bg-paper-grain text-charcoal">
+      {/* ──── Left rail — icon nav ──── */}
+      <aside className="flex w-14 flex-shrink-0 flex-col items-center border-r border-moss-100 bg-cream py-6">
+        <Link href="/" aria-label="Dashboard">
+          <button className="rounded-sm p-2.5 text-moss-900 transition-colors hover:bg-moss-50">
+            <LayoutDashboard className="h-[18px] w-[18px]" strokeWidth={1.5} />
           </button>
-          <button className="p-3 hover:bg-accent rounded-lg transition-colors" title="Fields">
-            <Wheat className="w-5 h-5" />
+        </Link>
+        <button
+          aria-label="Fields"
+          className="rounded-sm p-2.5 text-smoke transition-colors hover:bg-moss-50 hover:text-moss-900"
+        >
+          <Sprout className="h-[18px] w-[18px]" strokeWidth={1.5} />
+        </button>
+        <button
+          aria-label="Analytics"
+          onClick={() => setActiveTab('analytics')}
+          className={`rounded-sm p-2.5 transition-colors ${
+            activeTab === 'analytics'
+              ? 'bg-moss-900 text-cream'
+              : 'text-smoke hover:bg-moss-50 hover:text-moss-900'
+          }`}
+        >
+          <Activity className="h-[18px] w-[18px]" strokeWidth={1.5} />
+        </button>
+        <button
+          aria-label="Research"
+          onClick={() => setActiveTab('research')}
+          className={`rounded-sm p-2.5 transition-colors ${
+            activeTab === 'research'
+              ? 'bg-moss-900 text-cream'
+              : 'text-smoke hover:bg-moss-50 hover:text-moss-900'
+          }`}
+        >
+          <BookOpen className="h-[18px] w-[18px]" strokeWidth={1.5} />
+        </button>
+        <Link href="/classification" aria-label="Classification">
+          <button className="rounded-sm p-2.5 text-smoke transition-colors hover:bg-moss-50 hover:text-moss-900">
+            <Layers className="h-[18px] w-[18px]" strokeWidth={1.5} />
           </button>
-          <button
-            className={`p-3 rounded-lg transition-colors ${activeTab === 'analytics' ? 'bg-primary/10 text-primary' : 'hover:bg-accent'}`}
-            title="Analytics"
-            onClick={() => setActiveTab('analytics')}
-          >
-            <Activity className="w-5 h-5" />
-          </button>
-          <button
-            className={`p-3 rounded-lg transition-colors ${activeTab === 'research' ? 'bg-primary/10 text-primary' : 'hover:bg-accent'}`}
-            title="Research"
-            onClick={() => setActiveTab('research')}
-          >
-            <BookOpen className="w-5 h-5" />
-          </button>
-          <Link href="/classification">
-            <button className="p-3 hover:bg-accent rounded-lg transition-colors" title="Crop Classification">
-              <Layers className="w-5 h-5" />
-            </button>
-          </Link>
-          <button className="p-3 hover:bg-accent rounded-lg transition-colors" title="Map">
-            <MapPin className="w-5 h-5" />
-          </button>
+        </Link>
 
-          <div className="flex-1" />
+        <div className="flex-1" />
 
-          <button className="p-3 hover:bg-accent rounded-lg transition-colors" title="Settings">
-            <Settings className="w-5 h-5" />
-          </button>
-          <button className="p-3 hover:bg-accent rounded-lg transition-colors" title="Help">
-            <HelpCircle className="w-5 h-5" />
-          </button>
-          <button className="p-3 hover:bg-accent rounded-lg transition-colors" title="Profile">
-            <User className="w-5 h-5" />
-          </button>
-        </div>
+        <button className="rounded-sm p-2.5 text-stone transition-colors hover:text-moss-900">
+          <Settings className="h-4 w-4" strokeWidth={1.5} />
+        </button>
+        <button className="rounded-sm p-2.5 text-stone transition-colors hover:text-moss-900">
+          <HelpCircle className="h-4 w-4" strokeWidth={1.5} />
+        </button>
+        <button className="rounded-sm p-2.5 text-stone transition-colors hover:text-moss-900">
+          <User className="h-4 w-4" strokeWidth={1.5} />
+        </button>
+      </aside>
 
-        {/* Main sidebar panel */}
-        <div className="w-96 bg-background border-r overflow-auto">
-          <div className="p-6 space-y-6">
-            {activeTab === 'analytics' ? (
-              <>
-                {/* Analytics Tab Content */}
-                {/* Header */}
-                <div className="space-y-1">
-                  <h1 className="text-2xl font-bold">Zone Management</h1>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span>Field:</span>
-                <Select
-                  value={selectedFieldId}
-                  onValueChange={setSelectedFieldId}
+      {/* ──── Sidebar panel ──── */}
+      <section className="flex w-[400px] flex-shrink-0 flex-col border-r border-moss-100 bg-cream-grain overflow-hidden">
+        {/* Masthead */}
+        <header className="border-b border-moss-100 px-7 py-5">
+          <div className="flex items-baseline justify-between">
+            <p className="editorial-eyebrow">— Vol. I, Issue 01 —</p>
+            <p className="font-mono text-[10px] tracking-[0.18em] text-stone">{today}</p>
+          </div>
+          <h1 className="mt-3 font-display text-[34px] leading-[0.95] tracking-tight text-moss-950">
+            Remote
+            <span className="italic text-moss-700"> Sensing </span>
+            Atlas
+          </h1>
+          <p className="mt-2.5 max-w-[320px] text-[13px] leading-relaxed text-smoke">
+            Sentinel-2 imagery interpreted over agricultural plots — with a cartographer&rsquo;s
+            attention to detail.
+          </p>
+        </header>
+
+        {/* Scroll body */}
+        <div className="flex-1 overflow-y-auto px-7 py-6">
+          {activeTab === 'analytics' ? (
+            <div className="editorial-rise space-y-7">
+              {/* 01 · Field selector */}
+              <section>
+                <div className="mb-3 flex items-center justify-between">
+                  <span className="editorial-num">01 · Field</span>
+                  <span className="font-mono text-[10px] tracking-[0.16em] text-stone">
+                    {fields.length} {fields.length === 1 ? 'plot' : 'plots'}
+                  </span>
+                </div>
+                <select
+                  value={selectedFieldId ?? ''}
+                  onChange={(e) => setSelectedFieldId(e.target.value)}
                   disabled={loading || fields.length === 0}
+                  className="w-full appearance-none border border-moss-100 bg-cream px-3.5 py-2.5 font-mono text-[13px] text-moss-950 transition-colors focus:border-moss-700 focus:outline-none disabled:opacity-40"
                 >
-                  <SelectTrigger className="w-[200px] h-8">
-                    <SelectValue placeholder="Select a field" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {fields.map((field) => (
-                      <SelectItem key={field.id} value={field.id}>
-                        {field.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Tabs */}
-            <Tabs value={selectedIndex} onValueChange={(v) => setSelectedIndex(v as IndexType)}>
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="NDVI">Zone</TabsTrigger>
-                <TabsTrigger value="EVI">Productivity</TabsTrigger>
-                <TabsTrigger value="SAVI">Nitrogen Rx</TabsTrigger>
-              </TabsList>
-            </Tabs>
-
-            {/* Recommendation section */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Recommendation date</span>
-                <span className="text-sm text-muted-foreground">05 Jun 2024</span>
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium">Recommendation</h3>
-                {indexResult && (
-                  <div className="space-y-2 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Yield potential:</span>
-                      <span className="font-medium">
-                        {indexResult.statistics.min.toFixed(2)} - {indexResult.statistics.max.toFixed(2)} {selectedIndex}
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Goal cards */}
-              <div className="grid grid-cols-3 gap-2">
-                <button className="p-3 border rounded-lg hover:bg-accent transition-colors text-left">
-                  <div className="text-xs text-muted-foreground mb-1">Max Roi</div>
-                  <div className="text-sm font-medium">40</div>
-                  <div className="text-xs text-muted-foreground mt-1">21% yield</div>
-                </button>
-                <button className="p-3 border-2 border-primary rounded-lg bg-primary/5 text-left">
-                  <div className="text-xs text-muted-foreground mb-1">Balanced</div>
-                  <div className="text-sm font-medium">63</div>
-                  <div className="text-xs text-muted-foreground mt-1">56% yield</div>
-                </button>
-                <button className="p-3 border rounded-lg hover:bg-accent transition-colors text-left">
-                  <div className="text-xs text-muted-foreground mb-1">Max yield</div>
-                  <div className="text-sm font-medium">68</div>
-                  <div className="text-xs text-muted-foreground mt-1">71% yield</div>
-                </button>
-              </div>
-            </div>
-
-            {/* Visualization options */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between space-x-2 py-2">
-                <Label htmlFor="smooth-mode" className="text-sm font-medium cursor-pointer">
-                  Smooth Visualization
-                </Label>
-                <Switch
-                  id="smooth-mode"
-                  checked={smoothEnabled}
-                  onCheckedChange={setSmoothEnabled}
-                />
-              </div>
-
-              {indexResult && (
-                <div className="flex items-center justify-between space-x-2 py-2">
-                  <Label htmlFor="3d-mode" className="text-sm font-medium cursor-pointer">
-                    3D View
-                  </Label>
-                  <Switch
-                    id="3d-mode"
-                    checked={view3D}
-                    onCheckedChange={setView3D}
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Calculate button */}
-            <Button
-              className="w-full"
-              disabled={!selectedFieldId || calculating}
-              onClick={calculateIndex}
-            >
-              {calculating ? 'Processing...' : `Visualize ${selectedIndex}`}
-            </Button>
-            {error && (
-              <p className="text-xs text-destructive text-center">
-                Error: {error}
-              </p>
-            )}
-
-            {/* Statistics section */}
-            {experimentResult && (
-              <div className="space-y-3">
-                <h3 className="text-sm font-medium">Experiment Result</h3>
-                <div className="p-3 border rounded-lg bg-accent/50">
-                  <div className="text-xs font-medium mb-1">{experimentResult.experiment_type.replace(/_/g, ' ').toUpperCase()}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {Object.entries(experimentResult.parameters).map(([key, value]) => (
-                      <div key={key}>
-                        {key}: {typeof value === 'number' ? value.toFixed(2) : String(value ?? '')}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="text-xs text-muted-foreground">Statistics</div>
-                  <div className="grid grid-cols-3 gap-2">
-                    {typeof experimentResult.statistics.mean === 'number' && (
-                      <div className="p-2 border rounded">
-                        <div className="text-xs text-muted-foreground">Mean</div>
-                        <div className="text-sm font-medium">{experimentResult.statistics.mean.toFixed(3)}</div>
-                      </div>
-                    )}
-                    {typeof experimentResult.statistics.min === 'number' && (
-                      <div className="p-2 border rounded">
-                        <div className="text-xs text-muted-foreground">Min</div>
-                        <div className="text-sm font-medium">{experimentResult.statistics.min.toFixed(3)}</div>
-                      </div>
-                    )}
-                    {typeof experimentResult.statistics.max === 'number' && (
-                      <div className="p-2 border rounded">
-                        <div className="text-xs text-muted-foreground">Max</div>
-                        <div className="text-sm font-medium">{experimentResult.statistics.max.toFixed(3)}</div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <Button
-                  className="w-full"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setExperimentResult(null)}
-                >
-                  Clear Experiment
-                </Button>
-              </div>
-            )}
-            {indexResult && !experimentResult && (
-              <div className="space-y-3">
-                <h3 className="text-sm font-medium">Product: {selectedIndex}</h3>
-                <div className="space-y-2">
-                  <div className="text-xs text-muted-foreground">Statistics</div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="p-2 border rounded">
-                      <div className="text-xs text-muted-foreground">Mean</div>
-                      <div className="text-sm font-medium">{indexResult.statistics.mean.toFixed(3)}</div>
-                    </div>
-                    <div className="p-2 border rounded">
-                      <div className="text-xs text-muted-foreground">Min</div>
-                      <div className="text-sm font-medium">{indexResult.statistics.min.toFixed(3)}</div>
-                    </div>
-                    <div className="p-2 border rounded">
-                      <div className="text-xs text-muted-foreground">Max</div>
-                      <div className="text-sm font-medium">{indexResult.statistics.max.toFixed(3)}</div>
-                    </div>
-                  </div>
-                </div>
-                <IndexLegend indexType={selectedIndex} statistics={indexResult.statistics} />
-                <p className="text-xs text-muted-foreground">
-                  Using product: {indexResult.product_used}
-                </p>
-              </div>
-            )}
-
-            {/* Index and Band selector */}
-            <div className="space-y-3">
-              <div className="space-y-2">
-                <div className="text-xs font-medium text-muted-foreground">Spectral Indices</div>
-                <Tabs value={selectedIndex} onValueChange={(v) => setSelectedIndex(v as IndexType)}>
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="NDVI" className="text-xs">NDVI</TabsTrigger>
-                    <TabsTrigger value="EVI" className="text-xs">EVI</TabsTrigger>
-                    <TabsTrigger value="SAVI" className="text-xs">SAVI</TabsTrigger>
-                  </TabsList>
-                  <TabsList className="grid w-full grid-cols-2 mt-2">
-                    <TabsTrigger value="NDWI" className="text-xs">NDWI</TabsTrigger>
-                    <TabsTrigger value="NDBI" className="text-xs">NDBI</TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              </div>
-
-              <div className="space-y-2">
-                <div className="text-xs font-medium text-muted-foreground">RGB Composites</div>
-                <Tabs value={selectedIndex} onValueChange={(v) => setSelectedIndex(v as IndexType)}>
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="RGB" className="text-xs">True Color</TabsTrigger>
-                    <TabsTrigger value="FALSE_COLOR" className="text-xs">False Color</TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              </div>
-
-              <div className="space-y-2">
-                <div className="text-xs font-medium text-muted-foreground">Individual Bands</div>
-                <Tabs value={selectedIndex} onValueChange={(v) => setSelectedIndex(v as IndexType)}>
-                  <TabsList className="grid w-full grid-cols-4">
-                    <TabsTrigger value="B01" className="text-xs">B01</TabsTrigger>
-                    <TabsTrigger value="B02" className="text-xs">B02</TabsTrigger>
-                    <TabsTrigger value="B03" className="text-xs">B03</TabsTrigger>
-                    <TabsTrigger value="B04" className="text-xs">B04</TabsTrigger>
-                  </TabsList>
-                  <TabsList className="grid w-full grid-cols-4 mt-2">
-                    <TabsTrigger value="B05" className="text-xs">B05</TabsTrigger>
-                    <TabsTrigger value="B06" className="text-xs">B06</TabsTrigger>
-                    <TabsTrigger value="B07" className="text-xs">B07</TabsTrigger>
-                    <TabsTrigger value="B08" className="text-xs">B08</TabsTrigger>
-                  </TabsList>
-                  <TabsList className="grid w-full grid-cols-4 mt-2">
-                    <TabsTrigger value="B8A" className="text-xs">B8A</TabsTrigger>
-                    <TabsTrigger value="B09" className="text-xs">B09</TabsTrigger>
-                    <TabsTrigger value="B11" className="text-xs">B11</TabsTrigger>
-                    <TabsTrigger value="B12" className="text-xs">B12</TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              </div>
-            </div>
-              </>
-            ) : (
-              <>
-                {/* Experiments Tab Content */}
-                <div className="space-y-1">
-                  <h1 className="text-2xl font-bold">Experiments Lab</h1>
-                  <p className="text-sm text-muted-foreground">
-                    Test and validate image processing techniques
+                  <option value="">— Select a plot —</option>
+                  {fields.map((field) => (
+                    <option key={field.id} value={field.id}>
+                      {field.name}
+                    </option>
+                  ))}
+                </select>
+                {selectedField && (
+                  <p className="mt-2 font-mono text-[10px] tracking-[0.1em] text-stone">
+                    BBOX  {selectedField.bounds.south.toFixed(3)}°S  {Math.abs(selectedField.bounds.west).toFixed(3)}°W →
+                    {' '}{selectedField.bounds.north.toFixed(3)}°N {Math.abs(selectedField.bounds.east).toFixed(3)}°E
                   </p>
-                </div>
+                )}
+              </section>
 
-                {/* Active Experiments */}
+              {/* 02 · Index family */}
+              <section>
+                <div className="mb-3 editorial-rule">Index Library</div>
+
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-sm font-semibold mb-3">Available Experiments</h3>
-                    <ExperimentMenu onSelectExperiment={handleOpenExperiment} />
-                  </div>
-
-                  {/* Experiment History */}
-                  <div>
-                    <h3 className="text-sm font-semibold mb-3">Recent Experiments</h3>
-                    <div className="space-y-2">
-                      <div className="p-3 rounded-lg border bg-card">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="font-medium text-sm">Gaussian Blur Test</div>
-                          <span className="text-xs text-muted-foreground">2h ago</span>
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Sigma: 1.5, Kernel: 5x5
-                        </div>
-                        <div className="mt-2 flex gap-2">
-                          <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">Completed</span>
-                          <span className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded">Field #1</span>
-                        </div>
-                      </div>
-
-                      <div className="p-3 rounded-lg border bg-card">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="font-medium text-sm">NDVI Threshold Analysis</div>
-                          <span className="text-xs text-muted-foreground">5h ago</span>
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Threshold: 0.5, Method: Otsu
-                        </div>
-                        <div className="mt-2 flex gap-2">
-                          <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">Completed</span>
-                          <span className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded">Field #2</span>
-                        </div>
-                      </div>
+                    <p className="editorial-num mb-2">— Spectral Indices</p>
+                    <div className="grid grid-cols-5 gap-1.5">
+                      {SPECTRAL_INDICES.map((idx) => (
+                        <button
+                          key={idx}
+                          data-active={selectedIndex === idx}
+                          onClick={() => setSelectedIndex(idx)}
+                          className="index-chip"
+                        >
+                          {idx}
+                        </button>
+                      ))}
                     </div>
                   </div>
 
-                  {/* Quick Actions */}
                   <div>
-                    <h3 className="text-sm font-semibold mb-3">Quick Actions</h3>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button variant="outline" size="sm" className="text-xs">
-                        Export Results
-                      </Button>
-                      <Button variant="outline" size="sm" className="text-xs">
-                        Compare
-                      </Button>
-                      <Button variant="outline" size="sm" className="text-xs">
-                        Save Config
-                      </Button>
-                      <Button variant="outline" size="sm" className="text-xs">
-                        Load Config
-                      </Button>
+                    <p className="editorial-num mb-2">— RGB Composites</p>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {COMPOSITES.map((idx) => (
+                        <button
+                          key={idx}
+                          data-active={selectedIndex === idx}
+                          onClick={() => setSelectedIndex(idx)}
+                          className="index-chip"
+                        >
+                          {idx === 'RGB' ? 'True Color' : 'False Color'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="editorial-num mb-2">— Individual Bands</p>
+                    <div className="grid grid-cols-6 gap-1.5">
+                      {BANDS.map((band) => (
+                        <button
+                          key={band}
+                          data-active={selectedIndex === band}
+                          onClick={() => setSelectedIndex(band)}
+                          className="index-chip"
+                        >
+                          {band}
+                        </button>
+                      ))}
                     </div>
                   </div>
                 </div>
-              </>
+              </section>
+
+              {/* 03 · Render options */}
+              <section>
+                <div className="mb-3 editorial-rule">Render Options</div>
+
+                <div className="space-y-3">
+                  <label className="flex cursor-pointer items-center justify-between border border-moss-100 bg-cream px-4 py-3 text-[13px] hover:border-moss-300 transition-colors">
+                    <div>
+                      <p className="font-medium text-moss-950">Smooth Visualization</p>
+                      <p className="font-mono text-[10px] tracking-[0.1em] text-stone mt-0.5">
+                        GAUSSIAN σ = 1.5
+                      </p>
+                    </div>
+                    <Switch checked={smoothEnabled} onCheckedChange={setSmoothEnabled} />
+                  </label>
+
+                  {indexResult && (
+                    <label className="flex cursor-pointer items-center justify-between border border-moss-100 bg-cream px-4 py-3 text-[13px] hover:border-moss-300 transition-colors">
+                      <div>
+                        <p className="font-medium text-moss-950">3D Terrain</p>
+                        <p className="font-mono text-[10px] tracking-[0.1em] text-stone mt-0.5">
+                          ELEVATION × VALUE
+                        </p>
+                      </div>
+                      <Switch checked={view3D} onCheckedChange={setView3D} />
+                    </label>
+                  )}
+                </div>
+              </section>
+
+              {/* 04 · Compute action */}
+              <section>
+                <button
+                  onClick={calculateIndex}
+                  disabled={!selectedFieldId || calculating}
+                  className="btn-ribbon w-full"
+                >
+                  {calculating ? (
+                    <>
+                      <span className="editorial-spinner" />
+                      <span>Processing</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Visualize {selectedIndex}</span>
+                      <span aria-hidden>→</span>
+                    </>
+                  )}
+                </button>
+                {error && (
+                  <p className="mt-3 border-l-2 border-clay bg-clay/5 px-3 py-2 font-mono text-[11px] leading-relaxed text-clay">
+                    Error · {error}
+                  </p>
+                )}
+              </section>
+
+              {/* 05 · Result panel */}
+              {experimentResult && (
+                <section>
+                  <div className="mb-3 editorial-rule">Experiment Result</div>
+                  <div className="border border-moss-100 bg-cream p-4 space-y-3">
+                    <p className="font-display text-lg italic text-moss-900">
+                      {experimentResult.experiment_type.replace(/_/g, ' ')}
+                    </p>
+                    <div className="space-y-1 font-mono text-[11px] text-smoke">
+                      {Object.entries(experimentResult.parameters).map(([key, value]) => (
+                        <div key={key} className="flex justify-between">
+                          <span className="text-stone">{key.toUpperCase()}</span>
+                          <span>{typeof value === 'number' ? value.toFixed(2) : String(value ?? '')}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 pt-1">
+                      {(['mean', 'min', 'max'] as const).map((k) => {
+                        const v = experimentResult.statistics[k];
+                        return typeof v === 'number' ? (
+                          <div key={k} className="stat-card">
+                            <p className="stat-label">{k}</p>
+                            <p className="stat-value">{v.toFixed(3)}</p>
+                          </div>
+                        ) : null;
+                      })}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setExperimentResult(null)}
+                    className="editorial-link mt-3 font-mono text-[11px] tracking-[0.18em] uppercase text-smoke hover:text-moss-900"
+                  >
+                    Clear experiment
+                  </button>
+                </section>
+              )}
+
+              {indexResult && !experimentResult && (
+                <section>
+                  <div className="mb-3 editorial-rule">{selectedIndex} · Statistics</div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="stat-card">
+                      <p className="stat-label">Mean</p>
+                      <p className="stat-value">{indexResult.statistics.mean.toFixed(3)}</p>
+                    </div>
+                    <div className="stat-card">
+                      <p className="stat-label">Min</p>
+                      <p className="stat-value">{indexResult.statistics.min.toFixed(3)}</p>
+                    </div>
+                    <div className="stat-card">
+                      <p className="stat-label">Max</p>
+                      <p className="stat-value">{indexResult.statistics.max.toFixed(3)}</p>
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <IndexLegend indexType={selectedIndex} statistics={indexResult.statistics} />
+                  </div>
+                  <p className="mt-4 font-mono text-[10px] leading-relaxed text-stone">
+                    SOURCE PRODUCT
+                    <br />
+                    <span className="text-smoke break-all">{indexResult.product_used}</span>
+                  </p>
+                </section>
+              )}
+            </div>
+          ) : (
+            /* ──── Research tab ──── */
+            <div className="editorial-rise space-y-7">
+              <section>
+                <p className="editorial-eyebrow">— Laboratory</p>
+                <h2 className="mt-2 font-display text-[28px] leading-[1.05] text-moss-950">
+                  Image processing
+                  <span className="italic text-moss-700"> experiments</span>
+                </h2>
+                <p className="mt-2 text-[13px] leading-relaxed text-smoke">
+                  Apply filters, edge detectors, morphological operators and segmentation
+                  techniques over the selected plot&rsquo;s NIR band.
+                </p>
+              </section>
+
+              <section>
+                <div className="mb-3 editorial-rule">Available Experiments</div>
+                <ExperimentMenu onSelectExperiment={handleOpenExperiment} />
+              </section>
+
+              {experimentHistory.length > 0 && (
+                <section>
+                  <div className="mb-3 editorial-rule">Recent Runs</div>
+                  <div className="space-y-2">
+                    {experimentHistory.slice(0, 5).map((exp, i) => (
+                      <div
+                        key={i}
+                        className="border border-moss-100 bg-cream px-4 py-3"
+                      >
+                        <div className="flex items-baseline justify-between">
+                          <p className="font-medium text-[13px] text-moss-950 capitalize">
+                            {exp.experiment_type.replace(/_/g, ' ')}
+                          </p>
+                          <span className="font-mono text-[10px] tracking-[0.1em] text-stone">
+                            {new Date(exp.timestamp).toLocaleTimeString('en-GB', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </span>
+                        </div>
+                        <p className="mt-1 font-mono text-[11px] text-smoke">
+                          {Object.entries(exp.parameters)
+                            .map(([k, v]) => `${k}=${typeof v === 'number' ? v.toFixed(2) : v}`)
+                            .join('  ·  ')}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <footer className="border-t border-moss-100 px-7 py-3">
+          <p className="font-mono text-[10px] tracking-[0.16em] text-stone">
+            ICEV · Remote Sensing Atlas · 2026.1
+          </p>
+        </footer>
+      </section>
+
+      {/* ──── Map / 3D viewport ──── */}
+      <section className="relative flex-1 overflow-hidden">
+        {/* Floating chrome — index label + 3D pill */}
+        <div className="pointer-events-none absolute left-0 right-0 top-0 z-[400] flex items-start justify-between px-6 pt-5">
+          <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-moss-100 bg-cream/95 px-4 py-1.5 backdrop-blur-sm">
+            <span className="dot h-1.5 w-1.5 rounded-full bg-lime" />
+            <span className="font-mono text-[11px] tracking-[0.18em] text-moss-900 uppercase">
+              {experimentResult ? 'Experiment' : selectedIndex}
+            </span>
+            {indexResult?.product_used && (
+              <span className="font-mono text-[10px] tracking-[0.1em] text-stone">
+                · {indexResult.product_used.split('_')[2]?.slice(0, 8) ?? '—'}
+              </span>
             )}
           </div>
-        </div>
-      </div>
 
-      {/* Right side - Map/3D View */}
-      <div className="flex-1 relative">
+          {selectedField && (
+            <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-moss-100 bg-cream/95 px-4 py-1.5 backdrop-blur-sm">
+              <span className="font-mono text-[10px] tracking-[0.1em] text-stone">PLOT</span>
+              <span className="font-mono text-[11px] text-moss-900">{selectedField.name}</span>
+            </div>
+          )}
+        </div>
+
         {loading ? (
-          <div className="flex items-center justify-center h-full bg-muted">
-            <p className="text-muted-foreground">Loading fields...</p>
+          <div className="flex h-full items-center justify-center bg-paper-grain">
+            <div className="text-center">
+              <Loader2 className="mx-auto h-5 w-5 animate-spin text-moss-700" strokeWidth={1.5} />
+              <p className="mt-3 editorial-eyebrow text-stone">Loading plots</p>
+            </div>
           </div>
         ) : fields.length > 0 ? (
           view3D && indexResult && indexResult.elevation_data && selectedFieldId ? (
             <Terrain3DViewer
               imageData={indexResult.image_base64}
-              bounds={fields.find(f => f.id === selectedFieldId)?.bounds || { north: 0, south: 0, east: 0, west: 0 }}
               elevationScale={100}
             />
           ) : (
@@ -596,8 +613,6 @@ export default function Home() {
                 experimentResult
                   ? ({
                       kind: 'spectral',
-                      // Experiments don't share the strict spectral schema; coerce
-                      // numeric stats to keep the popup happy and skip what we don't have.
                       statistics: {
                         min: Number(experimentResult.statistics.min ?? 0),
                         max: Number(experimentResult.statistics.max ?? 0),
@@ -619,16 +634,20 @@ export default function Home() {
             />
           )
         ) : (
-          <div className="flex items-center justify-center h-full bg-muted">
-            <div className="text-center space-y-2">
-              <p className="text-muted-foreground">No fields found</p>
-              <p className="text-sm text-muted-foreground">
-                Make sure KML files are in data/KML Fields directory
+          <div className="flex h-full items-center justify-center bg-paper-grain">
+            <div className="text-center max-w-sm px-6">
+              <p className="editorial-eyebrow text-stone">— No plots indexed —</p>
+              <h2 className="mt-3 font-display text-2xl italic text-moss-900">
+                Empty atlas
+              </h2>
+              <p className="mt-2 text-[13px] leading-relaxed text-smoke">
+                Place KML files in <span className="font-mono text-[12px]">data/KML Fields/</span> or
+                draw a polygon directly on the map below to begin.
               </p>
             </div>
           </div>
         )}
-      </div>
+      </section>
 
       {/* Experiment Dialog */}
       {selectedExperiment && (
