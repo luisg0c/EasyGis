@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { KMLField } from '@/types';
+import { translateError } from '@/lib/utils';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -134,7 +135,7 @@ export default function ClassificationPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.detail || 'Classification failed');
+        throw new Error(translateError(errorData.detail) || 'Falha na classificação');
       }
 
       const result = await response.json();

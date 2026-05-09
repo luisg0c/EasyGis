@@ -8,6 +8,7 @@ import { ExperimentMenu } from '@/components/experiment-menu';
 import { Switch } from '@/components/ui/switch';
 import { KMLField } from '@/types';
 import { IndexType } from '@/lib/spectral-indices';
+import { translateError } from '@/lib/utils';
 import {
   LayoutDashboard,
   Sprout,
@@ -156,7 +157,7 @@ export default function Home() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to calculate index');
+        throw new Error(translateError(errorData.detail) || 'Falha ao calcular índice');
       }
 
       const result = await response.json();
@@ -201,7 +202,7 @@ export default function Home() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.detail || 'Experiment failed');
+        throw new Error(translateError(errorData.detail) || 'Experimento falhou');
       }
 
       const result: ExperimentResult = await response.json();
