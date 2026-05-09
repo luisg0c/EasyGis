@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { IndexLegend } from '@/components/index-legend';
+import { IndexInsight } from '@/components/index-insight';
 import { ExperimentDialog } from '@/components/experiment-dialog';
 import { ExperimentMenu } from '@/components/experiment-menu';
 import { Switch } from '@/components/ui/switch';
@@ -490,7 +490,7 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="mt-4">
-                    <IndexLegend indexType={selectedIndex} statistics={indexResult.statistics} />
+                    <IndexInsight indexType={selectedIndex} statistics={indexResult.statistics} />
                   </div>
                   <p className="mt-4 font-mono text-[10px] leading-relaxed text-stone">
                     PRODUTO DE ORIGEM
