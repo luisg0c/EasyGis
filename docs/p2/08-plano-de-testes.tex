@@ -1,0 +1,330 @@
+\documentclass[11pt, a4paper]{article}
+\input{p2-preamble.tex}
+
+\title{%
+  \vspace{-1.5cm}
+  {\Huge\bfseries\color{accentdim} Plano de Testes}\\[8pt]
+  {\Large\bfseries ICEV Remote Sensing Software}\\[18pt]
+  {\normalsize\itshape Avaliação P2 --- Engenharia de Software, 2026.1}
+}
+\author{Equipe ICEV Remote Sensing}
+\date{Versão 1.0 --- 09 de maio de 2026}
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+
+\vfill
+\begin{center}
+\small\textit{Instituto de Ensino Superior --- ICEV}\\
+\small\textit{Teresina, PI, Brasil}
+\end{center}
+\newpage
+
+\tableofcontents
+\newpage
+
+% ══════════════════════════════════════════════════════════════
+\section{Objetivo}
+% ══════════════════════════════════════════════════════════════
+
+Definir a estratégia, escopo e casos de teste para validar o MVP do sistema, com foco nos requisitos funcionais críticos de processamento de imagens Sentinel-2 (NDVI, EVI, estatísticas) e nos endpoints HTTP da API.
+
+% ══════════════════════════════════════════════════════════════
+\section{Escopo}
+% ══════════════════════════════════════════════════════════════
+
+\subsection{No escopo}
+
+\begin{itemize}
+  \item \textbf{Cálculo de índices espectrais} (NDVI, EVI) --- funções puras do \texttt{SentinelProcessor}
+  \item \textbf{Estatísticas e histograma} --- agregações sobre arrays NumPy
+  \item \textbf{Endpoints HTTP} --- \texttt{/}, \texttt{/health}, \texttt{/products}, validação de entrada de \texttt{/calculate-index}
+  \item \textbf{Conversão de coordenadas} --- geração de polígonos Shapely a partir de coordenadas geográficas
+  \item \textbf{Tratamento de casos de borda} --- divisão por zero, NaN, arrays vazios
+\end{itemize}
+
+\subsection{Fora do escopo}
+
+\begin{itemize}
+  \item \textbf{Integração com produto Sentinel-2 real} --- exigiria download de aproximadamente 1\,GB de dados; testado manualmente na demonstração.
+  \item \textbf{Testes de UI} (frontend Next.js) --- fora do escopo da entrega P2 acordado com o professor; testes manuais via demonstração.
+  \item \textbf{Performance e carga} --- sistema é local, single-user; não há requisito de carga.
+  \item \textbf{Endpoints \texttt{/api/experiments/run} e \texttt{/api/classification/classify}} --- exigem produto Sentinel-2 real para teste end-to-end. Validação por inspeção manual.
+\end{itemize}
+
+% ══════════════════════════════════════════════════════════════
+\section{Estratégia de Teste}
+% ══════════════════════════════════════════════════════════════
+
+\subsection{Níveis}
+
+\begin{table}[H]
+\centering
+\small
+\rowcolors{2}{tabrow}{white}
+\begin{tabularx}{\textwidth}{@{}llX@{}}
+\toprule
+\rowcolor{tabheader}\textcolor{white}{\textbf{Nível}} & \textcolor{white}{\textbf{Ferramenta}} & \textcolor{white}{\textbf{Cobertura Pretendida}}\\
+\midrule
+Unitário & pytest & Funções puras de \texttt{sentinel\_processor.py} (cálculo de índices, estatísticas)\\
+Integração & pytest + \texttt{TestClient} & Endpoints HTTP, validação Pydantic\\
+Manual & Demonstração ao vivo & Fluxo completo end-to-end com produto Sentinel-2 e KML real\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Abordagem}
+
+\begin{itemize}
+  \item \textbf{Caixa branca} nas funções de cálculo: validação contra resultados matemáticos conhecidos.
+  \item \textbf{Caixa preta} nos endpoints: requisições HTTP com payloads válidos/inválidos, verificação de status code e estrutura de resposta.
+  \item \textbf{Fixtures sintéticas} (NumPy) substituem o I/O de imagens reais, permitindo execução rápida ($<1$\,s) e reprodutível.
+\end{itemize}
+
+\subsection{Critérios de aceitação}
+
+\begin{itemize}
+  \item 100\% dos casos de teste planejados executados.
+  \item Taxa de sucesso $\geq 95\%$.
+  \item Falhas analisadas e documentadas no Relatório de Testes (\texttt{09-relatorio-de-testes.pdf}).
+\end{itemize}
+
+% ══════════════════════════════════════════════════════════════
+\section{Ambiente de Teste}
+% ══════════════════════════════════════════════════════════════
+
+\begin{table}[H]
+\centering
+\small
+\rowcolors{2}{tabrow}{white}
+\begin{tabularx}{\textwidth}{@{}lX@{}}
+\toprule
+\rowcolor{tabheader}\textcolor{white}{\textbf{Item}} & \textcolor{white}{\textbf{Especificação}}\\
+\midrule
+Sistema operacional & macOS 15 (Darwin 25.4.0)\\
+Python & 3.12.13\\
+pytest & 9.0.3\\
+Gerenciador de pacotes & uv 0.11.3\\
+Dependências & \texttt{pyproject.toml} grupo \texttt{[dependency-groups.dev]}\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\textbf{Comando de execução:}
+
+\begin{lstlisting}[style=shellstyle]
+uv sync --group dev
+uv run pytest tests/ -v --cov=api --cov-report=term-missing
+\end{lstlisting}
+
+% ══════════════════════════════════════════════════════════════
+\section{Casos de Teste}
+% ══════════════════════════════════════════════════════════════
+
+\subsection*{Convenção de identificação}
+
+\begin{itemize}
+  \item \textbf{CT-XX.Y} $\rightarrow$ Caso de teste número XX, sub-caso Y
+  \item Vinculado ao requisito funcional correspondente em \texttt{03-especificacao-requisitos-SRS.md}
+\end{itemize}
+
+\subsection{RF-05 --- Cálculo de NDVI}
+
+\renewcommand{\arraystretch}{1.4}
+\begin{table}[H]
+\centering
+\footnotesize
+\rowcolors{2}{tabrow}{white}
+\begin{tabularx}{\textwidth}{@{}p{1.5cm}p{3.5cm}p{3.5cm}X@{}}
+\toprule
+\rowcolor{tabheader}\textcolor{white}{\textbf{ID}} & \textcolor{white}{\textbf{Caso}} & \textcolor{white}{\textbf{Entrada}} & \textcolor{white}{\textbf{Resultado Esperado}}\\
+\midrule
+CT-01.1 & NDVI no intervalo válido & Bandas NIR e Red sintéticas (uint16, 100$\times$100) & Array com $\min \geq -1$ e $\max \leq 1$\\
+CT-01.2 & Vegetação saudável produz NDVI alto & NIR alto (3000--8000), Red baixo (500--2000) & $\mathrm{mean} > 0{,}4$\\
+CT-01.3 & Fórmula matemática correta & NIR = 8000, Red = 2000 & NDVI = 0{,}6 ($= 6000/10000$) com tolerância $10^{-6}$\\
+CT-01.4 & Tratamento de divisão por zero & NIR = 0, Red = 0 & Todos os pixels NaN (não crash)\\
+CT-01.5 & NDVI zero quando NIR == Red & NIR = Red = 3000 & NDVI $\approx 0{,}0$\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{RF-06 --- Cálculo de EVI}
+
+\begin{table}[H]
+\centering
+\footnotesize
+\rowcolors{2}{tabrow}{white}
+\begin{tabularx}{\textwidth}{@{}p{1.5cm}p{4cm}p{3.5cm}X@{}}
+\toprule
+\rowcolor{tabheader}\textcolor{white}{\textbf{ID}} & \textcolor{white}{\textbf{Caso}} & \textcolor{white}{\textbf{Entrada}} & \textcolor{white}{\textbf{Resultado Esperado}}\\
+\midrule
+CT-02.1 & EVI no intervalo válido & NIR, Red, Blue sintéticos & $\min \geq -1$ e $\max \leq 1$ (clipping aplicado)\\
+CT-02.2 & Coeficientes padrão & NIR=8000, Red=2000, Blue=1000 & EVI clipado em 1{,}0\\
+CT-02.3 & Coeficientes customizados produzem resultado diferente & Mesmas bandas, $G=2{,}0$ vs $G=2{,}5$ & Resultados numericamente diferentes\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{RF-10 --- Estatísticas Descritivas}
+
+\begin{table}[H]
+\centering
+\footnotesize
+\rowcolors{2}{tabrow}{white}
+\begin{tabularx}{\textwidth}{@{}p{1.5cm}p{4cm}p{3.5cm}X@{}}
+\toprule
+\rowcolor{tabheader}\textcolor{white}{\textbf{ID}} & \textcolor{white}{\textbf{Caso}} & \textcolor{white}{\textbf{Entrada}} & \textcolor{white}{\textbf{Resultado Esperado}}\\
+\midrule
+CT-03.1 & Todas as chaves presentes & Array NDVI 50$\times$50 & Dict contém \texttt{min, max, mean, median, std, count}\\
+CT-03.2 & Valores matematicamente corretos & \texttt{[[0.1,0.2,0.3],[0.4,0.5,0.6]]} & min=0{,}1; max=0{,}6; mean=0{,}35; count=6\\
+CT-03.3 & NaN ignorados no cálculo & Array 20$\times$20 com 100 NaN & count = 300 ($= 400 - 100$)\\
+CT-03.4 & Array totalmente NaN & Array 10$\times$10 todo NaN & count = 0; mean = 0{,}0 (sem crash)\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{RF-11 --- Histograma}
+
+\begin{table}[H]
+\centering
+\footnotesize
+\rowcolors{2}{tabrow}{white}
+\begin{tabularx}{\textwidth}{@{}p{1.5cm}p{4cm}p{3.5cm}X@{}}
+\toprule
+\rowcolor{tabheader}\textcolor{white}{\textbf{ID}} & \textcolor{white}{\textbf{Caso}} & \textcolor{white}{\textbf{Entrada}} & \textcolor{white}{\textbf{Resultado Esperado}}\\
+\midrule
+CT-04.1 & Padrão 50 bins & Array NDVI saudável & \texttt{len(counts) == 50} e \texttt{len(bins) == 50}\\
+CT-04.2 & Bins customizados & \texttt{bins=10} & \texttt{len(counts) == 10}\\
+CT-04.3 & Soma de counts = total de pixels & Array 50$\times$50 & \texttt{sum(counts) == 2500}\\
+CT-04.4 & Array vazio & Array 5$\times$5 todo NaN & Listas vazias retornadas (sem crash)\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Casos de Borda (CT-05)}
+
+\begin{table}[H]
+\centering
+\footnotesize
+\rowcolors{2}{tabrow}{white}
+\begin{tabularx}{\textwidth}{@{}p{1.5cm}p{4cm}p{3.5cm}X@{}}
+\toprule
+\rowcolor{tabheader}\textcolor{white}{\textbf{ID}} & \textcolor{white}{\textbf{Caso}} & \textcolor{white}{\textbf{Entrada}} & \textcolor{white}{\textbf{Resultado Esperado}}\\
+\midrule
+CT-05.1 & Conversão uint16 $\rightarrow$ float32 & NIR e Red como uint16 & \texttt{ndvi.dtype == np.float32}\\
+CT-05.2 & NDVI negativo para água & NIR=500, Red=2000 (água) & Todos os pixels $< 0$\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{RF-20 --- Endpoint \texttt{/health}}
+
+\begin{table}[H]
+\centering
+\footnotesize
+\rowcolors{2}{tabrow}{white}
+\begin{tabularx}{\textwidth}{@{}p{1.5cm}p{4cm}p{3.5cm}X@{}}
+\toprule
+\rowcolor{tabheader}\textcolor{white}{\textbf{ID}} & \textcolor{white}{\textbf{Caso}} & \textcolor{white}{\textbf{Requisição}} & \textcolor{white}{\textbf{Resultado Esperado}}\\
+\midrule
+CT-06.1 & Health responde 200 & \texttt{GET /health} & HTTP 200\\
+CT-06.2 & Estrutura da resposta & \texttt{GET /health} & JSON com \texttt{status: "healthy"} e \texttt{products\_dir: bool}\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Endpoint Raiz, Produtos e Validação}
+
+\begin{table}[H]
+\centering
+\footnotesize
+\rowcolors{2}{tabrow}{white}
+\begin{tabularx}{\textwidth}{@{}p{1.5cm}p{4.5cm}p{3.5cm}X@{}}
+\toprule
+\rowcolor{tabheader}\textcolor{white}{\textbf{ID}} & \textcolor{white}{\textbf{Caso}} & \textcolor{white}{\textbf{Requisição}} & \textcolor{white}{\textbf{Resultado Esperado}}\\
+\midrule
+CT-07.1 & Raiz retorna info da API & \texttt{GET /} & JSON com \texttt{message}, \texttt{version}, \texttt{endpoints}\\
+CT-08.1 & Endpoint \texttt{/products} responde 200 & \texttt{GET /products} & HTTP 200\\
+CT-08.2 & Estrutura JSON correta & \texttt{GET /products} & \texttt{products} (lista) e \texttt{count} (int)\\
+CT-09.1 & Campos obrigatórios faltando & \texttt{POST /calculate-index} body vazio & HTTP 422\\
+CT-09.2 & Tipo de coordenada inválido & longitude=``invalid'' (string) & HTTP 422\\
+CT-09.3 & \texttt{index\_type} desconhecido & index\_type=``INVALID\_INDEX'' & HTTP 400/404/500\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Conversão de Coordenadas (CT-10)}
+
+\begin{table}[H]
+\centering
+\footnotesize
+\rowcolors{2}{tabrow}{white}
+\begin{tabularx}{\textwidth}{@{}p{1.5cm}p{4.5cm}p{3.5cm}X@{}}
+\toprule
+\rowcolor{tabheader}\textcolor{white}{\textbf{ID}} & \textcolor{white}{\textbf{Caso}} & \textcolor{white}{\textbf{Entrada}} & \textcolor{white}{\textbf{Resultado Esperado}}\\
+\midrule
+CT-10.1 & Polígono Shapely válido & 4 coordenadas formando triângulo fechado & \texttt{polygon.is\_valid == True}, \texttt{area > 0}\\
+CT-10.2 & Centroide dentro do bbox & Coordenadas em Picos-PI & $-42{,}6194 \leq c_x \leq -42{,}6180$ e $-4{,}8809 \leq c_y \leq -4{,}8798$\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ══════════════════════════════════════════════════════════════
+\section{Matriz de Rastreabilidade Requisito $\times$ Caso de Teste}
+% ══════════════════════════════════════════════════════════════
+
+\begin{table}[H]
+\centering
+\small
+\rowcolors{2}{tabrow}{white}
+\begin{tabularx}{\textwidth}{@{}lX@{}}
+\toprule
+\rowcolor{tabheader}\textcolor{white}{\textbf{Requisito (SRS)}} & \textcolor{white}{\textbf{Casos de Teste}}\\
+\midrule
+RF-04 (Listar produtos) & CT-08.1, CT-08.2\\
+RF-05 (Calcular NDVI) & CT-01.1 a CT-01.5\\
+RF-06 (Calcular EVI) & CT-02.1, CT-02.2, CT-02.3\\
+RF-10 (Estatísticas) & CT-03.1 a CT-03.4\\
+RF-11 (Histograma) & CT-04.1 a CT-04.4\\
+RF-20 (Health check) & CT-06.1, CT-06.2\\
+RNF-04 (Confiabilidade --- erros claros) & CT-01.4, CT-03.4, CT-04.4, CT-09.1, CT-09.2, CT-09.3\\
+RNF-05 (Manutenibilidade --- separação de camadas) & Toda a suite (testa \texttt{SentinelProcessor} isoladamente das rotas HTTP)\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ══════════════════════════════════════════════════════════════
+\section{Riscos e Mitigações}
+% ══════════════════════════════════════════════════════════════
+
+\begin{table}[H]
+\centering
+\small
+\rowcolors{2}{tabrow}{white}
+\begin{tabularx}{\textwidth}{@{}XX@{}}
+\toprule
+\rowcolor{tabheader}\textcolor{white}{\textbf{Risco}} & \textcolor{white}{\textbf{Mitigação}}\\
+\midrule
+Testes dependem de produtos Sentinel-2 reais ($\sim$1\,GB) & Uso de fixtures sintéticas via NumPy. Apenas testes manuais usam dados reais (na demo).\\
+Ambiente de CI sem GDAL/rasterio & Execução em máquina local com GDAL instalado via Homebrew. Não há CI configurado neste MVP (escopo P2).\\
+Cobertura limitada de funções de I/O (\texttt{read\_band}, \texttt{crop\_to\_geometry}) & Aceitável para o MVP --- essas funções são thin wrappers sobre rasterio, validados em demonstração manual.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ══════════════════════════════════════════════════════════════
+\section{Critério de Saída}
+% ══════════════════════════════════════════════════════════════
+
+\begin{successbox}
+A entrega da P2 está pronta quando:
+\begin{itemize}
+  \item[\checkmark] Todos os 28 casos de teste foram executados
+  \item[\checkmark] Taxa de sucesso $\geq 95\%$ \textbf{(atingido: 100\%)}
+  \item[\checkmark] Relatório consolidado com evidências está disponível em \texttt{09-relatorio-de-testes.pdf}
+  \item[\checkmark] Suite executa em $< 30$\,s \textbf{(atingido: $\sim 17$\,s na primeira execução; $< 1$\,s em \textit{re-runs})}
+\end{itemize}
+\end{successbox}
+
+\end{document}

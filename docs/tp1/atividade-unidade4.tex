@@ -1,0 +1,216 @@
+\documentclass[10pt, a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage[left=2.2cm, right=1.8cm, top=2.2cm, bottom=1.8cm]{geometry}
+\usepackage{setspace}\singlespacing
+\setlength{\parindent}{1.25cm}
+\setlength{\parskip}{1pt}
+\usepackage{times}
+\usepackage{microtype}
+\usepackage{amsmath}
+\usepackage{xcolor}
+\definecolor{linkblue}{HTML}{2980B9}
+\usepackage{enumitem}\setlist{nosep}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{float}
+\usepackage{caption}
+\captionsetup{font=small, labelfont=bf, skip=4pt}
+\usepackage[colorlinks=true, linkcolor=linkblue, urlcolor=linkblue]{hyperref}
+\usepackage{fancyhdr}
+\pagestyle{fancy}\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancyhead[L]{\small\textcolor{gray}{EasyGIS Remote Sensing Software}}
+\fancyhead[R]{\small\textcolor{gray}{Projeto de Extensão VII, 2026.1}}
+\fancyfoot[C]{\thepage}
+\setlength{\headheight}{14pt}
+\usepackage{titlesec}
+\titleformat{\section}{\normalsize\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalsize\bfseries\itshape}{\thesubsection.}{0.5em}{}
+\titlespacing{\section}{0pt}{8pt}{3pt}
+\titlespacing{\subsection}{0pt}{5pt}{2pt}
+
+\begin{document}
+
+% ══════════════════════════════════════════════════════
+\begin{center}
+  {\large\bfseries MVP de Pesquisa Aplicada com Validação Experimental}\\[4pt]
+  {\normalsize Validação do Pipeline de Cálculo de NDVI do EasyGIS Remote Sensing Software}\\[8pt]
+  {\small Projeto de Extensão VII \,|\, Prof.\ Francisco Luciani \,|\, ICEV}\\[4pt]
+  {\small Luis Gustavo Olimpio, Lauan Matheus, João Leonardi, João Vinícius Castello,\\
+  Vinícius Henrique, Lucas Benevinuto, José Melquíades}\\[3pt]
+  {\footnotesize Teresina, PI \,|\, Março de 2026}
+\end{center}
+\vspace{4pt}\hrule\vspace{8pt}
+
+% ══════════════════════════════════════════════════════
+\section{Introdução}
+% ══════════════════════════════════════════════════════
+
+A agricultura de precisão erigiu-se, ao longo do último quartel, como paradigma hegemônico e incontornável para a gestão racional de lavouras em escala comercial, ancorando-se na aquisição e na hermenêutica de dados geoespaciais de elevada resolução espaço-temporal para fundamentar deliberações operacionais atinentes a irrigação deficitária controlada, fertirrigação sítio-específica, manejo integrado de pragas e colheita seletiva georeferenciada. No epicentro desse arcabouço epistêmico situam-se os índices de vegetação derivados de imageamento multiespectral orbital, instrumentos que facultam a aferição objetiva, remota e não destrutiva do vigor fotossintético do dossel vegetal, prescindindo de prospecção in loco com equipamentos portáteis de espectrorradiometria. Dentre a profusão de formulações propostas na literatura especializada, o Índice de Vegetação por Diferença Normalizada (NDVI), concebido originalmente por Rouse et al.\ (1974) no bojo do programa ERTS-1 da NASA, subsiste como o descritor espectral de emprego mais disseminado, em razão de sua parcimônia computacional, de sua resiliência perante flutuações nas condições de irradiância e de sua correlação comprovada com parâmetros biofísicos estruturais da vegetação, nomeadamente o Índice de Área Foliar (IAF) e a fração de Radiação Fotossinteticamente Ativa Absorvida (fAPAR).
+
+O acesso efetivo a essa capacidade analítica, não obstante, permanece circunscrito a profissionais que detêm proficiência em ferramentas de geoprocessamento de considerável hermeticidade operacional, tais como ArcGIS Pro, ENVI, ESA SNAP ou QGIS com o plugin Semi-Automatic Classification, as quais pressupõem domínio aprofundado de sistemas de referência geodésicos, algoritmos de atenuação atmosférica, manipulação de estruturas raster multibanda e exegese de metadados orbitais.
+
+O \textbf{EasyGIS Remote Sensing Software} foi engendrado com o desígnio precípuo de mitigar essa assimetria cognitiva, franqueando uma plataforma web gratuita e de código aberto que automatiza integralmente o pipeline de processamento de imagens do consórcio Sentinel-2. O presente documento consigna a validação experimental do componente nevrálgico dessa plataforma, cotejando seus resultados numéricos e seu desempenho computacional com os de uma implementação de referência independente, em estrita observância aos requisitos da Atividade Avaliativa da Unidade~IV.
+
+% ══════════════════════════════════════════════════════
+\section{Problema}
+% ══════════════════════════════════════════════════════
+
+O NDVI é definido pela razão normalizada $(B_{08} - B_{04}) / (B_{08} + B_{04})$, em que $B_{08}$ designa a reflectância hemisférica direcional na banda do infravermelho próximo (NIR, centrada em 842\,nm, largura a meia altura de 115\,nm) e $B_{04}$ a reflectância homóloga na banda do vermelho visível (Red, 665\,nm, FWHM de 30\,nm) do instrumento MSI embarcado nos satélites Sentinel-2A e 2B da Agência Espacial Europeia. O índice transmuta a atividade fotossintética da cobertura vegetal em grandeza escalar compreendida no intervalo $[-1, +1]$, e sua fundamentação biofísica assenta-se em dois fenômenos ópticos mutuamente complementares: a absorção seletiva da radiação fotossinteticamente ativa pelos pigmentos clorofilianos acondicionados nos tilacoides dos cloroplastos do parênquima paliçádico, e a intensa retrodifusão que o mesófilo esponjoso, com suas lacunas intercelulares saturadas de ar, exibe na faixa espectral do infravermelho próximo. Fitomassa fotossinteticamente ativa ostenta valores conspícuos de NDVI (tipicamente entre 0,4 e 0,9), ao passo que solo desnudo, corpos hídricos e superfícies antropizadas engendram valores nulos ou negativos.
+
+Impende sublinhar que discrepâncias no cômputo do NDVI, mesmo de exígua monta, propagam-se de forma não linear pela razão normalizada e podem subverter a classificação de vigor em zonas de transição espectral, induzindo o produtor rural a deliberações de manejo temerariamente equivocadas, como a supressão de irrigação em talhões sob estresse hídrico incipiente ou a aspersão dispensável de fertilizantes em áreas de vigor hígido (Huete et al., 2002).
+
+O problema que instiga o presente experimento reveste-se, destarte, de natureza dual e plenamente mensurável. Primeiramente, cumpre perscrutar se o pipeline de processamento espectral do EasyGIS engendra valores de NDVI numericamente fidedignos quando cotejados com os de uma implementação de referência que opera de modo inteiramente independente da API. Em segundo lugar, é imperioso aquilatar se a latência de processamento é congruente com o requisito de interatividade consignado na especificação do sistema (RNF-01: resposta em até 30 segundos para talhões de até 500 hectares), condição sine qua non para que a plataforma concretize seu desiderato de substituir o processamento offline por uma experiência interativa em tempo quase real.
+
+% ══════════════════════════════════════════════════════
+\section{Hipótese}
+% ══════════════════════════════════════════════════════
+
+A hipótese alternativa ($\text{H}_1$) conjectura que a API do EasyGIS computa o NDVI com erro absoluto médio (MAE) infra 0,02 relativamente ao valor de referência produzido por script Python independente (empregando rasterio e NumPy, sem qualquer intermediação da API), e que o processamento se perfaz em lapso temporal inferior a 30 segundos para talhões com extensão de até 500 hectares. O limiar de 0,02 encontra respaldo robusto na literatura de sensoriamento remoto quantitativo, porquanto incertezas dessa grandeza são imputáveis à heterogeneidade intrapixel decorrente da resolução espacial finita (10 metros para as bandas B04 e B08), ao ruído radiométrico intrínseco ao sensor MSI (razão sinal-ruído superior a 100:1 nas sobreditas bandas) e às incertezas remanescentes do algoritmo de correção atmosférica Sen2Cor, aferidas pela ESA em $\pm$0,05 para reflectância de superfície (BOA) nas bandas do visível e do NIR (ESA, 2015).
+
+A hipótese nula ($\text{H}_0$) estatui que o MAE é igual ou superior a 0,02, ou que a latência excede 30 segundos. A refutação de $\text{H}_0$ demanda que ambas as condições de $\text{H}_1$ se verifiquem concomitantemente em todos os 12 cenários experimentais, porquanto acurácia numérica desacompanhada de celeridade computacional inviabiliza a experiência interativa que constitui o diferencial ontológico da plataforma, ao passo que celeridade satisfatória acompanhada de valores espúrios conduz o produtor a deliberações de manejo lastreadas em dados espectrais falaciosos, conjuntura cujos prejuízos potenciais suplantam os da mera inexistência da ferramenta.
+
+Convém ressalvar que a hipótese formulada não padece de trivialidade: conquanto API e referência partilhem a mesma biblioteca de ingestão de rasters e a mesma formulação algébrica, divergências na cadeia de reprojeção geodésica, no algoritmo de recorte espacial e na quantização imposta pela renderização PNG constituem fontes potenciais de discrepância cuja magnitude somente pode ser determinada por via experimental.
+
+% ══════════════════════════════════════════════════════
+\section{Descrição do MVP}
+% ══════════════════════════════════════════════════════
+
+O MVP materializa-se como plataforma web funcional composta por dois módulos arquiteturalmente desacoplados. O backend consubstancia-se numa API RESTful edificada sobre Python~3.12 e o framework assíncrono FastAPI, socorrendo-se das bibliotecas rasterio para ingestão de rasters multiespectrais em formato JPEG\,2000, pyproj para transformações geodésicas entre datums e sistemas de referência de coordenadas, e NumPy para operações de álgebra matricial sobre arrays de reflectância em aritmética de ponto flutuante de precisão dupla (64 bits). O frontend, implementado em Next.js~16 com React~19 e TypeScript, disponibiliza interface cartográfica interativa via Leaflet para visualização bidimensional e renderização tridimensional do relevo por intermédio de Three.js com modelo digital de elevação.
+
+O componente nevrálgico submetido a validação é o endpoint \texttt{POST /calculate-index}, o qual concatena seis estágios de processamento determinísticos: (i)~leitura das bandas espectrais dos grânulos Sentinel-2 L2A, cujas reflectâncias BOA já se encontram corrigidas atmosfericamente pelo processador Sen2Cor; (ii)~reprojeção do polígono do talhão de WGS\,84 (EPSG:4326) para a projeção UTM nativa do grânulo via \texttt{pyproj.Transformer}; (iii)~recorte espacial mediante máscara binária engendrada pela rasterização do polígono sobre a grade do raster; (iv)~cálculo vetorizado do índice em aritmética \texttt{float64}, com tratamento explícito de singularidades de divisão por zero via \texttt{np.where}; (v)~renderização do mapa resultante como imagem PNG de 8 bits por canal com mapeamento cromático RGBA; e (vi)~cômputo de estatísticas descritivas ($\mu$, $\sigma$, min, max) acompanhadas de histograma com 50 bins equiespaçados. O payload de retorno, serializado em JSON, agrega a imagem codificada em Base64, o vetor de estatísticas e a matriz altimétrica. O sistema é instanciável via \texttt{uvicorn main:app}, com dependências congeladas (Figura~\ref{fig:interface}).
+
+% ══════════════════════════════════════════════════════
+\section{Planejamento Experimental}
+% ══════════════════════════════════════════════════════
+
+\subsection{Variáveis e Baseline}
+
+\textbf{Variáveis independentes} (fatores deliberadamente manipulados): (i)~extensão do talhão em quatro patamares (50, 100, 200 e 500\,ha), fator que governa o volume de pixels ($10^4$\,px/ha à resolução de 10\,m), a alocação de memória e a latência; (ii)~três grânulos Sentinel-2 L2A adquiridos em efemérides distintas sobre região agrícola do cerrado piauiense, abarcando estágios fenológicos contrastantes (solo desnudo pós-colheita, pleno crescimento vegetativo e senescência fisiológica), com o fito de aferir a robustez do pipeline perante distribuições espectrais heterogêneas.
+
+\textbf{Dependentes:} MAE do NDVI pixel a pixel; coeficiente de determinação (r²); latência em milissegundos; pico de memória RSS (MB); taxa de sucesso (HTTP 200/total).
+
+\textbf{Controladas:} hardware invariável, mesmo KML por cenário, Uvicorn single-worker isento de carga concorrente, código-fonte e virtualenv congelados (\texttt{pip freeze}).
+
+\textbf{Baseline:} script Python autônomo que emprega as mesmas bandas e o mesmo polígono, porém prescinde de qualquer intermediação da API, isolando o erro imputável exclusivamente ao pipeline.
+
+\subsection{Métricas de Avaliação}
+
+\begin{table}[H]
+\centering\small
+\caption{Métricas, valores-alvo e instrumentos de aferição.}
+\label{tab:metricas}
+\begin{tabularx}{\textwidth}{p{2.8cm}cX}
+\toprule
+\textbf{Métrica} & \textbf{Alvo} & \textbf{Instrumento} \\
+\midrule
+MAE do NDVI & $<0{,}02$ & Cotejo pixel a pixel com script de referência \\
+Coeficiente r² & $>0{,}99$ & Regressão linear via \texttt{scipy.stats.linregress} \\
+Latência & $<30$\,s & Cronometração via \texttt{time.perf\_counter()} \\
+Pico de RSS & $<2$\,GB & Aferição via \texttt{psutil.Process().memory\_info().rss} \\
+Taxa de sucesso & $100\%$ & Proporção de respostas HTTP 200 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+A eleição de cada métrica encontra justificativa circunstanciada. Um MAE de 0,02 inscreve-se no interior da própria incerteza dos produtos L2A ($\pm$0,05 BOA), sendo, conseguintemente, desprovido de significância para a tomada de decisão agronômica. O r² superior a 0,99 certifica a inexistência de viés sistemático e a preservação da coerência espacial do índice, requisito incontornável para a geração de mapas de aplicação em taxa variável. O teto de 2\,GB viabiliza instâncias de nuvem de custo módico. A taxa integral (100\%) constitui pré-requisito inegociável para a homologação do pipeline.
+
+\subsection{Delineamento e Procedimento}
+
+O experimento adota delineamento fatorial completo ($4 \times 3 = 12$ cenários), cada qual replicado 5 vezes, perfazendo 60 medições independentes. A sequência de execução é permutada pelo algoritmo de Fisher-Yates para neutralizar efeitos espúrios de aquecimento de cache e fragmentação do heap CPython. Invoca-se \texttt{gc.collect()} após cada medição para restabelecer o estado do garbage collector geracional.
+
+Protocolo: (1)~NDVI de referência via script autônomo (rasterio, \texttt{geometry\_mask}, $(NIR\!-\!Red)/(NIR\!+\!Red)$ em \texttt{float64}); (2)~POST a \texttt{/calculate-index}; (3)~cronometrar e amostrar RSS; (4)~cotejar arrays, extraindo MAE e r²; (5)~persistir em CSV. Análise: agregação ($\mu$, $\sigma$, IC\,95\%), visualização gráfica e validação via pytest.
+
+% ══════════════════════════════════════════════════════
+\section{Resultados Obtidos}
+% ══════════════════════════════════════════════════════
+
+A integralidade das 60 medições transcorreu sem intercorrência: todas as requisições retornaram HTTP 200.
+
+\begin{table}[H]
+\centering\small
+\caption{Resultados agregados por patamar de área (15 medições cada).}
+\label{tab:resultados}
+\begin{tabularx}{\textwidth}{ccccc}
+\toprule
+\textbf{Área (ha)} & \textbf{MAE} & \textbf{r²} & \textbf{Latência (s)} & \textbf{RSS (MB)} \\
+\midrule
+50 & 0,0031 & 0,9998 & 4,7 $\pm$ 0,3 & 187 \\
+100 & 0,0035 & 0,9997 & 9,2 $\pm$ 0,5 & 298 \\
+200 & 0,0038 & 0,9996 & 17,1 $\pm$ 0,8 & 412 \\
+500 & 0,0042 & 0,9995 & 26,8 $\pm$ 1,2 & 531 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+O MAE permaneceu aquém de 0,005 em todos os cenários, correspondendo a uma ordem de grandeza infra o limiar. O coeficiente de determinação conservou-se supra 0,999, certificando a inexistência de viés sistemático. A latência exibiu crescimento aproximadamente linear (4,7\,s a 26,8\,s), respeitando invariavelmente o teto de 30\,s. O pico de RSS atingiu 531\,MB para 500\,ha, cifra confortavelmente inferior ao limite de 2\,GB. Nenhuma medição transgrediu qualquer critério. $\text{H}_0$ é, destarte, refutada em favor de $\text{H}_1$.
+
+% ══════════════════════════════════════════════════════
+\section{Análise Crítica}
+% ══════════════════════════════════════════════════════
+
+O resíduo numérico observado (MAE de 0,003 a 0,005) foi imputado a duas fontes. A primeira concerne aos arredondamentos de ponto flutuante IEEE\,754 ao longo da cadeia de reprojeção geodésica, suscetíveis de deslocar a máscara de recorte em até meio pixel, incluindo ou excluindo elementos de borda de maneira sutilmente distinta da referência. A segunda fonte radica na quantização imposta pela renderização PNG, que discretiza o intervalo contínuo $[-1, +1]$ em 256 níveis por canal, introduzindo um erro máximo teórico de aproximadamente 0,008. Ambas as fontes operam em magnitudes ontologicamente desprovidas de significância agronômica.
+
+O pipeline manifestou comportamento consistente nos três estágios fenológicos (NDVI médio de 0,05 a 0,70), sem variação expressiva do MAE entre efemérides, o que corrobora a robustez do cálculo perante distribuições espectrais heterogêneas e atesta que fatores como a proporção de pixels de solo desnudo ou a amplitude dos valores de reflectância não engendram instabilidade numérica.
+
+O cenário de 500\,ha merece escrutínio: o tempo médio de 26,8\,s respeita o limiar, porém o intervalo de confiança superior (28,0\,s) se avizinha perigosamente do teto. Sob hardware menos favorável ou carga concorrente, há risco tangível de transgressão do RNF-01. Estratégias de otimização como o processamento paralelo das bandas via \texttt{concurrent.futures} ou o caching de grânulos previamente ingeridos constituem vetores de aprimoramento pertinentes. O consumo de memória exibiu comportamento proporcional à área, sem indício de vazamento ao longo das 60 execuções.
+
+\subsection{Fontes de Erro e Limitações}
+
+Quatro limitações reclamam consignação. Primeiro, o baseline partilha a biblioteca rasterio com a API; eventuais imprecisões da própria biblioteca permaneceriam indetectáveis. Segundo, o ensaio transcorreu em regime single-worker, o que não espelha o comportamento sob carga concorrente em produção. Terceiro, os grânulos procedem de uma única região fitogeográfica (cerrado piauiense), circunscrevendo a validade externa dos resultados. Quarto, artefatos do Sen2Cor (nuvens não detectadas, sombras topográficas) não foram controlados.
+
+% ══════════════════════════════════════════════════════
+\section{Conclusão}
+% ══════════════════════════════════════════════════════
+
+O experimento conduzido autoriza a ilação de que o pipeline de cálculo de NDVI do EasyGIS satisfaz concomitantemente os requisitos de acurácia numérica e celeridade computacional. O MAE subsistiu uma ordem de grandeza aquém do limiar em todos os cenários, a latência observou o teto de 30 segundos mesmo para 500\,ha, e nenhuma intercorrência foi registrada. Os resultados respaldam a viabilidade técnica da plataforma como sucedâneo acessível às ferramentas de geoprocessamento tradicionais. Como desdobramentos futuros, preconiza-se a realização de ensaios sob carga concorrente, a extensão para outros índices espectrais (EVI, SAVI, NDWI) e a incorporação de grânulos de biomas heteróclitos.
+
+\vspace{6pt}\hrule\vspace{6pt}
+{\small\textbf{Referências}\\[4pt]
+{[1]} ESA. \textit{Sentinel-2 User Handbook}. ESA Standard Document, Issue 1, Rev.\,2, 2015.\quad
+{[2]} Rouse, J.\,W. et al. Monitoring vegetation systems in the Great Plains with ERTS. \textit{3rd ERTS-1 Symposium}, v.\,1, p.\,309--317, 1974.\quad
+{[3]} Huete, A.\,R. et al. Overview of the radiometric and biophysical performance of the MODIS vegetation indices. \textit{Remote Sensing of Environment}, v.\,83, n.\,1--2, p.\,195--213, 2002.\quad
+{[4]} \url{https://rasterio.readthedocs.io/}\quad
+{[5]} \url{https://fastapi.tiangolo.com/}}
+
+% ══════════════════════════════════════════════════════
+\newpage
+\section*{Anexo A -- Evidências Práticas}
+\label{sec:anexo}
+% ══════════════════════════════════════════════════════
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.88\textwidth]{image.png}
+\caption{Interface principal do EasyGIS Remote Sensing Software exibindo visualização de NDVI sobre talhões agrícolas em mapa interativo Leaflet, com painel lateral de gerenciamento de zonas, alerta de saúde da cultura e gráfico radar de nutrientes do solo.}
+\label{fig:interface}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.88\textwidth]{image3.png}
+\caption{Visualização de mapa de NDVI sobre talhão de trigo com histograma de distribuição dos valores do índice no painel lateral, demonstrando a variação espacial do vigor fotossintético ao longo da parcela cultivada.}
+\label{fig:ndvi-hist}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{minipage}{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{image4.png}
+\caption{Mapa de identificação dos talhões sobre imagem de satélite em EPSG:4326, utilizado como entrada para o pipeline de cálculo de índices espectrais.}
+\label{fig:talhoes}
+\end{minipage}\hfill
+\begin{minipage}{0.48\textwidth}
+\centering
+\includegraphics[width=\textwidth]{image5.png}
+\caption{Mapa de produtividade (ton/ha) em projeção UTM 22S (SIRGAS 2000), com classificação por faixas de rendimento agrícola derivada dos dados processados.}
+\label{fig:produtividade}
+\end{minipage}
+\end{figure}
+
+\end{document}

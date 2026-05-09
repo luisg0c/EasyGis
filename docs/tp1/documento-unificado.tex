@@ -1,0 +1,788 @@
+\documentclass[12pt, a4paper]{article}
+
+% ── Codificação e idioma ──
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+
+% ── Layout ──
+\usepackage[top=2.5cm, bottom=2.5cm, left=3cm, right=2cm]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+\setlength{\parindent}{1.25cm}
+\setlength{\parskip}{6pt}
+
+% ── Fontes e tipografia ──
+\usepackage{lmodern}
+\usepackage{microtype}
+
+% ── Cores ──
+\usepackage[table,dvipsnames]{xcolor}
+\definecolor{ndvilow}{HTML}{8B4513}
+\definecolor{ndvimid}{HTML}{DAA520}
+\definecolor{ndvihigh}{HTML}{006400}
+\definecolor{umlblue}{HTML}{4A90D9}
+\definecolor{umlgreen}{HTML}{27AE60}
+\definecolor{umlorange}{HTML}{E67E22}
+\definecolor{umlpurple}{HTML}{8E44AD}
+\definecolor{umlgray}{HTML}{BDC3C7}
+\definecolor{umlred}{HTML}{E74C3C}
+\definecolor{tabheader}{HTML}{2C3E50}
+\definecolor{tabrow}{HTML}{F5F6FA}
+\definecolor{linkblue}{HTML}{2980B9}
+
+% ── Tabelas e figuras ──
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+
+% ── Listas ──
+\usepackage{enumitem}
+\setlist[itemize]{itemsep=2pt, parsep=0pt}
+\setlist[enumerate]{itemsep=2pt, parsep=0pt}
+
+% ── Diagramas UML com TikZ ──
+\usepackage{tikz}
+\usetikzlibrary{
+  shapes.geometric,
+  shapes.multipart,
+  arrows.meta,
+  positioning,
+  fit,
+  backgrounds,
+  calc,
+  decorations.pathreplacing
+}
+
+% ── Links ──
+\usepackage[colorlinks=true, linkcolor=linkblue, urlcolor=linkblue, citecolor=linkblue]{hyperref}
+
+% ── Cabeçalho e rodapé ──
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textcolor{gray}{EasyGIS Remote Sensing Software}}
+\fancyhead[R]{\small\textcolor{gray}{Fábrica de Software, 2026.1}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ── Estilos TikZ para UML ──
+\tikzset{
+  umlcomponent/.style={
+    rectangle, draw=umlblue, fill=umlblue!8, rounded corners=3pt,
+    minimum width=2.8cm, minimum height=0.9cm,
+    font=\footnotesize\sffamily, align=center, line width=0.6pt
+  },
+  umlpackage/.style={
+    rectangle, draw=#1, fill=#1!5, rounded corners=4pt,
+    inner sep=8pt, line width=0.8pt
+  },
+  umlpackage/.default=umlblue,
+  umlarrow/.style={
+    -{Stealth[length=5pt]}, line width=0.6pt, color=#1
+  },
+  umlarrow/.default=black,
+  umlactor/.style={
+    circle, draw=umlblue, fill=umlblue!10,
+    minimum size=0.6cm, font=\tiny\sffamily
+  },
+  umlnote/.style={
+    rectangle, draw=gray, fill=yellow!8, rounded corners=2pt,
+    font=\scriptsize\sffamily, align=left, inner sep=4pt
+  },
+  seqbox/.style={
+    rectangle, draw=umlblue, fill=umlblue!10, rounded corners=2pt,
+    minimum width=1.8cm, minimum height=0.55cm,
+    font=\scriptsize\sffamily\bfseries, align=center
+  },
+  seqmsg/.style={
+    -{Stealth[length=4pt]}, line width=0.5pt
+  },
+  seqret/.style={
+    -{Stealth[length=4pt]}, line width=0.5pt, dashed
+  },
+}
+
+% ── Metadados ──
+\title{%
+  \vspace{-1cm}
+  \textbf{\Large EasyGIS Remote Sensing Software}\\[6pt]
+  \large Plataforma de Sensoriamento Remoto para\\Agricultura de Precisão\\[12pt]
+  \normalsize Trabalho Prático 1: Concepção, Requisitos e Arquitetura\\[4pt]
+  \normalsize Disciplina: Estágio Supervisionado -- Fábrica de Software
+}
+\author{%
+  Luis Gustavo Olimpio \and Lauan Matheus \and João Leonardi\\
+  \and João Vinícius Castello \and Vinícius Henrique\\
+  \and Lucas Benevinuto \and José Melquíades \and Sammuel Moura Saraiva
+}
+\date{05 de março de 2026}
+
+% ══════════════════════════════════════════════════════════════
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+
+\vfill
+\begin{center}
+\small\textit{Instituto de Ensino Superior -- ICEV}\\
+\small\textit{Teresina, PI, Brasil}
+\end{center}
+\newpage
+
+% ── Sumário ──
+\tableofcontents
+\newpage
+
+% ══════════════════════════════════════════════════════════════
+\section{Introdução}
+% ══════════════════════════════════════════════════════════════
+
+Este documento consolida os artefatos de concepção, requisitos e arquitetura do \textbf{EasyGIS Remote Sensing Software}, plataforma web de sensoriamento remoto voltada para agricultura de precisão. O trabalho corresponde ao \textbf{Trabalho Prático~1} da disciplina de Estágio Supervisionado (Fábrica de Software) do ICEV, elaborado entre \textbf{8 de fevereiro} e \textbf{5 de março de 2026}, seguindo a metodologia Scrum detalhada na Seção~2, sob orientação do professor, que exerce o papel de Product Owner.
+
+A disciplina organiza-se em duas entregas. O TP1, objeto deste documento, abrangeu a fase de concepção: visão do produto, backlog organizado em épicos e histórias de usuário, especificação formal de requisitos funcionais e não funcionais, arquitetura projetada com diagramas UML, protótipos de interface e plano de projeto com cronograma, atribuições e gestão de riscos. O \textbf{Trabalho Prático~2}, com entrega prevista para \textbf{11 de maio de 2026}, compreenderá o desenvolvimento, os testes e a entrega do MVP funcional, conforme o plano de implementação descrito na Seção~\ref{sec:plano}.
+
+O software processará imagens multiespectrais do satélite Sentinel-2 da Agência Espacial Europeia (ESA) sobre talhões agrícolas delimitados por arquivos KML, produzindo índices de vegetação, experimentos de processamento de imagem e classificações automatizadas de culturas. Os resultados serão apresentados em interface web interativa com mapa bidimensional e visualização tridimensional.
+
+% ══════════════════════════════════════════════════════════════
+\section{Metodologia}
+% ══════════════════════════════════════════════════════════════
+
+\subsection{Framework Scrum}
+
+O desenvolvimento do EasyGIS Remote Sensing Software adota o framework Scrum conforme descrito no \textit{Scrum Guide} (Schwaber; Sutherland, 2020), com adaptações ao contexto acadêmico da disciplina de Estágio Supervisionado. O Scrum fundamenta-se em três pilares: transparência, inspeção e adaptação. A transparência é assegurada pelo backlog do produto visível a todos os membros e pelo acompanhamento contínuo do progresso em cada sprint. A inspeção ocorre nas cerimônias de revisão e retrospectiva, nas quais o time avalia o incremento produzido e o próprio processo de trabalho. A adaptação manifesta-se no refinamento contínuo do backlog e na reordenação de prioridades pelo Product Owner a cada ciclo.
+
+A duração dos sprints varia conforme a fase do projeto. Na Fase~1 (TP1), foram adotados sprints de uma semana, totalizando quatro ciclos entre 8 de fevereiro e 5 de março de 2026. Essa duração reduzida justifica-se pelo cronograma compacto da fase de concepção e pela necessidade de ciclos de feedback mais frequentes com o Product Owner. Na Fase~2 (TP2), os sprints terão duração de duas semanas, mais próxima do padrão recomendado pelo Scrum Guide, em razão do maior volume de trabalho técnico de implementação.
+
+\subsection{Papéis Scrum}
+
+Três papéis compõem a estrutura organizacional do projeto:
+
+\begin{itemize}
+  \item \textbf{Product Owner (PO):} exercido pelo professor da disciplina, é responsável por maximizar o valor do produto, manter e priorizar o backlog, definir critérios de aceitação das histórias de usuário e validar os incrementos entregues ao final de cada sprint. O PO participa das cerimônias de Sprint Planning e Sprint Review, garantindo alinhamento entre as entregas e os objetivos pedagógicos da disciplina.
+  \item \textbf{Scrum Master (SM):} exercido por Luis Gustavo Olimpio, que acumula a função de Tech Lead. O Scrum Master facilita as cerimônias, remove impedimentos que bloqueiam o progresso do time, protege a equipe de interferências externas e promove a adoção das práticas ágeis. No contexto do projeto, o SM também coordena as decisões arquiteturais e a integração entre os módulos de frontend e backend.
+  \item \textbf{Development Team:} composto pelos sete demais integrantes (Lauan Matheus, João Leonardi, João Vinícius Castello, Vinícius Henrique, Lucas Benevinuto, José Melquíades e Sammuel Moura Saraiva), é auto-organizado e multifuncional. Cada membro possui competências específicas (frontend, backend, geoespacial, QA), porém todos contribuem para o objetivo da sprint. A auto-organização significa que o time decide internamente como transformar itens do backlog em incrementos funcionais, sem imposição externa de tarefas individuais.
+\end{itemize}
+
+\subsection{Artefatos Scrum}
+
+O processo de desenvolvimento produz e mantém três artefatos principais:
+
+\begin{itemize}
+  \item \textbf{Product Backlog:} lista ordenada de todas as funcionalidades, melhorias e correções desejadas para o produto. Contém 35 histórias de usuário organizadas em seis épicos, priorizadas pelo método MoSCoW e refinadas continuamente pelo PO em colaboração com o Development Team. Cada item possui descrição no formato canônico ágil, prioridade (alta, média, baixa) e critérios de aceitação.
+  \item \textbf{Sprint Backlog:} subconjunto do Product Backlog selecionado para cada sprint durante a cerimônia de Sprint Planning. Inclui as histórias de usuário comprometidas e o plano de trabalho para alcançá-las. O Sprint Backlog pertence exclusivamente ao Development Team e pode ser ajustado durante a sprint, desde que o objetivo da sprint seja preservado.
+  \item \textbf{Incremento:} resultado tangível e potencialmente entregável ao final de cada sprint. Cada incremento deve atender à Definição de Pronto (Definition of Done) estabelecida pela equipe, acumulando-se aos incrementos anteriores para formar o produto em construção.
+\end{itemize}
+
+\subsection{Cerimônias Scrum}
+
+Quatro cerimônias estruturam o ritmo de trabalho em cada sprint:
+
+\begin{itemize}
+  \item \textbf{Sprint Planning:} realizada no primeiro dia de cada sprint, com duração de até 1 hora. O PO apresenta os itens de maior prioridade do backlog, o Development Team estima o esforço necessário e seleciona os itens que compõem o Sprint Backlog. O resultado é o Sprint Goal, objetivo claro e conciso que orienta o trabalho da sprint.
+  \item \textbf{Daily Scrum:} reunião diária de no máximo 15 minutos, na qual cada membro responde a três perguntas: o que fez desde a última reunião, o que pretende fazer até a próxima e quais impedimentos enfrenta. No contexto do projeto, a Daily Scrum ocorre de forma assíncrona via canal de comunicação da equipe nos dias sem encontro presencial.
+  \item \textbf{Sprint Review:} realizada no último dia da sprint, com duração de até 30 minutos. O Development Team demonstra o incremento funcional ao PO, que avalia se os critérios de aceitação foram atendidos e fornece feedback. Itens não concluídos retornam ao Product Backlog para repriorização.
+  \item \textbf{Sprint Retrospective:} realizada após a Sprint Review, com duração de até 20 minutos. A equipe discute o que funcionou bem, o que pode ser melhorado e quais ações concretas serão adotadas na próxima sprint. O foco é a melhoria contínua do processo, não do produto.
+\end{itemize}
+
+\subsection{Estimativa e Velocidade}
+
+A estimativa de esforço das histórias de usuário utiliza a técnica de \textit{story points} com a sequência de Fibonacci (1, 2, 3, 5, 8, 13). Histórias com estimativa superior a 8 pontos são decompostas em itens menores para reduzir incerteza e facilitar o acompanhamento. A velocidade do time, definida como a soma dos story points entregues por sprint, será mensurada a partir da primeira sprint de implementação e utilizada para calibrar o planejamento das sprints seguintes.
+
+O backlog foi priorizado pelo método \textbf{MoSCoW}, que classifica cada item em quatro categorias: \textit{Must Have} (essencial para o MVP), \textit{Should Have} (agrega valor significativo), \textit{Could Have} (desejável, mas dispensável) e \textit{Won't Have} (fora do escopo da versão atual). Essa classificação, combinada com a estimativa em story points, permite ao PO tomar decisões informadas sobre o que incluir em cada sprint.
+
+% ══════════════════════════════════════════════════════════════
+\section{Visão do Produto}
+% ══════════════════════════════════════════════════════════════
+
+\subsection{Contexto e Problema}
+
+O Brasil figura entre os maiores produtores agrícolas do mundo, com aproximadamente 66 milhões de hectares de área plantada. A agricultura de precisão, que emprega tecnologias para gerenciar a variabilidade espacial e temporal das lavouras, tem apresentado crescimento significativo no país, porém ainda enfrenta barreiras substanciais de adoção. Entre os principais obstáculos estão o elevado custo de ferramentas GIS comerciais como ArcGIS e ENVI, cujo licenciamento pode ultrapassar milhares de reais anuais; a complexidade técnica de softwares profissionais de sensoriamento remoto, que exigem treinamento especializado; e a inexistência de soluções integradas que reúnam processamento de imagem, análise espectral e visualização em plataforma única e acessível.
+
+O programa Copernicus da ESA, por sua vez, disponibiliza gratuitamente imagens Sentinel-2 com resolução espacial de 10 metros e tempo de revisita de 5 dias, o que configura oportunidade singular para democratizar o acesso à agricultura de precisão. A utilização direta dessas imagens, no entanto, demanda conhecimentos especializados em geoprocessamento, manipulação de arquivos JP2 e interpretação de bandas espectrais, habilidades ausentes na formação da maioria dos produtores rurais e técnicos agrícolas.
+
+O problema central reside em monitorar a saúde de culturas agrícolas de modo rápido e acessível, sem depender de vistorias presenciais dispendiosas ou de softwares proprietários de alto custo. As consequências desse cenário são decisões tardias ou desinformadas sobre irrigação, aplicação de insumos e manejo de pragas, com impacto direto na produtividade e nos custos operacionais.
+
+\subsection{Solução Proposta}
+
+O EasyGIS Remote Sensing Software foi concebido como plataforma web gratuita e de código aberto que permitirá a usuários sem conhecimento avançado em geoprocessamento carregar limites de talhões agrícolas, processar imagens multiespectrais de satélite e gerar mapas de índices vegetativos acompanhados de estatísticas descritivas, tudo por meio de interface intuitiva acessível via navegador.
+
+A solução será composta por dois módulos. O \textbf{backend}, a ser desenvolvido em Python com FastAPI, concentrará o processamento geoespacial: leitura de bandas espectrais JP2 via rasterio, recorte de imagens ao polígono do talhão mediante reprojeção de coordenadas com pyproj e mascaramento espacial, cálculo de índices de vegetação (NDVI, EVI, SAVI) com NumPy, execução de experimentos de visão computacional com SciPy e OpenCV, e classificação de culturas com scikit-learn. O \textbf{frontend}, projetado com Next.js 16, React 19 e TypeScript, proverá interface com mapa interativo Leaflet sobre imagens de satélite, painel de controle para seleção de análises, visualização tridimensional via Three.js e página dedicada à classificação de culturas.
+
+\subsection{Usuários-Alvo}
+
+Quatro perfis de usuário orientam as decisões de projeto. O \textbf{produtor rural}, proprietário ou gestor de propriedade agrícola, necessita monitorar a saúde das lavouras, identificar áreas de estresse hídrico ou nutricional e otimizar a aplicação de insumos. O \textbf{agrônomo}, profissional técnico responsável pelo manejo, busca gerar mapas de variabilidade para prescrição de insumos e analisar o vigor vegetativo ao longo do ciclo produtivo. O \textbf{pesquisador acadêmico}, inserido no campo do sensoriamento remoto ou da agronomia, deseja experimentar algoritmos de processamento de imagem sobre dados reais e comparar índices espectrais. O \textbf{estudante} de agronomia, engenharia agrícola ou ciência da computação utiliza a plataforma para aprender conceitos de sensoriamento remoto de forma prática e visual.
+
+\subsection{Diferenciais Competitivos}
+
+Seis características distinguem a plataforma das soluções existentes no mercado: (i)~é gratuita e de código aberto, sem custos de licenciamento; (ii)~oferece interface web intuitiva que dispensa instalação de software GIS desktop; (iii)~inclui visualização 3D interativa como diferencial pedagógico para compreensão da variabilidade espacial; (iv)~disponibiliza laboratório de experimentos com 13 algoritmos de visão computacional aplicáveis a dados reais de satélite; (v)~integra classificação de culturas, da ingestão do dado à área classificada em hectares, em plataforma única; e (vi)~tem foco no contexto agropecuário brasileiro, com tipos de cultura (soja, milho, café, cana-de-açúcar) e geolocalização padrão no estado do Piauí.
+
+% ══════════════════════════════════════════════════════════════
+\section{Backlog do Produto}
+% ══════════════════════════════════════════════════════════════
+
+O backlog do produto está organizado em seis épicos que agrupam as funcionalidades por domínio de negócio. Cada épico contém histórias de usuário no formato canônico ágil (\textit{como} [persona], \textit{quero} [ação], \textit{para que} [benefício]), classificadas por prioridade (alta, média ou baixa). Ao todo, foram identificadas 35 histórias de usuário, priorizadas pelo Product Owner para implementação ao longo das sprints planejadas.
+
+\subsection{Épico 1: Gestão de Talhões Agrícolas}
+
+O primeiro épico abrange a definição e o gerenciamento das áreas agrícolas objeto de análise. A funcionalidade de maior prioridade é a importação de limites de talhões a partir de arquivos KML exportados do Google Earth (US-01), seguida pela visualização dos polígonos sobre imagem de satélite no mapa interativo (US-02). O sistema deverá permitir o desenho de novos polígonos diretamente no mapa (US-03), a exibição da área em hectares de cada talhão (US-04), a persistência dos talhões desenhados (US-05) e a busca de localizações por endereço (US-06).
+
+\subsection{Épico 2: Processamento de Índices Espectrais}
+
+O núcleo funcional do sistema concentra-se neste épico, que compreende o cálculo e a visualização de índices de vegetação. As histórias de maior prioridade são o cálculo do NDVI para avaliação de saúde vegetal (US-07), do EVI para análise com correção atmosférica (US-08) e a geração de estatísticas descritivas por índice (US-11). Contemplam-se ainda a visualização de composições em cor verdadeira e falsa-cor (US-09), a exibição individual das 13 bandas espectrais do Sentinel-2 (US-10), a geração de histogramas de distribuição (US-12), a aplicação de suavização gaussiana (US-13) e a integração dos índices NDWI e SAVI ao endpoint principal (US-14).
+
+\subsection{Épico 3: Visualização e Interação com Mapa}
+
+A experiência de exploração visual dos dados constitui o foco deste épico. A sobreposição do resultado espectral ao mapa de satélite (US-16) e a legenda com escala de cores e guia de interpretação (US-20) são os itens prioritários. A alternância entre camadas de satélite e de ruas (US-17), a exibição do nível de estresse ao clicar no mapa (US-18) e a visualização 3D interativa do terreno espectral (US-19) complementam o conjunto.
+
+\subsection{Épico 4: Laboratório de Experimentos}
+
+Voltado a pesquisadores e estudantes, este épico prevê 13 algoritmos de processamento de imagem em cinco categorias: filtros de suavização (US-21), detectores de borda (US-22), operações morfológicas (US-23), segmentação por limiar (US-24) e ajuste interativo de parâmetros via sliders (US-25). A exportação de resultados para relatórios (US-26) complementa o conjunto.
+
+\subsection{Épico 5: Classificação de Culturas}
+
+A classificação automatizada das áreas agrícolas é o foco deste épico. A separação por limiar de NDVI em zonas de vigor (US-27), a quantificação de área por classe em hectares (US-29) e a exibição do resultado como overlay colorido no mapa (US-32) configuram os itens de alta prioridade. A classificação não supervisionada por K-Means (US-28), a seleção de índices como features (US-30) e a classificação supervisionada com Random Forest (US-31) completam as funcionalidades previstas.
+
+\subsection{Épico 6: Gestão de Dados Sentinel-2}
+
+O sexto épico contempla a listagem de produtos disponíveis (US-33), a verificação de saúde do sistema (US-34) e o download automático de imagens Sentinel-2 (US-35), este último classificado como \textit{won't have} para a primeira versão.
+
+\subsection{Priorização MoSCoW}
+
+A priorização seguiu o método MoSCoW. Os itens \textbf{Must Have} (10 histórias) correspondem ao MVP funcional: importação de KML, mapa, NDVI, EVI, estatísticas, overlay, legenda, classificação por limiar e exibição de resultados. Os itens \textbf{Should Have} (17 histórias) agregam valor significativo: composições RGB, bandas individuais, visualização 3D, experimentos e K-Means. Os itens \textbf{Could Have} (7 histórias) representam melhorias desejáveis, enquanto o download automático foi o único \textbf{Won't Have}.
+
+% ══════════════════════════════════════════════════════════════
+\section{Especificação de Requisitos de Software}
+% ══════════════════════════════════════════════════════════════
+
+A especificação de requisitos segue a norma IEEE~830-1998, adaptada ao contexto do projeto. Os requisitos estão categorizados em funcionais (RF) e não funcionais (RNF), com rastreabilidade direta às histórias de usuário do backlog.
+
+\subsection{Requisitos Funcionais}
+
+Foram especificados 20 requisitos funcionais, organizados em quatro grupos temáticos. Todos descrevem comportamentos que o sistema deverá apresentar quando implementado.
+
+\subsubsection{Gestão de Dados Geoespaciais (RF-01 a RF-04)}
+
+O sistema deverá ler arquivos \texttt{.kml} do diretório de dados, extraindo polígonos de talhões com coordenadas geográficas, bounding box, área aproximada em hectares e centroide (RF-01). Os polígonos serão renderizados sobre o mapa Leaflet com diferenciação visual: azul para o talhão selecionado, verde para os demais (RF-02). Ferramentas de desenho permitirão criar novos talhões diretamente no mapa, adicionados à lista com ID gerado automaticamente (RF-03). O backend listará todos os produtos Sentinel-2 disponíveis no diretório de imagens, identificados pelo padrão \texttt{S2*\_MSIL2A\_*.SAFE} (RF-04).
+
+\subsubsection{Processamento Espectral (RF-05 a RF-12)}
+
+O cálculo do NDVI (RF-05) utilizará as bandas B08 (NIR, 10m) e B04 (Red, 10m) segundo a fórmula $(NIR - Red) / (NIR + Red)$, com resultado limitado ao intervalo $[-1, 1]$. O EVI (RF-06) incorporará a banda B02 (Blue) e aplicará a expressão $2{,}5 \times (NIR - Red) / (NIR + 6 \times Red - 7{,}5 \times Blue + 1)$. Composições em cor verdadeira (RF-07) e falsa-cor (RF-08) serão geradas combinando bandas em 10m de resolução. A visualização individual de cada uma das 13 bandas do Sentinel-2 em resoluções nativas, a saber 10m (B02, B03, B04, B08), 20m (B05 a B07, B8A, B11, B12) e 60m (B01, B09, B10), é contemplada pelo RF-09. Para cada cálculo, o sistema retornará estatísticas descritivas (RF-10) e histograma de 50 bins (RF-11). A suavização gaussiana com $\sigma = 1{,}5$ será aplicada opcionalmente (RF-12).
+
+\subsubsection{Visualização e Interação (RF-13 a RF-15)}
+
+Os resultados serão exibidos como overlay de imagem sobre o bounding box do talhão no mapa (RF-13). Para o NDVI, popups interativos classificarão o estresse em quatro níveis: severo ($< 0{,}2$), moderado ($0{,}2$--$0{,}4$), leve ($0{,}4$--$0{,}6$) e saudável ($\geq 0{,}6$) (RF-14). A visualização 3D renderizará os valores de pixel como elevação em um terreno tridimensional interativo com rotação, zoom e deslocamento (RF-15).
+
+\subsubsection{Experimentos e Classificação (RF-16 a RF-20)}
+
+O laboratório de experimentos (RF-16) disponibilizará 13 algoritmos sobre a banda NIR, organizados em cinco categorias: filtros (gaussiano, mediana, bilateral), detecção de bordas (Sobel, Canny, laplaciano), equalização de histograma, operações morfológicas (erosão, dilatação, abertura, fechamento) e segmentação por limiar (binário, Otsu, adaptativo). A classificação por limiar de NDVI (RF-17) separará os pixels em três zonas de vigor com cálculo de área em hectares. A classificação não supervisionada (RF-18) agrupará pixels em 2 a 6 classes via K-Means. A legenda de classificação (RF-19) exibirá nome, cor, porcentagem e área de cada classe. O endpoint de verificação de saúde (RF-20) retornará o status do backend e a disponibilidade do diretório de produtos.
+
+\subsection{Requisitos Não Funcionais}
+
+Oito requisitos não funcionais foram definidos para orientar a qualidade do sistema:
+
+\begin{itemize}
+  \item \textbf{Desempenho (RNF-01):} O cálculo de índice espectral para um talhão típico deve completar em até 30 segundos. A renderização do mapa 2D deve manter taxa acima de 30~FPS.
+  \item \textbf{Usabilidade (RNF-02):} A interface deve ser utilizável sem treinamento prévio por um agrônomo com conhecimento básico de informática. Parâmetros de experimentos são ajustáveis via sliders com valores padrão razoáveis.
+  \item \textbf{Compatibilidade (RNF-03):} Navegadores Chrome 90+, Firefox 80+, Edge 90+ e Safari 15+. Backend compatível com Linux, macOS e Windows (via WSL). Python 3.12+ e Node.js 18+.
+  \item \textbf{Confiabilidade (RNF-04):} Mensagens de erro claras (HTTP 400/500), feedback visual durante processamento e tratamento gracioso de KML malformados.
+  \item \textbf{Manutenibilidade (RNF-05):} Código organizado em módulos (API, processador, componentes, utilitários), com tipagem estática (TypeScript, Pydantic) e separação de responsabilidades.
+  \item \textbf{Portabilidade (RNF-06):} Sem dependência de banco de dados. Gerenciamento de dependências via \texttt{uv} (Python) e \texttt{npm} (Node.js).
+  \item \textbf{Segurança (RNF-07):} CORS restrito a \texttt{localhost:3000}. Sem autenticação (sistema local single-user).
+  \item \textbf{Escalabilidade (RNF-08):} Projetado para uso single-user. Processamento limitado pela RAM disponível.
+\end{itemize}
+
+\subsection{Matriz de Rastreabilidade}
+
+A Tabela~\ref{tab:rastreabilidade} apresenta a correspondência entre requisitos funcionais e histórias de usuário, assegurando cobertura completa e bidirecional.
+
+\begin{table}[H]
+\centering
+\caption{Rastreabilidade entre requisitos funcionais e histórias de usuário.}
+\label{tab:rastreabilidade}
+\footnotesize
+\begin{tabular}{lll}
+\toprule
+\textbf{Requisito} & \textbf{Histórias} & \textbf{Domínio} \\
+\midrule
+RF-01, RF-02, RF-03 & US-01, US-02, US-03, US-04 & Gestão de Talhões \\
+RF-04 & US-33 & Dados Sentinel-2 \\
+RF-05, RF-06 & US-07, US-08 & Índices Espectrais \\
+RF-07, RF-08, RF-09 & US-09, US-10 & Composições e Bandas \\
+RF-10, RF-11, RF-12 & US-11, US-12, US-13 & Estatísticas \\
+RF-13, RF-14, RF-15 & US-16, US-18, US-19 & Visualização \\
+RF-16 & US-21 a US-25 & Experimentos \\
+RF-17, RF-18, RF-19 & US-27 a US-30, US-32 & Classificação \\
+RF-20 & US-34 & Saúde do Sistema \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ══════════════════════════════════════════════════════════════
+\section{Arquitetura do Sistema}
+% ══════════════════════════════════════════════════════════════
+
+A arquitetura projetada para o EasyGIS Remote Sensing Software segue o padrão cliente-servidor com dois processos independentes comunicando-se via API REST. Os diagramas UML a seguir descrevem a estrutura, o comportamento e a implantação projetados para o sistema.
+
+\subsection{Visão Geral da Arquitetura}
+
+O sistema operará como dois processos na máquina local do usuário. O frontend, servidor de desenvolvimento Next.js na porta 3000, renderizará a interface no navegador e realizará chamadas HTTP ao backend. O backend, servidor Uvicorn/FastAPI na porta 8000, processará as requisições geoespaciais e retornará resultados em JSON com imagens codificadas em base64. Ambos os processos acessarão o sistema de arquivos local: o frontend lerá arquivos KML de talhões, ao passo que o backend lerá imagens Sentinel-2 em formato JP2.
+
+A separação em dois processos é motivada por duas razões: (i)~impedir que o processamento pesado de imagens em Python bloqueie a interface do usuário; e (ii)~viabilizar o desenvolvimento paralelo pelas equipes de frontend e backend.
+
+\subsection{Diagrama de Componentes}
+
+A Figura~\ref{fig:componentes} apresenta o diagrama de componentes do sistema, mostrando os módulos principais e suas dependências.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=0.78, every node/.style={scale=0.78}]
+
+  % ── Frontend ──
+  \node[umlcomponent, fill=umlblue!12, minimum width=2cm, minimum height=0.7cm] (dash) at (0, 0) {Dashboard};
+  \node[umlcomponent, fill=umlblue!12, minimum width=2cm, minimum height=0.7cm] (classpage) at (2.5, 0) {Classification};
+  \node[umlcomponent, fill=umlblue!12, minimum width=2cm, minimum height=0.7cm] (apifields) at (5, 0) {API Fields};
+
+  \node[umlcomponent, fill=umlgreen!12, minimum width=2cm, minimum height=0.7cm] (mapview) at (0, -1.2) {MapViewer};
+  \node[umlcomponent, fill=umlgreen!12, minimum width=2cm, minimum height=0.7cm] (terrain) at (2.5, -1.2) {Terrain3D};
+  \node[umlcomponent, fill=umlgreen!12, minimum width=2cm, minimum height=0.7cm] (expcomp) at (5, -1.2) {Experiments};
+
+  \node[umlcomponent, fill=gray!12, minimum width=2cm, minimum height=0.7cm] (kmlparser) at (0, -2.4) {KMLParser};
+  \node[umlcomponent, fill=gray!12, minimum width=2cm, minimum height=0.7cm] (specidx) at (2.5, -2.4) {SpectralIdx};
+  \node[umlcomponent, fill=gray!12, minimum width=2cm, minimum height=0.7cm] (types) at (5, -2.4) {Types};
+
+  \begin{scope}[on background layer]
+    \node[umlpackage=umlblue, fit=(dash)(classpage)(apifields)(mapview)(terrain)(expcomp)(kmlparser)(specidx)(types),
+      label={[font=\scriptsize\sffamily\bfseries, text=umlblue]above:Frontend (Next.js 16 / React 19 / TypeScript)}] (frontend) {};
+  \end{scope}
+
+  % ── Seta REST ──
+  \draw[umlarrow=umlred, line width=0.8pt] (frontend.south) -- node[right, font=\scriptsize, text=umlred] {REST / JSON} ++(0, -0.7);
+
+  % ── Backend ──
+  \node[umlcomponent, fill=umlorange!15, minimum width=2cm, minimum height=0.7cm] (routes) at (0, -4.5) {Rotas (API)};
+  \node[umlcomponent, fill=umlorange!15, minimum width=2cm, minimum height=0.7cm] (processor) at (2.5, -4.5) {Sentinel Proc.};
+  \node[umlcomponent, fill=umlorange!15, minimum width=2cm, minimum height=0.7cm] (renderer) at (5, -4.5) {Renderização};
+
+  \node[umlcomponent, fill=umlpurple!12, minimum width=1.1cm, minimum height=0.6cm] (scipy) at (-0.1, -5.6) {\tiny SciPy};
+  \node[umlcomponent, fill=umlpurple!12, minimum width=1.1cm, minimum height=0.6cm] (opencv) at (1.3, -5.6) {\tiny OpenCV};
+  \node[umlcomponent, fill=umlpurple!12, minimum width=1.1cm, minimum height=0.6cm] (sklearn) at (2.7, -5.6) {\tiny sklearn};
+  \node[umlcomponent, fill=umlpurple!12, minimum width=1.1cm, minimum height=0.6cm] (numpy) at (4.1, -5.6) {\tiny NumPy};
+  \node[umlcomponent, fill=umlpurple!12, minimum width=1.1cm, minimum height=0.6cm] (rasterio) at (5.5, -5.6) {\tiny rasterio};
+
+  \begin{scope}[on background layer]
+    \node[umlpackage=umlorange, fit=(routes)(processor)(renderer)(scipy)(opencv)(sklearn)(numpy)(rasterio),
+      label={[font=\scriptsize\sffamily\bfseries, text=umlorange]above:Backend (FastAPI / Python 3.12)}] (backend) {};
+  \end{scope}
+
+  % ── Seta dados ──
+  \draw[umlarrow=gray, line width=0.8pt] (backend.south) -- node[right, font=\scriptsize, text=gray] {Leitura} ++(0, -0.6);
+
+  % ── Sistema de Arquivos ──
+  \node[umlcomponent, fill=gray!18, minimum width=2.4cm, minimum height=0.7cm] (sentinel) at (1.2, -7.4) {Sentinel-2 (.SAFE)};
+  \node[umlcomponent, fill=gray!18, minimum width=2.4cm, minimum height=0.7cm] (kmlfiles) at (4.2, -7.4) {KML Fields};
+
+  \begin{scope}[on background layer]
+    \node[umlpackage=gray, fit=(sentinel)(kmlfiles),
+      label={[font=\scriptsize\sffamily\bfseries, text=gray]above:Sistema de Arquivos Local}] (datastore) {};
+  \end{scope}
+
+  % ── Setas internas frontend ──
+  \draw[umlarrow, thin] (dash.south) -- (mapview.north);
+  \draw[umlarrow, thin] (classpage.south) -- (terrain.north);
+  \draw[umlarrow, thin] (apifields.south) -- (expcomp.north);
+
+  % ── Setas internas backend ──
+  \draw[umlarrow, thin] (routes.east) -- (processor.west);
+  \draw[umlarrow, thin] (processor.east) -- (renderer.west);
+
+\end{tikzpicture}
+\caption{Diagrama de componentes do EasyGIS Remote Sensing Software.}
+\label{fig:componentes}
+\end{figure}
+
+\subsection{Diagrama de Implantação}
+
+A Figura~\ref{fig:implantacao} ilustra a topologia de implantação do sistema. Todos os nós executam na mesma máquina local, com três serviços externos acessados exclusivamente para leitura de tiles de mapa.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=0.5cm and 0.6cm, scale=0.85, every node/.style={scale=0.85}]
+
+  % ── Local Machine ──
+  \node[rectangle, draw=umlblue, fill=umlblue!3, minimum width=11cm, minimum height=5.5cm, rounded corners=5pt, line width=1pt] (machine) {};
+  \node[font=\footnotesize\sffamily\bfseries, text=umlblue] at (machine.north) [below=3pt] {Máquina Local do Usuário};
+
+  % Navegador
+  \node[umlcomponent, fill=umlgreen!12, minimum width=2.6cm] at (-3, 1) (browser) {Navegador\\Web};
+
+  % Next.js
+  \node[umlcomponent, fill=umlblue!12, minimum width=2.6cm] at (0.3, 1) (nextjs) {Next.js\\Porta 3000};
+
+  % FastAPI
+  \node[umlcomponent, fill=umlorange!15, minimum width=2.6cm] at (3.6, 1) (fastapi) {FastAPI\\Porta 8000};
+
+  % File System
+  \node[umlcomponent, fill=gray!15, minimum width=3cm] at (0.3, -1) (kml) {KML Fields\\\texttt{*.kml}};
+  \node[umlcomponent, fill=gray!15, minimum width=3cm] at (3.6, -1) (safe) {Sentinel-2\\\texttt{*.SAFE}};
+
+  % Arrows internas
+  \draw[umlarrow] (browser) -- node[above, font=\scriptsize] {HTTP} (nextjs);
+  \draw[umlarrow] (nextjs) -- node[above, font=\scriptsize] {REST} (fastapi);
+  \draw[umlarrow=gray] (nextjs) -- (kml);
+  \draw[umlarrow=gray] (fastapi) -- (safe);
+
+  % ── External Services ──
+  \node[umlcomponent, fill=umlpurple!10, minimum width=3.2cm, below=2.4cm of machine] (external) {Serviços Externos\\(Esri, OSM, Nominatim)};
+
+  \draw[umlarrow=umlpurple, dashed] (browser.south) -- ++(0,-1.8) -| (external.north);
+
+\end{tikzpicture}
+\caption{Diagrama de implantação do sistema.}
+\label{fig:implantacao}
+\end{figure}
+
+\subsection{Diagrama de Sequência: Cálculo de Índice NDVI}
+
+A Figura~\ref{fig:seq-ndvi} detalha o fluxo de interação para o cálculo do NDVI, desde a seleção do talhão pelo usuário até a exibição do resultado no mapa.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=0.82, every node/.style={scale=0.82}]
+  % Atores
+  \node[seqbox] (user) at (0, 0) {Usuário};
+  \node[seqbox] (fe) at (3.2, 0) {Frontend};
+  \node[seqbox] (be) at (6.4, 0) {Backend};
+  \node[seqbox] (sp) at (9.8, 0) {Sentinel\\Processor};
+
+  % Linhas de vida
+  \draw[dashed, gray] (user.south) -- ++(0, -8.5);
+  \draw[dashed, gray] (fe.south) -- ++(0, -8.5);
+  \draw[dashed, gray] (be.south) -- ++(0, -8.5);
+  \draw[dashed, gray] (sp.south) -- ++(0, -8.5);
+
+  % Mensagens
+  \draw[seqmsg] (0, -1) -- node[above, font=\scriptsize] {Seleciona talhão + NDVI} (3.2, -1);
+  \draw[seqmsg] (3.2, -2) -- node[above, font=\scriptsize, align=center] {POST /calculate-index} (6.4, -2);
+  \draw[seqmsg] (6.4, -3) -- node[above, font=\scriptsize] {read\_band(B08, B04)} (9.8, -3);
+  \draw[seqret] (9.8, -3.8) -- node[above, font=\scriptsize] {arrays NIR, Red} (6.4, -3.8);
+  \draw[seqmsg] (6.4, -4.5) -- node[above, font=\scriptsize] {crop\_to\_geometry()} (9.8, -4.5);
+  \draw[seqret] (9.8, -5.2) -- node[above, font=\scriptsize] {arrays recortados} (6.4, -5.2);
+  \draw[seqmsg] (6.4, -5.8) -- node[above, font=\scriptsize] {calculate\_ndvi()} (9.8, -5.8);
+  \draw[seqret] (9.8, -6.3) -- node[above, font=\scriptsize] {NDVI array} (6.4, -6.3);
+
+  % Nota de processamento
+  \node[umlnote, anchor=west] at (6.8, -7) {Gera PNG RGBA\\+ stats + histograma\\+ elevation\_data};
+
+  \draw[seqret] (6.4, -7.8) -- node[above, font=\scriptsize] {JSON \{image\_base64, stats\}} (3.2, -7.8);
+  \draw[seqret] (3.2, -8.3) -- node[above, font=\scriptsize] {Overlay no mapa + legenda} (0, -8.3);
+\end{tikzpicture}
+\caption{Diagrama de sequência para o cálculo de NDVI.}
+\label{fig:seq-ndvi}
+\end{figure}
+
+\subsection{Diagrama de Sequência: Classificação de Culturas}
+
+A Figura~\ref{fig:seq-class} apresenta o fluxo de classificação não supervisionada, em que os índices selecionados são calculados, empilhados como features e submetidos ao algoritmo K-Means.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=0.82, every node/.style={scale=0.82}]
+  \node[seqbox] (user) at (0, 0) {Usuário};
+  \node[seqbox] (fe) at (3.2, 0) {Frontend};
+  \node[seqbox] (be) at (6.4, 0) {Backend};
+  \node[seqbox] (sp) at (9.8, 0) {Sentinel\\Processor};
+
+  \draw[dashed, gray] (user.south) -- ++(0, -8.5);
+  \draw[dashed, gray] (fe.south) -- ++(0, -8.5);
+  \draw[dashed, gray] (be.south) -- ++(0, -8.5);
+  \draw[dashed, gray] (sp.south) -- ++(0, -8.5);
+
+  \draw[seqmsg] (0, -1) -- node[above, font=\scriptsize, align=center] {Configura método,\\n\_classes, features} (3.2, -1);
+  \draw[seqmsg] (3.2, -2) -- node[above, font=\scriptsize] {POST /classify} (6.4, -2);
+  \draw[seqmsg] (6.4, -3) -- node[above, font=\scriptsize] {Calcula NDVI, EVI} (9.8, -3);
+  \draw[seqret] (9.8, -3.8) -- node[above, font=\scriptsize] {arrays de índices} (6.4, -3.8);
+
+  \node[umlnote, anchor=west] at (6.8, -4.8) {Stack features\\KMeans(n=3).fit()\\Área = pixels $\times$ 100\,m²};
+
+  \draw[seqmsg] (6.4, -5.8) -- node[above, font=\scriptsize] {Gera PNG por classe} (9.8, -5.8);
+
+  \draw[seqret] (6.4, -6.8) -- node[above, font=\scriptsize] {JSON \{classes, image, stats\}} (3.2, -6.8);
+  \draw[seqret] (3.2, -7.5) -- node[above, font=\scriptsize] {Overlay + legenda + ha} (0, -7.5);
+\end{tikzpicture}
+\caption{Diagrama de sequência para classificação de culturas.}
+\label{fig:seq-class}
+\end{figure}
+
+\subsection{Decisões Arquiteturais}
+
+Cinco decisões arquiteturais fundamentais orientam o projeto:
+
+\begin{enumerate}
+  \item \textbf{Arquitetura em dois processos:} a separação entre frontend e backend viabilizará o desenvolvimento paralelo e impedirá que o processamento pesado de imagens bloqueie a interface.
+  \item \textbf{Transferência de imagens via base64:} codificar imagens PNG como strings base64 dentro do payload JSON simplificará a API ao custo de cerca de 33\% de overhead no tamanho da transferência, eliminando a necessidade de servir arquivos estáticos.
+  \item \textbf{Processamento em memória sem persistência:} a ausência de banco de dados reduzirá a complexidade de infraestrutura para a primeira versão; cada análise será independente e \textit{stateless}.
+  \item \textbf{Reprojeção dinâmica de coordenadas:} o frontend trabalhará em EPSG:4326 (WGS84), enquanto as imagens Sentinel-2 utilizam projeções UTM; a reprojeção automática via pyproj garantirá compatibilidade sem expor complexidade ao usuário.
+  \item \textbf{KML como formato de entrada:} amplamente suportado pelo Google Earth e QGIS, o formato facilita a interoperabilidade e a adoção por usuários sem ferramentas especializadas.
+\end{enumerate}
+
+\subsection{Stack Tecnológica}
+
+A Tabela~\ref{tab:stack} consolida as tecnologias selecionadas para o projeto.
+
+\begin{table}[H]
+\centering
+\caption{Stack tecnológica do EasyGIS Remote Sensing Software.}
+\label{tab:stack}
+\footnotesize
+\begin{tabularx}{\textwidth}{llX}
+\toprule
+\textbf{Camada} & \textbf{Tecnologia} & \textbf{Função} \\
+\midrule
+\multirow{6}{*}{Frontend}
+  & Next.js 16 / React 19 & Framework web com SSR e App Router \\
+  & TypeScript 5 & Tipagem estática \\
+  & Tailwind CSS 4 & Estilização utilitária \\
+  & Leaflet 1.9 & Mapa interativo 2D \\
+  & Three.js 0.180 & Renderização 3D (WebGL) \\
+  & shadcn/ui + Radix & Componentes de interface \\
+\midrule
+\multirow{6}{*}{Backend}
+  & Python 3.12 & Linguagem principal \\
+  & FastAPI 0.115+ & Framework REST \\
+  & rasterio 1.4+ & Leitura de JP2 geoespaciais \\
+  & NumPy 2.0+ & Processamento numérico \\
+  & SciPy / OpenCV & Filtros e visão computacional \\
+  & scikit-learn & K-Means clustering \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ══════════════════════════════════════════════════════════════
+\section{Protótipo de Interface}
+% ══════════════════════════════════════════════════════════════
+
+A interface do sistema foi prototipada com duas telas principais, ambas seguindo o padrão de layout dividido entre painel de controle lateral e área de visualização. Esta seção descreve a organização visual, os fluxos de interação e os componentes projetados.
+
+\subsection{Dashboard Principal}
+
+A tela principal ocupará toda a viewport do navegador e divide-se em três zonas: barra de ícones de navegação (48px de largura), painel lateral de controle (384px fixos) e área de mapa ou visualização 3D ocupando o espaço restante.
+
+O painel lateral organizar-se-á em duas abas. A aba \textbf{Analytics} concentrará os controles de análise espectral: seleção de talhão via dropdown, abas de análise rápida (Zone/NDVI, Productivity/EVI, Nitrogen/SAVI), toggle de suavização, botão de execução, badges de estatísticas (média, mínimo, máximo), toggle de visualização 3D, legenda com gradiente de cores e guia de interpretação, e seletores para os 19 tipos de índice disponíveis (5 de vegetação, 2 composições RGB, 12 bandas individuais). A aba \textbf{Research} apresentará menu accordion com cinco categorias de experimentos totalizando 13 algoritmos, área de experimentos recentes e botões de ação rápida.
+
+A área principal alternará entre o mapa Leaflet 2D, dotado de camadas de satélite Esri e ruas OpenStreetMap, ferramentas de desenho para polígonos e retângulos, overlay de resultados, popups de estresse NDVI e busca de endereço, e a visualização Three.js 3D, na qual os valores dos pixels serão renderizados como elevação em terreno texturizado com iluminação de três pontos e controles orbitais.
+
+\subsection{Página de Classificação}
+
+A segunda tela empregará layout 50/50. O painel esquerdo conterá controles de seleção de talhão, abas para método de classificação (supervisionada, não supervisionada, limiar), seletores condicionais de tipo de cultura ou número de classes, checkboxes de features (NDVI, EVI, SAVI) e botão de execução. Após a classificação, um painel de resultados exibirá área total, área classificada e legenda colorida com porcentagem e hectares por classe. O painel direito apresentará o mapa com overlay colorido de classificação sobre a imagem de satélite.
+
+\subsection{Componentes Reutilizáveis}
+
+O design system basear-se-á em componentes shadcn/ui (Button, Select, Tabs, Dialog, Slider, Switch, Label), complementados por cinco componentes customizados: \texttt{MapViewer} para o mapa Leaflet, \texttt{Terrain3DViewer} para visualização tridimensional, \texttt{ExperimentMenu} para o accordion de algoritmos, \texttt{Experiment\-Dialog} para configuração de parâmetros via sliders dinâmicos e \texttt{IndexLegend} para legenda com gradiente de cores e fórmula do índice.
+
+\subsection{Identidade Visual}
+
+A interface adotará tema escuro com fundo \texttt{\#09090b} (zinc-950), cards em \texttt{\#18181b} (zinc-900), cor primária verde \texttt{\#22c55e} para ações e indicadores positivos, azul \texttt{\#3b82f6} para destaques de seleção, texto principal em \texttt{\#fafafa} e texto secundário em \texttt{\#a1a1aa}. O gradiente de NDVI seguirá uma escala de seis faixas, do marrom (solo exposto, valores negativos) ao verde escuro (vegetação densa, acima de 0,6), conforme representado na Tabela~\ref{tab:gradiente}.
+
+\begin{table}[H]
+\centering
+\caption{Gradiente de cores para visualização do NDVI.}
+\label{tab:gradiente}
+\footnotesize
+\begin{tabular}{cll}
+\toprule
+\textbf{Faixa NDVI} & \textbf{Cor} & \textbf{Interpretação} \\
+\midrule
+$-1{,}0$ a $-0{,}2$ & \textcolor{ndvilow}{\rule{0.8cm}{0.35cm}} Marrom & Água / solo exposto \\
+$-0{,}2$ a $0{,}0$ & \textcolor{ndvilow!60}{\rule{0.8cm}{0.35cm}} Marrom claro & Solo \\
+$0{,}0$ a $0{,}2$ & \textcolor{ndvimid}{\rule{0.8cm}{0.35cm}} Dourado & Vegetação escassa \\
+$0{,}2$ a $0{,}4$ & \textcolor{ndvimid!60!ndvihigh}{\rule{0.8cm}{0.35cm}} Amarelo-verde & Vegetação moderada \\
+$0{,}4$ a $0{,}6$ & \textcolor{ndvihigh!60}{\rule{0.8cm}{0.35cm}} Verde lima & Vegetação saudável \\
+$0{,}6$ a $1{,}0$ & \textcolor{ndvihigh}{\rule{0.8cm}{0.35cm}} Verde escuro & Vegetação densa \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ══════════════════════════════════════════════════════════════
+\section{Plano de Projeto}
+\label{sec:plano}
+% ══════════════════════════════════════════════════════════════
+
+O projeto abrange duas fases distintas, correspondentes aos dois trabalhos práticos da disciplina. A \textbf{Fase~1 (TP1)}, de 8 de fevereiro a 5 de março de 2026, compreendeu a concepção, o levantamento de requisitos, o design da arquitetura, a elaboração dos protótipos de interface e a redação da documentação. A \textbf{Fase~2 (TP2)}, de 6 de março a 11 de maio de 2026, abrangerá a implementação, os testes e a entrega do MVP funcional, organizada em cinco sprints de duas semanas. Cada sprint possui um \textit{Sprint Goal} explícito, definido na cerimônia de Sprint Planning em acordo entre o Product Owner e o Development Team.
+
+\subsection{Equipe e Papéis Scrum}
+
+A equipe Scrum é composta por oito integrantes, distribuídos conforme competências complementares. O papel de \textbf{Scrum Master} é exercido por Luis Gustavo Olimpio, que também atua como Tech Lead. Os demais compõem o \textbf{Development Team}.
+
+\begin{table}[H]
+\centering
+\caption{Composição da equipe e responsabilidades.}
+\label{tab:equipe}
+\footnotesize
+\begin{tabularx}{\textwidth}{p{4cm}lX}
+\toprule
+\textbf{Membro} & \textbf{Papel Scrum} & \textbf{Responsabilidades Técnicas} \\
+\midrule
+Luis Gustavo Olimpio & Scrum Master / Tech Lead & Arquitetura geral, SentinelProcessor, rasterio \\
+Lauan Matheus & Dev Team / Frontend Lead & Next.js, Leaflet, componentes React \\
+João Leonardi & Dev Team / Backend & Endpoints FastAPI, Pydantic, classificação \\
+João Vinícius Castello & Dev Team / Frontend & shadcn/ui, ExperimentDialog, responsividade \\
+Vinícius Henrique & Dev Team / Full Stack & Three.js, Terrain3DViewer, elevação \\
+Lucas Benevinuto & Dev Team / Geoespacial & KMLParser, bandas espectrais, testes \\
+José Melquíades & Dev Team / QA & Testes, documentação, dependências \\
+Sammuel Moura Saraiva & Dev Team / Backend & Endpoints FastAPI, integração \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Fase 1: Concepção e Design (TP1, 08/02 a 05/03)}
+
+A primeira fase, concluída com a entrega deste documento, concentrou-se na definição conceitual e arquitetural do produto. As atividades realizadas foram:
+
+\begin{itemize}
+  \item \textbf{Semana 1 (08/02 a 14/02):} Levantamento do problema e pesquisa de mercado. Definição dos usuários-alvo, identificação dos diferenciais competitivos e redação do Documento de Visão do Produto. Primeira sessão de elicitação de requisitos com o Product Owner.
+  \item \textbf{Semana 2 (15/02 a 21/02):} Construção do Product Backlog com 35 histórias de usuário organizadas em seis épicos. Aplicação da priorização MoSCoW. Especificação dos 20 requisitos funcionais e 8 não funcionais segundo a norma IEEE~830. Elaboração da matriz de rastreabilidade.
+  \item \textbf{Semana 3 (22/02 a 28/02):} Projeto da arquitetura cliente-servidor (FastAPI + Next.js). Elaboração dos diagramas UML: componentes, implantação e sequência. Definição da stack tecnológica. Seleção das decisões arquiteturais fundamentais.
+  \item \textbf{Semana 4 (01/03 a 05/03):} Prototipação das interfaces (dashboard principal e página de classificação). Definição da identidade visual e do design system. Elaboração do plano de projeto com cronograma, riscos e cerimônias Scrum. Consolidação de toda a documentação no documento unificado.
+\end{itemize}
+
+\subsection{Fase 2: Implementação e Entrega do MVP (TP2, 06/03 a 11/05)}
+
+A segunda fase organizará a implementação do software em cinco sprints de duas semanas, seguindo o cronograma descrito a seguir. Os Sprint Goals refletem a priorização MoSCoW do backlog: as primeiras sprints entregam os itens \textit{Must Have}, as intermediárias abordam os \textit{Should Have} e as finais incorporam \textit{Could Have} conforme a velocidade do time permitir.
+
+\subsubsection{Sprint 1: Fundação (06/03 a 19/03)}
+
+\textbf{Sprint Goal:} \textit{Estabelecer a infraestrutura de desenvolvimento e validar a leitura de dados geoespaciais de ponta a ponta.}
+
+Serão configurados o repositório Git com a estrutura de diretórios, o projeto Next.js com TypeScript e Tailwind CSS, e o projeto FastAPI com Uvicorn. Em paralelo, a classe \texttt{SentinelProcessor} será desenvolvida com leitura de bandas JP2 e recorte por geometria, o \texttt{KMLParser} será criado para extração de polígonos dos arquivos KML, a comunicação CORS entre frontend e backend será configurada e os tipos TypeScript serão definidos em \texttt{types/index.ts}. Ao término da sprint, espera-se que o backend leia imagens Sentinel-2 e o frontend renderize o mapa base com os talhões importados.
+
+\subsubsection{Sprint 2: Funcionalidades Core (20/03 a 02/04)}
+
+\textbf{Sprint Goal:} \textit{Entregar o fluxo completo de cálculo e visualização de índices espectrais com estatísticas.}
+
+No backend, serão desenvolvidos o endpoint \texttt{POST /calculate-index} com suporte a NDVI e EVI, o mecanismo de recorte por polígono (\texttt{crop\_to\_geometry}) com reprojeção automática de coordenadas e a renderização de PNG com gradiente de cores. No frontend, o componente \texttt{MapViewer} será criado com integração Leaflet, overlay de resultados, painel lateral com aba Analytics, seleção de talhão e índice, e componente \texttt{IndexLegend}. O módulo de estatísticas descritivas e histograma completará a sprint.
+
+\subsubsection{Sprint 3: Funcionalidades Avançadas (03/04 a 16/04)}
+
+\textbf{Sprint Goal:} \textit{Ampliar as capacidades de visualização (3D, bandas, composições) e interação (desenho, busca).}
+
+O componente \texttt{Terrain\-3DViewer} será desenvolvido com Three.js, incluindo geometria de plano deformada por elevação, texturização com a imagem de índice, iluminação de três pontos e controles orbitais. Composições RGB e falsa-cor serão adicionadas, assim como a visualização das 13 bandas individuais do Sentinel-2 em resolução nativa. As ferramentas de desenho via leaflet-draw, a busca de endereço via leaflet-geosearch, o popup interativo de estresse NDVI e a suavização gaussiana completarão esta sprint.
+
+\subsubsection{Sprint 4: Experimentos e Classificação (17/04 a 30/04)}
+
+\textbf{Sprint Goal:} \textit{Entregar o laboratório de experimentos e a classificação de culturas.}
+
+Serão desenvolvidos o endpoint de experimentos com 13 algoritmos de processamento de imagem, os componentes \texttt{Experiment\-Menu} e \texttt{Experiment\-Dialog}, a aba Research no painel lateral, a página de classificação de culturas, o endpoint de classificação com suporte a K-Means, limiar de NDVI e classificação supervisionada, além do cálculo de área por classe em hectares.
+
+\subsubsection{Sprint 5: Testes, Refinamento e Entrega (01/05 a 11/05)}
+
+\textbf{Sprint Goal:} \textit{Corrigir bugs, executar testes de integração e preparar o MVP para entrega final.}
+
+A sprint final concentrar-se-á na estabilização do sistema. Serão realizados testes de integração end-to-end com dados reais Sentinel-2, correção de bugs identificados nas sprints anteriores, declaração de todas as dependências no \texttt{pyproject.toml}, implementação de estados de carregamento e mensagens de erro amigáveis, e redação da documentação técnica complementar (guia de instalação e manual do usuário). A Sprint Review final constituirá a demonstração do MVP ao Product Owner.
+
+\subsection{Marcos do Projeto}
+
+\begin{table}[H]
+\centering
+\caption{Marcos (\textit{milestones}) do projeto.}
+\label{tab:milestones}
+\footnotesize
+\begin{tabular}{llll}
+\toprule
+\textbf{Marco} & \textbf{Data} & \textbf{Critério} & \textbf{Status} \\
+\midrule
+M0: Concepção (TP1) & 05/03 & Documentação completa entregue & Concluído \\
+M1: Infraestrutura & 19/03 & Backend lendo JP2, frontend com mapa & Planejado \\
+M2: MVP Funcional & 02/04 & NDVI no mapa com estatísticas & Planejado \\
+M3: Features Completas & 16/04 & 3D, bandas, desenho, busca & Planejado \\
+M4: Produto Completo & 30/04 & Experimentos + classificação & Planejado \\
+M5: Entrega Final (TP2) & 11/05 & MVP testado, documentado, estável & Planejado \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Gestão de Riscos}
+
+A Tabela~\ref{tab:riscos} apresenta os riscos identificados durante o planejamento do projeto, classificados por probabilidade e impacto, com as respectivas estratégias de mitigação previstas.
+
+\begin{table}[H]
+\centering
+\caption{Registro de riscos do projeto.}
+\label{tab:riscos}
+\footnotesize
+\begin{tabularx}{\textwidth}{Xccl}
+\toprule
+\textbf{Risco} & \textbf{Prob.} & \textbf{Impacto} & \textbf{Mitigação} \\
+\midrule
+Imagens Sentinel-2 grandes demais para RAM & Média & Alto & Limitar tamanho de talhão \\
+Dependências Python não declaradas & Alta & Médio & Incluir no \texttt{pyproject.toml} \\
+Latência de processamento para talhões grandes & Média & Médio & Feedback de progresso \\
+Navegadores sem suporte a WebGL & Baixa & Baixo & Fallback para mapa 2D \\
+KML malformados causam falha & Baixa & Médio & Validação no parser \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Definição de Pronto}
+
+Uma tarefa será considerada concluída quando atender simultaneamente a seis critérios: código implementado e funcional; aderência aos padrões do projeto (TypeScript com tipagem, Pydantic para validação); ausência de erros de console no frontend e de exceções não tratadas no backend; teste manual com dados reais (imagem Sentinel-2 e arquivo KML); revisão por ao menos um outro membro da equipe; e código versionado no repositório Git.
+
+\subsection{Definição de Preparado}
+
+Complementarmente, a \textit{Definition of Ready} estabelece os critérios que uma história de usuário deve satisfazer antes de ser incluída em um Sprint Backlog: descrição no formato canônico ágil (\textit{como/quero/para que}); critérios de aceitação claros e verificáveis; estimativa em story points atribuída pelo Development Team; dependências técnicas identificadas e resolvidas ou explicitamente aceitas; e aprovação do Product Owner quanto à prioridade.
+
+\subsection{Gestão de Mudanças}
+
+Alterações no escopo do projeto são gerenciadas por meio do refinamento contínuo do Product Backlog. Novas histórias de usuário, alterações de prioridade ou remoção de itens são propostas pelo PO ou pelo Development Team e discutidas nas sessões de \textit{Backlog Refinement}, realizadas na metade de cada sprint. Mudanças no Sprint Backlog durante uma sprint em andamento são evitadas para preservar a estabilidade do Sprint Goal; caso um impedimento técnico torne um item inviável, o Scrum Master facilita a renegociação de escopo com o PO sem comprometer o objetivo da sprint.
+
+O controle de versão via Git constitui o mecanismo primário de rastreabilidade de mudanças no código. Cada funcionalidade será desenvolvida em branch dedicada, submetida a revisão por pares (\textit{code review}) e integrada à branch principal mediante \textit{pull request}. Essa prática assegura que cada alteração seja auditável e reversível.
+
+\subsection{Monitoramento e Comunicação}
+
+O progresso de cada sprint será acompanhado por meio de três mecanismos. O \textit{Sprint Burndown Chart} registrará a quantidade de story points restantes ao longo dos dias da sprint, permitindo identificar desvios em relação ao ritmo planejado. O \textit{Kanban Board} (via GitHub Projects) organizará as tarefas em colunas \textit{To Do}, \textit{In Progress}, \textit{In Review} e \textit{Done}, oferecendo visibilidade instantânea do estado de cada item. As \textit{Daily Scrums}, presenciais ou assíncronas, garantirão alinhamento diário e identificação precoce de impedimentos.
+
+Ao final de cada sprint, a Sprint Review produzirá um registro do incremento demonstrado e do feedback do PO, enquanto a Sprint Retrospective gerará uma lista de ações de melhoria para o ciclo seguinte. Esses registros compõem o histórico processual do projeto e subsidiam a avaliação contínua da maturidade ágil da equipe.
+
+% ══════════════════════════════════════════════════════════════
+\section{Itens Complementares para o TP2}
+% ══════════════════════════════════════════════════════════════
+
+Além das 35 histórias de usuário do backlog principal, a equipe identificou eixos complementares que poderão ser incorporados ao escopo do TP2 conforme a velocidade do time e a priorização do Product Owner.
+
+A \textbf{persistência de dados} prevê a adoção de banco de dados SQLite ou PostgreSQL para salvar talhões desenhados, resultados de análises e histórico por talhão. A \textbf{classificação supervisionada real} contempla o treinamento de modelo Random Forest sobre dados rotulados e a construção de pipeline de treinamento e inferência. A \textbf{qualidade de código} inclui testes unitários (pytest para backend, Jest para frontend), configuração de CI/CD com GitHub Actions e formatação automática (ruff para Python, ESLint para TypeScript). As \textbf{melhorias de experiência do usuário} abrangem estados de carregamento durante processamento e mensagens de erro amigáveis. Esses itens serão avaliados nas sessões de Backlog Refinement ao longo das sprints de implementação.
+
+% ══════════════════════════════════════════════════════════════
+\section{Considerações Finais}
+% ══════════════════════════════════════════════════════════════
+
+O Trabalho Prático~1 cumpriu integralmente o escopo da fase de concepção do EasyGIS Remote Sensing Software. Ao longo de quatro semanas, a equipe produziu os seis artefatos que compõem este documento: a visão do produto com análise de mercado e usuários-alvo; o backlog com 35 histórias de usuário organizadas em seis épicos e priorizadas pelo método MoSCoW; a especificação de 20 requisitos funcionais e 8 não funcionais com matriz de rastreabilidade; a arquitetura cliente-servidor projetada com diagramas UML de componentes, implantação e sequência; os protótipos de interface com identidade visual e design system; e o plano de projeto com cronograma, cerimônias Scrum, gestão de riscos e definições de pronto e preparado.
+
+A arquitetura em dois processos, FastAPI para processamento geoespacial e Next.js para interface interativa, foi dimensionada para viabilizar o desenvolvimento paralelo e a separação de responsabilidades. A integração planejada de rasterio, Leaflet e Three.js em plataforma única constituirá o principal diferencial técnico do sistema. A priorização MoSCoW assegura que os itens \textit{Must Have} (importação de KML, NDVI, EVI, overlay, estatísticas, classificação por limiar) serão priorizados nas duas primeiras sprints de implementação do TP2.
+
+Com a fase de concepção concluída, a equipe iniciará a implementação em 6 de março de 2026, seguindo o cronograma de cinco sprints que culmina na entrega do MVP funcional em 11 de maio de 2026, sob supervisão do Product Owner e coordenação do Scrum Master.
+
+% ══════════════════════════════════════════════════════════════
+% ── Referências ──
+% ══════════════════════════════════════════════════════════════
+\newpage
+\section*{Referências}
+\addcontentsline{toc}{section}{Referências}
+
+\begin{enumerate}[label={[\arabic*]}, leftmargin=*]
+  \item ESA. \textit{Sentinel-2 Mission Guide}. Disponível em: \url{https://sentinel.esa.int/web/sentinel/missions/sentinel-2}. Acesso em: 5 mar. 2026.
+  \item OGC. \textit{KML Standard}. Disponível em: \url{https://www.ogc.org/standard/kml/}. Acesso em: 5 mar. 2026.
+  \item Rasterio Contributors. \textit{Rasterio Documentation}. Disponível em: \url{https://rasterio.readthedocs.io/}. Acesso em: 5 mar. 2026.
+  \item Ramírez, S. \textit{FastAPI Documentation}. Disponível em: \url{https://fastapi.tiangolo.com/}. Acesso em: 5 mar. 2026.
+  \item Rouse, J. W. et al. Monitoring vegetation systems in the Great Plains with ERTS. \textit{Third Earth Resources Technology Satellite-1 Symposium}, v.~1, p. 309--317, 1974.
+  \item Huete, A. R. et al. Overview of the radiometric and biophysical performance of the MODIS vegetation indices. \textit{Remote Sensing of Environment}, v.~83, n.~1--2, p. 195--213, 2002.
+  \item Huete, A. R. A soil-adjusted vegetation index (SAVI). \textit{Remote Sensing of Environment}, v.~25, n.~3, p. 295--309, 1988.
+  \item Pedregosa, F. et al. Scikit-learn: Machine Learning in Python. \textit{Journal of Machine Learning Research}, v.~12, p. 2825--2830, 2011.
+  \item Schwaber, K.; Sutherland, J. \textit{The Scrum Guide}. 2020. Disponível em: \url{https://scrumguides.org/}. Acesso em: 5 mar. 2026.
+  \item Cohn, M. \textit{Agile Estimating and Planning}. Upper Saddle River: Prentice Hall, 2005.
+\end{enumerate}
+
+\end{document}

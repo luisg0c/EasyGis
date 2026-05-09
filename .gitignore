@@ -17,3 +17,17 @@ data/products/
 # Keep directory structure but ignore contents
 !data/products/.gitkeep
 !data/KML\ Fields/
+
+# LaTeX build artifacts
+docs/**/*.aux
+docs/**/*.log
+docs/**/*.out
+docs/**/*.toc
+docs/**/*.nav
+docs/**/*.snm
+docs/**/*.vrb
+docs/**/*.synctex.gz
+
+# macOS
+.DS_Store
+*.zip

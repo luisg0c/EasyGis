@@ -1,0 +1,330 @@
+\documentclass[11pt, a4paper]{article}
+\input{p2-preamble.tex}
+
+\title{%
+  \vspace{-1.5cm}
+  {\Huge\bfseries\color{accentdim} Relatório de Execução de Testes}\\[8pt]
+  {\Large\bfseries ICEV Remote Sensing Software}\\[18pt]
+  {\normalsize\itshape Avaliação P2 --- Engenharia de Software, 2026.1}
+}
+\author{Equipe ICEV Remote Sensing}
+\date{Execução em 09 de maio de 2026}
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+
+\begin{infobox}[title={Resumo da execução}]
+\begin{itemize}
+  \item \textbf{Data:} 2026-05-09 14:17:44
+  \item \textbf{Ambiente:} macOS Darwin 25.4.0 / Python 3.12.13 / pytest 9.0.3
+  \item \textbf{Plano referenciado:} \texttt{08-plano-de-testes.pdf}
+  \item \textbf{Resultado:} \textbf{\color{successgreen}APROVADO} --- 28/28 casos passaram (100\%)
+\end{itemize}
+\end{infobox}
+
+\vfill
+\begin{center}
+\small\textit{Instituto de Ensino Superior --- ICEV}\\
+\small\textit{Teresina, PI, Brasil}
+\end{center}
+\newpage
+
+\tableofcontents
+\newpage
+
+% ══════════════════════════════════════════════════════════════
+\section{Sumário Executivo}
+% ══════════════════════════════════════════════════════════════
+
+\renewcommand{\arraystretch}{1.4}
+\begin{table}[H]
+\centering
+\small
+\rowcolors{2}{tabrow}{white}
+\begin{tabularx}{\textwidth}{@{}Xr@{}}
+\toprule
+\rowcolor{tabheader}\textcolor{white}{\textbf{Métrica}} & \textcolor{white}{\textbf{Valor}}\\
+\midrule
+Casos de teste planejados & 28\\
+Casos executados & 28\\
+\textbf{Aprovados} & \textbf{\color{successgreen}28 (100\%)}\\
+Reprovados & 0\\
+Erros (não conseguiram rodar) & 0\\
+Tempo total de execução & 0,79\,s\\
+Cobertura de código (módulos \texttt{api/}) & 24\% (linhas executadas)\\
+Cobertura de \texttt{sentinel\_processor.py} (lógica de negócio) & \textbf{55\%}\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{successbox}
+\textbf{Resultado: APROVADO.} Todos os requisitos funcionais críticos cobertos no plano foram validados pelos testes automatizados.
+\end{successbox}
+
+% ══════════════════════════════════════════════════════════════
+\section{Comando Executado}
+% ══════════════════════════════════════════════════════════════
+
+\begin{lstlisting}[style=shellstyle]
+$ uv run pytest tests/ -v --cov=api --cov-report=term-missing
+\end{lstlisting}
+
+% ══════════════════════════════════════════════════════════════
+\section{Evidência Bruta da Execução}
+% ══════════════════════════════════════════════════════════════
+
+\begin{lstlisting}[style=shellstyle, basicstyle=\ttfamily\scriptsize]
+============================= test session starts ==============================
+platform darwin -- Python 3.12.13, pytest-9.0.3, pluggy-1.6.0
+cachedir: .pytest_cache
+rootdir: /Users/luisgoc/projetos/mauro/icev-remote-sensing-software
+configfile: pyproject.toml
+plugins: anyio-4.11.0, cov-7.1.0
+collecting ... collected 28 items
+
+tests/test_api_endpoints.py::TestHealthEndpoint::test_health_returns_200 PASSED         [  3%]
+tests/test_api_endpoints.py::TestHealthEndpoint::test_health_response_structure PASSED  [  7%]
+tests/test_api_endpoints.py::TestRootEndpoint::test_root_returns_api_info PASSED        [ 10%]
+tests/test_api_endpoints.py::TestProductsEndpoint::test_products_endpoint_returns_200 PASSED          [ 14%]
+tests/test_api_endpoints.py::TestProductsEndpoint::test_products_response_structure PASSED            [ 17%]
+tests/test_api_endpoints.py::TestCalculateIndexValidation::test_missing_required_fields_returns_422 PASSED  [ 21%]
+tests/test_api_endpoints.py::TestCalculateIndexValidation::test_invalid_coordinate_format_returns_422 PASSED [ 25%]
+tests/test_api_endpoints.py::TestCalculateIndexValidation::test_unknown_index_type_returns_error PASSED     [ 28%]
+tests/test_api_endpoints.py::TestCoordinatesToPolygon::test_coordinates_form_valid_polygon PASSED      [ 32%]
+tests/test_api_endpoints.py::TestCoordinatesToPolygon::test_polygon_centroid_in_correct_region PASSED  [ 35%]
+tests/test_sentinel_processor.py::TestNDVI::test_ndvi_in_valid_range PASSED                       [ 39%]
+tests/test_sentinel_processor.py::TestNDVI::test_ndvi_healthy_vegetation_is_positive PASSED       [ 42%]
+tests/test_sentinel_processor.py::TestNDVI::test_ndvi_formula_correctness PASSED                  [ 46%]
+tests/test_sentinel_processor.py::TestNDVI::test_ndvi_handles_division_by_zero PASSED             [ 50%]
+tests/test_sentinel_processor.py::TestNDVI::test_ndvi_zero_values_when_nir_equals_red PASSED      [ 53%]
+tests/test_sentinel_processor.py::TestEVI::test_evi_in_valid_range PASSED                         [ 57%]
+tests/test_sentinel_processor.py::TestEVI::test_evi_default_coefficients PASSED                   [ 60%]
+tests/test_sentinel_processor.py::TestEVI::test_evi_custom_coefficients PASSED                    [ 64%]
+tests/test_sentinel_processor.py::TestStatistics::test_statistics_all_keys_present PASSED         [ 67%]
+tests/test_sentinel_processor.py::TestStatistics::test_statistics_correct_values PASSED           [ 71%]
+tests/test_sentinel_processor.py::TestStatistics::test_statistics_ignores_nan PASSED              [ 75%]
+tests/test_sentinel_processor.py::TestStatistics::test_statistics_empty_data PASSED               [ 78%]
+tests/test_sentinel_processor.py::TestHistogram::test_histogram_default_50_bins PASSED            [ 82%]
+tests/test_sentinel_processor.py::TestHistogram::test_histogram_custom_bins PASSED                [ 85%]
+tests/test_sentinel_processor.py::TestHistogram::test_histogram_total_count_matches PASSED        [ 89%]
+tests/test_sentinel_processor.py::TestHistogram::test_histogram_empty_data PASSED                 [ 92%]
+tests/test_sentinel_processor.py::TestEdgeCases::test_integer_to_float_conversion PASSED          [ 96%]
+tests/test_sentinel_processor.py::TestEdgeCases::test_negative_ndvi_for_water PASSED              [100%]
+
+================================ tests coverage ================================
+Name                        Stmts   Miss  Cover
+---------------------------------------------------
+api/__init__.py                 0      0   100%
+api/main.py                   511    409    20%
+api/sentinel_processor.py      75     34    55%
+---------------------------------------------------
+TOTAL                         586    443    24%
+============================== 28 passed in 0.79s ==============================
+\end{lstlisting}
+
+% ══════════════════════════════════════════════════════════════
+\section{Detalhamento por Caso de Teste}
+% ══════════════════════════════════════════════════════════════
+
+\subsection{Cálculo de NDVI (RF-05)}
+
+\begin{table}[H]
+\centering
+\footnotesize
+\rowcolors{2}{tabrow}{white}
+\begin{tabularx}{\textwidth}{@{}p{1.5cm}Xp{1.5cm}p{1.5cm}p{4cm}@{}}
+\toprule
+\rowcolor{tabheader}\textcolor{white}{\textbf{ID}} & \textcolor{white}{\textbf{Caso}} & \textcolor{white}{\textbf{Resultado}} & \textcolor{white}{\textbf{Tempo}} & \textcolor{white}{\textbf{Observação}}\\
+\midrule
+CT-01.1 & NDVI no intervalo válido & \cmark\ PASSED & $<10$\,ms & \texttt{min} e \texttt{max} dentro de $[-1, 1]$\\
+CT-01.2 & Vegetação saudável $\rightarrow$ NDVI $> 0{,}4$ & \cmark\ PASSED & $<10$\,ms & Média obtida $\approx 0{,}61$\\
+CT-01.3 & Fórmula correta para entrada conhecida & \cmark\ PASSED & $<10$\,ms & NIR=8000, Red=2000 $\rightarrow$ NDVI=0{,}6 (exato)\\
+CT-01.4 & Divisão por zero produz NaN & \cmark\ PASSED & $<10$\,ms & \texttt{np.all(np.isnan(ndvi))}\\
+CT-01.5 & NDVI = 0 quando NIR == Red & \cmark\ PASSED & $<10$\,ms & \texttt{np.allclose(ndvi, 0.0)}\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Cálculo de EVI (RF-06)}
+
+\begin{table}[H]
+\centering
+\footnotesize
+\rowcolors{2}{tabrow}{white}
+\begin{tabularx}{\textwidth}{@{}p{1.5cm}Xp{2cm}p{1.5cm}@{}}
+\toprule
+\rowcolor{tabheader}\textcolor{white}{\textbf{ID}} & \textcolor{white}{\textbf{Caso}} & \textcolor{white}{\textbf{Resultado}} & \textcolor{white}{\textbf{Tempo}}\\
+\midrule
+CT-02.1 & EVI no intervalo válido (clipping) & \cmark\ PASSED & $<10$\,ms\\
+CT-02.2 & Coeficientes padrão & \cmark\ PASSED & $<10$\,ms\\
+CT-02.3 & Coeficientes customizados produzem resultado diferente & \cmark\ PASSED & $<10$\,ms\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Estatísticas Descritivas (RF-10)}
+
+\begin{table}[H]
+\centering
+\footnotesize
+\rowcolors{2}{tabrow}{white}
+\begin{tabularx}{\textwidth}{@{}p{1.5cm}Xp{2cm}p{1.5cm}@{}}
+\toprule
+\rowcolor{tabheader}\textcolor{white}{\textbf{ID}} & \textcolor{white}{\textbf{Caso}} & \textcolor{white}{\textbf{Resultado}} & \textcolor{white}{\textbf{Tempo}}\\
+\midrule
+CT-03.1 & Todas as chaves presentes & \cmark\ PASSED & $<10$\,ms\\
+CT-03.2 & Valores matematicamente corretos & \cmark\ PASSED & $<10$\,ms\\
+CT-03.3 & NaN ignorados & \cmark\ PASSED & $<10$\,ms\\
+CT-03.4 & Array totalmente NaN não crasha & \cmark\ PASSED & $<10$\,ms\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Histograma (RF-11)}
+
+\begin{table}[H]
+\centering
+\footnotesize
+\rowcolors{2}{tabrow}{white}
+\begin{tabularx}{\textwidth}{@{}p{1.5cm}Xp{2cm}p{1.5cm}@{}}
+\toprule
+\rowcolor{tabheader}\textcolor{white}{\textbf{ID}} & \textcolor{white}{\textbf{Caso}} & \textcolor{white}{\textbf{Resultado}} & \textcolor{white}{\textbf{Tempo}}\\
+\midrule
+CT-04.1 & Padrão 50 bins & \cmark\ PASSED & $<10$\,ms\\
+CT-04.2 & Bins customizados & \cmark\ PASSED & $<10$\,ms\\
+CT-04.3 & Soma de counts = total & \cmark\ PASSED & $<10$\,ms\\
+CT-04.4 & Array vazio retorna listas vazias & \cmark\ PASSED & $<10$\,ms\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Casos de Borda (CT-05)}
+
+\begin{table}[H]
+\centering
+\footnotesize
+\rowcolors{2}{tabrow}{white}
+\begin{tabularx}{\textwidth}{@{}p{1.5cm}Xp{2cm}p{1.5cm}@{}}
+\toprule
+\rowcolor{tabheader}\textcolor{white}{\textbf{ID}} & \textcolor{white}{\textbf{Caso}} & \textcolor{white}{\textbf{Resultado}} & \textcolor{white}{\textbf{Tempo}}\\
+\midrule
+CT-05.1 & Conversão uint16 $\rightarrow$ float32 & \cmark\ PASSED & $<10$\,ms\\
+CT-05.2 & NDVI negativo para água & \cmark\ PASSED & $<10$\,ms\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Endpoints HTTP}
+
+\begin{table}[H]
+\centering
+\footnotesize
+\rowcolors{2}{tabrow}{white}
+\begin{tabularx}{\textwidth}{@{}p{1.5cm}Xp{2cm}p{1.5cm}@{}}
+\toprule
+\rowcolor{tabheader}\textcolor{white}{\textbf{ID}} & \textcolor{white}{\textbf{Caso}} & \textcolor{white}{\textbf{Resultado}} & \textcolor{white}{\textbf{Tempo}}\\
+\midrule
+CT-06.1 & \texttt{GET /health} retorna 200 & \cmark\ PASSED & $<50$\,ms\\
+CT-06.2 & Estrutura de \texttt{/health} correta & \cmark\ PASSED & $<50$\,ms\\
+CT-07.1 & \texttt{GET /} retorna info da API & \cmark\ PASSED & $<50$\,ms\\
+CT-08.1 & \texttt{GET /products} responde 200 & \cmark\ PASSED & $<50$\,ms\\
+CT-08.2 & Estrutura de \texttt{/products} correta & \cmark\ PASSED & $<50$\,ms\\
+CT-09.1 & Body vazio $\rightarrow$ HTTP 422 & \cmark\ PASSED & $<50$\,ms\\
+CT-09.2 & Coordenada inválida $\rightarrow$ HTTP 422 & \cmark\ PASSED & $<50$\,ms\\
+CT-09.3 & \texttt{index\_type} desconhecido $\rightarrow$ erro & \cmark\ PASSED & $<50$\,ms\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Conversão de Coordenadas}
+
+\begin{table}[H]
+\centering
+\footnotesize
+\rowcolors{2}{tabrow}{white}
+\begin{tabularx}{\textwidth}{@{}p{1.5cm}Xp{2cm}p{1.5cm}@{}}
+\toprule
+\rowcolor{tabheader}\textcolor{white}{\textbf{ID}} & \textcolor{white}{\textbf{Caso}} & \textcolor{white}{\textbf{Resultado}} & \textcolor{white}{\textbf{Tempo}}\\
+\midrule
+CT-10.1 & Polígono Shapely válido & \cmark\ PASSED & $<10$\,ms\\
+CT-10.2 & Centroide dentro do bbox & \cmark\ PASSED & $<10$\,ms\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ══════════════════════════════════════════════════════════════
+\section{Análise dos Resultados}
+% ══════════════════════════════════════════════════════════════
+
+\subsection{Pontos fortes}
+
+\begin{enumerate}
+  \item \textbf{Cobertura adequada da lógica de negócio.} Todas as funções puras de cálculo do \texttt{SentinelProcessor} (NDVI, EVI, estatísticas, histograma) estão cobertas, com casos felizes e de borda.
+  \item \textbf{Validação Pydantic exercitada.} Os três caminhos de erro do endpoint principal (\texttt{/calculate-index}) --- body vazio, tipo errado, índice desconhecido --- produzem códigos HTTP corretos (422 / 400--500). Isso garante o RNF-04 (Confiabilidade --- erros claros).
+  \item \textbf{Casos de borda explícitos.} Divisão por zero, arrays totalmente NaN, e conversão de tipo uint16 $\rightarrow$ float32 são testes que evitam regressões silenciosas se o código for refatorado.
+  \item \textbf{Execução rápida.} A suite completa roda em $< 1$\,s (após cache de import), o que viabiliza inclusão em pipeline de CI futuro sem impacto perceptível.
+  \item \textbf{Validação matemática.} O CT-01.3 verifica a fórmula com valores conhecidos analiticamente ($(8000-2000)/(8000+2000) = 0{,}6$), evitando bugs onde ``compila e roda mas calcula errado''.
+\end{enumerate}
+
+\subsection{Limitações conhecidas}
+
+\renewcommand{\arraystretch}{1.4}
+\begin{table}[H]
+\centering
+\small
+\rowcolors{2}{tabrow}{white}
+\begin{tabularx}{\textwidth}{@{}XXX@{}}
+\toprule
+\rowcolor{tabheader}\textcolor{white}{\textbf{Limitação}} & \textcolor{white}{\textbf{Justificativa}} & \textcolor{white}{\textbf{Mitigação}}\\
+\midrule
+Cobertura de \texttt{main.py} em 20\% & Endpoints de processamento exigem produto Sentinel-2 real ($\sim$1\,GB) que não cabe no repositório & Validação manual na demonstração ao vivo (Item 4 da P2)\\
+Funções \texttt{read\_band} e \texttt{crop\_to\_geometry} não unitarizadas & Idem --- exigem JP2 real e granule structure do Sentinel-2 & Validação por demonstração end-to-end\\
+Frontend (Next.js) não testado automaticamente & Escopo da P2 priorizou testes do backend (lógica de cálculo) & Validação manual via roteiro de demonstração\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Riscos residuais}
+
+\begin{itemize}
+  \item \textbf{Refatorações de I/O em \texttt{read\_band}} podem quebrar sem que a suite detecte. \textit{Mitigação:} incluir um teste de smoke com produto pequeno em uma futura iteração.
+  \item \textbf{Mudanças no schema Pydantic} sem atualização do frontend podem causar erros 422 em produção. \textit{Mitigação:} TypeScript no cliente espelha o schema (DA-07), reduzindo risco.
+\end{itemize}
+
+% ══════════════════════════════════════════════════════════════
+\section{Conclusão}
+% ══════════════════════════════════════════════════════════════
+
+A suíte de 28 testes valida com sucesso os requisitos funcionais críticos do MVP:
+
+\begin{itemize}
+  \item \textbf{RF-04, RF-05, RF-06, RF-10, RF-11, RF-20} --- todos cobertos.
+  \item \textbf{RNF-04 (Confiabilidade), RNF-05 (Manutenibilidade)} --- exercitados estruturalmente.
+\end{itemize}
+
+\begin{successbox}
+Não foram encontrados defeitos durante a execução. O sistema está apto à demonstração e entrega da P2.
+\end{successbox}
+
+% ══════════════════════════════════════════════════════════════
+\section{Como Reproduzir}
+% ══════════════════════════════════════════════════════════════
+
+\begin{lstlisting}[style=shellstyle]
+# Instalar dependencias (uma vez)
+uv sync --group dev
+
+# Rodar suite completa
+uv run pytest tests/ -v
+
+# Com cobertura
+uv run pytest tests/ -v --cov=api --cov-report=term-missing
+
+# Rodar um caso especifico (exemplo)
+uv run pytest tests/test_sentinel_processor.py::TestNDVI::test_ndvi_formula_correctness -v
+\end{lstlisting}
+
+A suite é determinística (\texttt{np.random.default\_rng(seed=42)}), portanto os resultados são reprodutíveis em qualquer máquina com Python 3.12 e \texttt{uv} instalados.
+
+\end{document}

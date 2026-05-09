@@ -1,0 +1,512 @@
+\documentclass[aspectratio=169, 11pt]{beamer}
+
+% ── Codificação ───────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amssymb, amsmath}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{listings}
+\usepackage{pifont}
+
+% ── Paleta de cores ──────────────────────────────────────────
+\definecolor{bgdark}{HTML}{0F171F}
+\definecolor{bgpanel}{HTML}{18222E}
+\definecolor{textmain}{HTML}{E6EDF3}
+\definecolor{textmuted}{HTML}{9AA8B6}
+\definecolor{accent}{HTML}{3FB950}
+\definecolor{accentdim}{HTML}{236E35}
+\definecolor{ndvilow}{HTML}{8B4513}
+\definecolor{ndvimid}{HTML}{DAA520}
+\definecolor{ndvihigh}{HTML}{006400}
+
+% ── Tema Beamer custom ────────────────────────────────────────
+\setbeamercolor{background canvas}{bg=bgdark}
+\setbeamercolor{normal text}{fg=textmain}
+\setbeamercolor{frametitle}{fg=textmain, bg=bgdark}
+\setbeamercolor{title}{fg=textmain}
+\setbeamercolor{subtitle}{fg=textmuted}
+\setbeamercolor{author}{fg=textmuted}
+\setbeamercolor{date}{fg=textmuted}
+\setbeamercolor{institute}{fg=textmuted}
+\setbeamercolor{itemize item}{fg=accent}
+\setbeamercolor{itemize subitem}{fg=accent}
+\setbeamercolor{enumerate item}{fg=accent}
+\setbeamercolor{section in toc}{fg=textmain}
+\setbeamercolor{block title}{fg=textmain, bg=accentdim}
+\setbeamercolor{block body}{fg=textmain, bg=bgpanel}
+\setbeamercolor{alerted text}{fg=accent}
+\setbeamercolor{footline}{fg=textmuted}
+
+\setbeamerfont{frametitle}{size=\Large, series=\bfseries}
+\setbeamerfont{title}{size=\huge, series=\bfseries}
+\setbeamerfont{subtitle}{size=\large}
+\setbeamerfont{footline}{size=\scriptsize}
+
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{itemize item}{\textcolor{accent}{\textbullet}}
+\setbeamertemplate{itemize subitem}{\textcolor{accent}{\(\circ\)}}
+
+% Frame title com barra accent à esquerda
+\setbeamertemplate{frametitle}{%
+  \nointerlineskip
+  \begin{beamercolorbox}[wd=\paperwidth, ht=2.5ex, dp=1.5ex, leftskip=0.4cm]{frametitle}
+    \begin{tikzpicture}[remember picture, overlay]
+      \fill[accent] ([xshift=0.4cm, yshift=-0.2cm]current page.north west)
+                    rectangle ([xshift=0.55cm, yshift=-2.0cm]current page.north west);
+    \end{tikzpicture}%
+    \hspace{0.4em}\insertframetitle\strut
+  \end{beamercolorbox}
+}
+
+% Footer customizado
+\setbeamertemplate{footline}{%
+  \begin{beamercolorbox}[wd=\paperwidth, ht=2.5ex, dp=1ex, leftskip=0.5cm, rightskip=0.5cm]{footline}
+    ICEV Remote Sensing Software \(\cdot\) P2 Engenharia de Software
+    \hfill
+    \insertframenumber{} / \inserttotalframenumber
+  \end{beamercolorbox}
+}
+
+\setbeamertemplate{title page}{%
+  \begin{tikzpicture}[remember picture, overlay]
+    \fill[accent] ([xshift=0.5cm, yshift=-2.5cm]current page.north west)
+                  rectangle ([xshift=0.7cm, yshift=-5.0cm]current page.north west);
+  \end{tikzpicture}
+  \vspace{2cm}
+  \begin{flushleft}
+    \hspace{0.9cm}{\small\textcolor{accent}{\textbf{AVALIAÇÃO P2 \(\cdot\) ENGENHARIA DE SOFTWARE}}}\\[10pt]
+    \hspace{0.9cm}{\Huge\textbf{\inserttitle}}\\[10pt]
+    \hspace{0.9cm}{\large\textcolor{textmuted}{\insertsubtitle}}\\[30pt]
+    \hspace{0.9cm}{\small\textcolor{accent}{\textbf{EQUIPE}}}\\[5pt]
+    \hspace{0.9cm}{\normalsize\insertauthor}\\[20pt]
+    \hspace{0.9cm}{\small\textcolor{textmuted}{\insertdate}}
+  \end{flushleft}
+}
+
+% Estilo de listings (código)
+\lstdefinestyle{darkshell}{
+  basicstyle=\ttfamily\small\color{textmain},
+  backgroundcolor=\color{bgpanel},
+  frame=none,
+  framesep=4pt,
+  xleftmargin=8pt,
+  xrightmargin=8pt,
+  breaklines=true,
+  keywordstyle=\color{accent}\bfseries,
+  showstringspaces=false,
+  keepspaces=true
+}
+\lstset{style=darkshell}
+
+% Comandos auxiliares
+\newcommand{\panel}[1]{%
+  \begin{beamercolorbox}[wd=\linewidth, sep=8pt, rounded=true]{block body}
+    #1
+  \end{beamercolorbox}
+}
+
+\newcommand{\kicker}[1]{{\small\textcolor{accent}{\textbf{#1}}}}
+
+% ── Metadados ───────────────────────────────────────────────
+\title{ICEV Remote Sensing Software}
+\subtitle{Plataforma Web de Sensoriamento Remoto para Agricultura de Precisão}
+\author{%
+  Luis Gustavo Olimpio \(\cdot\) Lauan Matheus \(\cdot\) João Leonardi \(\cdot\) João Vinícius Castello\\
+  Vinícius Henrique \(\cdot\) Lucas Benevinuto \(\cdot\) José Melquíades
+}
+\date{Maio \(\cdot\) 2026}
+
+% ══════════════════════════════════════════════════════════════
+\begin{document}
+
+% ─── Slide 1 — Capa ──────────────────────────────────────────
+{\setbeamertemplate{footline}{}
+\begin{frame}[plain]
+  \titlepage
+\end{frame}}
+
+% ─── Slide 2 — Agenda ────────────────────────────────────────
+\begin{frame}{Agenda}
+  \kicker{ROTEIRO DE 20 MIN}
+  \vspace{0.4cm}
+  \begin{itemize}\itemsep0.4em
+    \item Problema e contexto --- agricultura de precisão no Brasil
+    \item Solução --- visão geral do produto
+    \item Backlog priorizado e funcionalidades do MVP
+    \item Arquitetura --- frontend, backend, dados
+    \item Tecnologias e decisões de design
+    \item Demonstração ao vivo (NDVI, 3D, classificação)
+    \item Estratégia de testes e resultados
+    \item Encerramento, próximos passos e dúvidas
+  \end{itemize}
+\end{frame}
+
+% ─── Slide 3 — Problema ──────────────────────────────────────
+\begin{frame}{O problema}
+  \kicker{POR QUE EXISTIR?}
+  \vspace{0.3cm}
+
+  {\large\bfseries Monitorar saúde de culturas é caro, complexo e fragmentado.}
+  \vspace{0.4cm}
+
+  \panel{%
+    \begin{itemize}\itemsep0.3em
+      \item Softwares GIS comerciais (ArcGIS, ENVI) custam milhares de R\$ por ano
+      \item Ferramentas profissionais exigem treinamento especializado
+      \item Ausência de soluções integradas: visualização + análise + classificação
+      \item Imagens Sentinel-2 (gratuitas, 10\,m, revisita 5 dias) subutilizadas no Brasil
+      \item Decisões tardias = perdas de produtividade e custos operacionais
+    \end{itemize}
+  }
+\end{frame}
+
+% ─── Slide 4 — Solução ───────────────────────────────────────
+\begin{frame}{A solução}
+  \kicker{ICEV REMOTE SENSING SOFTWARE}
+  \vspace{0.3cm}
+
+  Plataforma web local que processa imagens Sentinel-2 sobre talhões e gera
+  índices, classificações e visualizações 3D --- \textbf{sem custo de licenciamento}.
+
+  \vspace{0.5cm}
+  \begin{columns}[t]
+    \column{0.5\textwidth}
+      \panel{%
+        \textbf{\textcolor{accent}{Importar Talhões}}\\
+        \footnotesize\textcolor{textmuted}{KML do Google Earth ou desenho direto no mapa}
+      }
+      \vspace{0.3cm}
+      \panel{%
+        \textbf{\textcolor{accent}{Calcular Índices}}\\
+        \footnotesize\textcolor{textmuted}{NDVI \(\cdot\) EVI \(\cdot\) SAVI \(\cdot\) NDWI \(\cdot\) NDBI + 13 bandas}
+      }
+    \column{0.5\textwidth}
+      \panel{%
+        \textbf{\textcolor{accent}{Classificar Zonas}}\\
+        \footnotesize\textcolor{textmuted}{K-Means \(\cdot\) Threshold \(\cdot\) Supervisionada simulada}
+      }
+      \vspace{0.3cm}
+      \panel{%
+        \textbf{\textcolor{accent}{Visualizar em 3D}}\\
+        \footnotesize\textcolor{textmuted}{Renderização Three.js com elevação por valor}
+      }
+  \end{columns}
+\end{frame}
+
+% ─── Slide 5 — Usuários-alvo ─────────────────────────────────
+\begin{frame}{Para quem é?}
+  \kicker{USUÁRIOS-ALVO}
+  \vspace{0.4cm}
+
+  \begin{tabular}{@{}p{3.5cm}p{12cm}@{}}
+    \textbf{\textcolor{accent}{Produtor Rural}} & Monitorar lavouras, identificar áreas de estresse, otimizar insumos\\[0.4cm]
+    \textbf{\textcolor{accent}{Agrônomo}} & Mapas de variabilidade, prescrição de insumos, análise de vigor\\[0.4cm]
+    \textbf{\textcolor{accent}{Pesquisador}} & Experimentar algoritmos sobre dados reais, comparar índices\\[0.4cm]
+    \textbf{\textcolor{accent}{Estudante}} & Aprender sensoriamento remoto na prática\\
+  \end{tabular}
+\end{frame}
+
+% ─── Slide 6 — Backlog ──────────────────────────────────────
+\begin{frame}{Backlog priorizado}
+  \kicker{6 ÉPICOS \(\cdot\) 33 HISTÓRIAS}
+  \vspace{0.3cm}
+
+  \footnotesize
+  \begin{itemize}\itemsep0.2em
+    \item Épico 1 --- Gestão de Talhões (KML, mapa, desenho) \hfill 6 histórias
+    \item Épico 2 --- Índices Espectrais (NDVI/EVI/SAVI/NDWI/NDBI/bandas) \hfill 9 histórias
+    \item Épico 3 --- Visualização \& Mapa Interativo (2D, 3D, popup) \hfill 5 histórias
+    \item Épico 4 --- Lab. de Experimentos (filtros, bordas, morfologia) \hfill 6 histórias
+    \item Épico 5 --- Classificação (K-Means, Threshold, Supervisionada) \hfill 6 histórias
+    \item Épico 6 --- Gestão de Dados Sentinel-2 (multi-produto) \hfill 1 história
+  \end{itemize}
+
+  \vspace{0.4cm}
+  \panel{%
+    \textbf{\textcolor{accent}{MVP entregue: 28 das 33 histórias (84,8\%)}}\\
+    \footnotesize\textcolor{textmuted}{Pendentes: persistência de talhões desenhados \(\cdot\) classificação supervisionada real \(\cdot\) exportação de experimentos}
+  }
+\end{frame}
+
+% ─── Slide 7 — Arquitetura ──────────────────────────────────
+\begin{frame}{Arquitetura}
+  \kicker{VISÃO GERAL}
+  \vspace{0.3cm}
+
+  \footnotesize
+  \begin{columns}[t]
+    \column{0.5\textwidth}
+      \panel{%
+        \textcolor{accent}{\textbf{FRONTEND \(\cdot\) porta 3000}}\\[3pt]
+        \textbf{Next.js 16 \(\cdot\) React 19 \(\cdot\) TypeScript}\\[3pt]
+        \begin{itemize}\itemsep0.2em
+          \item Mapa Leaflet 2D + leaflet-draw
+          \item Three.js / @react-three/fiber (3D)
+          \item shadcn/ui + Tailwind CSS 4
+        \end{itemize}
+      }
+    \column{0.5\textwidth}
+      \panel{%
+        \textcolor{accent}{\textbf{BACKEND \(\cdot\) porta 8000}}\\[3pt]
+        \textbf{FastAPI + Uvicorn \(\cdot\) Python 3.12}\\[3pt]
+        \begin{itemize}\itemsep0.2em
+          \item rasterio (JP2 Sentinel-2)
+          \item NumPy \(\cdot\) SciPy \(\cdot\) scikit-learn \(\cdot\) OpenCV
+          \item Shapely \(\cdot\) pyproj (geometria, reprojeção)
+        \end{itemize}
+      }
+  \end{columns}
+  \vspace{0.4cm}
+
+  \panel{%
+    \textcolor{accent}{\textbf{DADOS LOCAIS}}\\[3pt]
+    \begin{itemize}\itemsep0.2em
+      \item \texttt{data/products/} \(\rightarrow\) Sentinel-2 .SAFE (granules em R10m, R20m, R60m)
+      \item \texttt{data/KML Fields/} \(\rightarrow\) polígonos de talhões (KML do Google Earth)
+    \end{itemize}
+  }
+
+  \vspace{0.2cm}
+  \begin{center}
+    \scriptsize\textcolor{textmuted}{Comunicação REST/JSON \(\cdot\) imagens em base64 \(\cdot\) sem banco de dados}
+  \end{center}
+\end{frame}
+
+% ─── Slide 8 — Stack tecnológica ────────────────────────────
+\begin{frame}{Stack tecnológica}
+  \kicker{POR QUE ESCOLHEMOS CADA UMA}
+  \vspace{0.3cm}
+
+  \footnotesize
+  \begin{tabular}{@{}p{4cm}p{12cm}@{}}
+    \textbf{\textcolor{accent}{FastAPI}} & Validação Pydantic automática, OpenAPI grátis, async nativo\\[0.25cm]
+    \textbf{\textcolor{accent}{rasterio}} & Padrão de fato em I/O geoespacial Python (wrapper sobre GDAL)\\[0.25cm]
+    \textbf{\textcolor{accent}{Next.js 16 + React 19}} & App Router unifica páginas e rotas API server-side\\[0.25cm]
+    \textbf{\textcolor{accent}{Leaflet}} & Maduro, leve, integra com Esri/OSM sem token pago\\[0.25cm]
+    \textbf{\textcolor{accent}{Three.js / R3F}} & Visualização 3D nativa em WebGL, sem peso de Cesium\\[0.25cm]
+    \textbf{\textcolor{accent}{Tailwind + shadcn/ui}} & Componentes acessíveis (Radix), zero CSS-in-JS\\[0.25cm]
+    \textbf{\textcolor{accent}{uv}} & Build reprodutível e \(\sim 10\times\) mais rápido que pip\\
+  \end{tabular}
+\end{frame}
+
+% ─── Slide 9 — Decisões de design ───────────────────────────
+\begin{frame}{Decisões de design}
+  \kicker{TRADE-OFFS EXPLÍCITOS}
+  \vspace{0.2cm}
+
+  \footnotesize
+  \begin{itemize}\itemsep0.35em
+    \item \textbf{\textcolor{accent}{DA-01}} \(\cdot\) Frontend e backend em processos separados\\
+          {\scriptsize\textcolor{textmuted}{Permite que o processamento Python pesado não bloqueie a UI}}
+    \item \textbf{\textcolor{accent}{DA-02}} \(\cdot\) Imagens via base64 dentro do JSON\\
+          {\scriptsize\textcolor{textmuted}{API simples, uma resposta = todos os dados; trade-off: +33\% de tamanho}}
+    \item \textbf{\textcolor{accent}{DA-04}} \(\cdot\) Reprojeção dinâmica (WGS84 \(\rightarrow\) UTM)\\
+          {\scriptsize\textcolor{textmuted}{Frontend trabalha em lat/lon, backend trata projeções via pyproj}}
+    \item \textbf{\textcolor{accent}{DA-06}} \(\cdot\) SentinelProcessor isolado das rotas HTTP\\
+          {\scriptsize\textcolor{textmuted}{Permite testes unitários sem subir o servidor}}
+    \item \textbf{\textcolor{accent}{DA-07}} \(\cdot\) Tipagem end-to-end (TS + Pydantic)\\
+          {\scriptsize\textcolor{textmuted}{Erros de contrato detectados em build, não em produção}}
+    \item \textbf{\textcolor{accent}{DA-09}} \(\cdot\) Suavização gaussiana com máscara\\
+          {\scriptsize\textcolor{textmuted}{Evita ``sangramento'' de valores nas bordas do polígono}}
+  \end{itemize}
+\end{frame}
+
+% ─── Slide 10 — Fluxo NDVI ──────────────────────────────────
+\begin{frame}{Fluxo de cálculo de NDVI}
+  \kicker{DIAGRAMA DE SEQUÊNCIA}
+  \vspace{0.2cm}
+
+  \footnotesize
+  \begin{enumerate}\itemsep0.18em
+    \item Usuário seleciona talhão e índice ``NDVI'' na UI
+    \item Frontend envia \texttt{POST /calculate-index} com coordenadas WGS84
+    \item Backend resolve produto Sentinel-2 .SAFE mais recente
+    \item rasterio lê bandas B08 (NIR) e B04 (Red) em 10\,m
+    \item pyproj reprojeta polígono WGS84 \(\rightarrow\) CRS nativo da imagem (UTM)
+    \item rasterio.mask recorta as bandas ao polígono
+    \item NumPy calcula NDVI = (NIR \(-\) Red) / (NIR + Red), clipa a \([-1, 1]\)
+    \item Pillow gera PNG colorido (gradiente \textcolor{ndvilow}{marrom} \(\rightarrow\) \textcolor{ndvimid}{amarelo} \(\rightarrow\) \textcolor{ndvihigh}{verde})
+    \item Backend retorna JSON com base64, estatísticas, histograma e dados 3D
+    \item Frontend sobrepõe imagem ao mapa Leaflet + atualiza painel de stats
+  \end{enumerate}
+\end{frame}
+
+% ─── Slide 11 — Demo ────────────────────────────────────────
+\begin{frame}{Demonstração ao vivo}
+  \kicker{6 MINUTOS}
+  \vspace{0.3cm}
+
+  \panel{%
+    \begin{enumerate}\itemsep0.5em
+      \item Abrir \url{http://localhost:3000} \(\rightarrow\) selecionar talhão ``crop field 1''
+      \item Calcular NDVI \(\rightarrow\) ver overlay colorido + stats + histograma
+      \item Clicar no mapa \(\rightarrow\) popup com nível de estresse
+      \item Trocar para EVI \(\rightarrow\) comparar resultado
+      \item Ativar visualização 3D \(\rightarrow\) rotacionar terreno
+      \item Ir em \texttt{/classification} \(\rightarrow\) rodar K-Means com 3 classes \(\rightarrow\) hectares por classe
+    \end{enumerate}
+  }
+
+  \vspace{0.3cm}
+  \begin{center}
+    \scriptsize\textcolor{textmuted}{Caso a internet falhe, prints da execução estão em \texttt{docs/}}
+  \end{center}
+\end{frame}
+
+% ─── Slide 12 — Estratégia de testes ────────────────────────
+\begin{frame}[fragile]{Estratégia de testes}
+  \kicker{PLANO EM TRÊS NÍVEIS}
+  \vspace{0.3cm}
+
+  \footnotesize
+  \begin{columns}[t]
+    \column{0.32\textwidth}
+      \panel{%
+        \textcolor{accent}{\textbf{UNITÁRIO}}\\[3pt]
+        \textbf{pytest + NumPy}\\[3pt]
+        \begin{itemize}\itemsep0.15em
+          \item Cálculo NDVI/EVI
+          \item Estatísticas
+          \item Histograma
+          \item Casos de borda
+        \end{itemize}
+      }
+    \column{0.32\textwidth}
+      \panel{%
+        \textcolor{accent}{\textbf{INTEGRAÇÃO}}\\[3pt]
+        \textbf{FastAPI TestClient}\\[3pt]
+        \begin{itemize}\itemsep0.15em
+          \item /, /health, /products
+          \item Validação Pydantic (422)
+          \item Erros 400 / 404 / 500
+          \item Conversão de coords
+        \end{itemize}
+      }
+    \column{0.32\textwidth}
+      \panel{%
+        \textcolor{accent}{\textbf{MANUAL}}\\[3pt]
+        \textbf{Demo end-to-end}\\[3pt]
+        \begin{itemize}\itemsep0.15em
+          \item Sentinel-2 real (1\,GB)
+          \item Frontend Next.js
+          \item Renderização 3D
+          \item Apresentação ao vivo
+        \end{itemize}
+      }
+  \end{columns}
+  \vspace{0.4cm}
+
+  \begin{center}
+  \footnotesize\textcolor{textmuted}{Fixtures sintéticas (NumPy) substituem produtos reais --- suite roda em \(< 1\) s}
+  \end{center}
+
+  \vspace{0.2cm}
+  \begin{lstlisting}[style=darkshell, basicstyle=\ttfamily\small\color{accent}]
+$ uv run pytest tests/ -v --cov=api
+  \end{lstlisting}
+\end{frame}
+
+% ─── Slide 13 — Resultados ──────────────────────────────────
+\begin{frame}{Resultados dos testes}
+  \kicker{EXECUÇÃO DE 09/05/2026}
+  \vspace{0.3cm}
+
+  \begin{columns}[t]
+    \column{0.24\textwidth}
+      \panel{%
+        \begin{center}
+          {\Large\bfseries\textcolor{accent}{28}}\\[2pt]
+          \scriptsize\textcolor{textmuted}{casos executados}
+        \end{center}
+      }
+    \column{0.24\textwidth}
+      \panel{%
+        \begin{center}
+          {\Large\bfseries\textcolor{accent}{100\%}}\\[2pt]
+          \scriptsize\textcolor{textmuted}{taxa de sucesso}
+        \end{center}
+      }
+    \column{0.24\textwidth}
+      \panel{%
+        \begin{center}
+          {\Large\bfseries\textcolor{accent}{0,79\,s}}\\[2pt]
+          \scriptsize\textcolor{textmuted}{tempo total}
+        \end{center}
+      }
+    \column{0.24\textwidth}
+      \panel{%
+        \begin{center}
+          {\Large\bfseries\textcolor{accent}{55\%}}\\[2pt]
+          \scriptsize\textcolor{textmuted}{cobertura do core}
+        \end{center}
+      }
+  \end{columns}
+  \vspace{0.4cm}
+
+  \scriptsize
+  \panel{%
+    \textcolor{accent}{\textbf{Cobertura por requisito}}\\[2pt]
+    \begin{itemize}\itemsep0.1em
+      \item RF-04 (produtos) \(\cdot\) RF-05 (NDVI) \(\cdot\) RF-06 (EVI) \(\cdot\) RF-10 (stats)
+      \item RF-11 (histograma) \(\cdot\) RF-20 (health)
+      \item RNF-04 (confiabilidade) \(\cdot\) RNF-05 (manutenibilidade)
+      \item Validação Pydantic exercitada com payloads inválidos (HTTP 422)
+    \end{itemize}
+  }
+\end{frame}
+
+% ─── Slide 14 — Limitações ──────────────────────────────────
+\begin{frame}{Limitações conhecidas}
+  \kicker{O QUE NÃO ESTÁ NO MVP}
+  \vspace{0.3cm}
+
+  \footnotesize
+  \begin{itemize}\itemsep0.4em
+    \item \textbf{\textcolor{accent}{Sem persistência de dados}} \(\cdot\) talhões desenhados são perdidos ao recarregar
+    \item \textbf{\textcolor{accent}{Classificação supervisionada simulada}} \(\cdot\) não usa modelo treinado real
+    \item \textbf{\textcolor{accent}{Imagens Sentinel-2 baixadas manualmente}} \(\cdot\) sem download automático via API Copernicus
+    \item \textbf{\textcolor{accent}{Single-user em localhost}} \(\cdot\) sem autenticação ou multi-tenancy
+    \item \textbf{\textcolor{accent}{Cobertura de I/O limitada}} \(\cdot\) read\_band/crop dependem de .SAFE real, testes manuais cobrem
+  \end{itemize}
+\end{frame}
+
+% ─── Slide 15 — Próximos passos ─────────────────────────────
+\begin{frame}{Próximos passos}
+  \kicker{ROADMAP PÓS-MVP}
+  \vspace{0.3cm}
+
+  \begin{itemize}\itemsep0.3em
+    \item Integração com a API do Copernicus (download automático)
+    \item Persistência via SQLite ou PostgreSQL/PostGIS
+    \item Modelo Random Forest treinado para classificação supervisionada real
+    \item Exportação dos resultados em GeoTIFF / Shapefile / CSV
+    \item Comparação temporal (multi-data) lado a lado
+    \item Aplicação web hospedada (multi-usuário, autenticação)
+    \item Pipeline CI com pytest + GitHub Actions
+  \end{itemize}
+\end{frame}
+
+% ─── Slide 16 — Encerramento ────────────────────────────────
+{\setbeamertemplate{footline}{}
+\begin{frame}[plain]
+  \begin{tikzpicture}[remember picture, overlay]
+    \fill[accent] ([xshift=0.5cm, yshift=-3.0cm]current page.north west)
+                  rectangle ([xshift=0.7cm, yshift=-5.5cm]current page.north west);
+  \end{tikzpicture}
+  \vspace{2.7cm}
+  \begin{flushleft}
+    \hspace{0.9cm}{\small\textcolor{accent}{\textbf{OBRIGADO}}}\\[10pt]
+    \hspace{0.9cm}{\Huge\textbf{Perguntas e demonstração}}\\[16pt]
+    \hspace{0.9cm}{\large\textcolor{textmuted}{github.com / icev-remote-sensing-software}}\\[34pt]
+    \hspace{0.9cm}{\small\textcolor{accent}{\textbf{ENTREGÁVEIS DA P2}}}\\[6pt]
+    \hspace{0.9cm}\parbox{14cm}{\normalsize MVP funcional \(\cdot\) Plano e relatório de testes \(\cdot\) Manual do usuário \(\cdot\) Documentação técnica \(\cdot\) Apresentação}
+  \end{flushleft}
+\end{frame}}
+
+\end{document}

@@ -1,0 +1,246 @@
+\documentclass[11pt, a4paper]{article}
+\input{p2-preamble.tex}
+
+\title{%
+  \vspace{-1.5cm}
+  {\Huge\bfseries\color{accentdim} Entrega da Avaliação P2}\\[8pt]
+  {\Large\bfseries Engenharia de Software --- 2026.1}\\[18pt]
+  {\large ICEV Remote Sensing Software}\\[4pt]
+  {\normalsize\itshape Plataforma de Sensoriamento Remoto para Agricultura de Precisão}
+}
+\author{%
+  Luis Gustavo Olimpio \and Lauan Matheus \and João Leonardi\\
+  \and João Vinícius Castello \and Vinícius Henrique\\
+  \and Lucas Benevinuto \and José Melquíades
+}
+\date{Maio de 2026}
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+
+\vfill
+\begin{center}
+\small\textit{Instituto de Ensino Superior --- ICEV}\\
+\small\textit{Teresina, PI, Brasil}\\[6pt]
+\small\textit{Disciplina: Engenharia de Software --- Avaliação P2}\\
+\small\textit{Prazo de entrega: 11/05/2026}
+\end{center}
+\newpage
+
+\tableofcontents
+\newpage
+
+% ══════════════════════════════════════════════════════════════
+\section{Mapeamento dos Entregáveis Obrigatórios}
+% ══════════════════════════════════════════════════════════════
+
+Este documento é o ponto de partida da avaliação. Cada entregável obrigatório da P2 está mapeado para o arquivo correspondente no repositório do projeto.
+
+\renewcommand{\arraystretch}{1.4}
+\begin{table}[H]
+\centering
+\small
+\rowcolors{2}{tabrow}{white}
+\begin{tabularx}{\textwidth}{@{}clX@{}}
+\toprule
+\rowcolor{tabheader}\textcolor{white}{\textbf{\#}} & \textcolor{white}{\textbf{Entregável da P2}} & \textcolor{white}{\textbf{Localização}}\\
+\midrule
+1 & Código-fonte do MVP & Repositório completo --- diretórios \texttt{api/}, \texttt{web/}, \texttt{data/} com versionamento Git\\
+2 & Plano de Testes & \texttt{docs/p2/08-plano-de-testes.pdf}\\
+2 & Relatório de Testes & \texttt{docs/p2/09-relatorio-de-testes.pdf}\\
+3 & Manual do Usuário & \texttt{docs/p2/07-manual-usuario.pdf}\\
+4 & Apresentação e Demonstração & \texttt{docs/p2/apresentacao-p2.pdf}\\
+5 & Documentação Técnica & Ver Seção~\ref{sec:doctec} (consolidada)\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ══════════════════════════════════════════════════════════════
+\section{Documentação Técnica Consolidada}
+\label{sec:doctec}
+% ══════════════════════════════════════════════════════════════
+
+A documentação técnica está \textbf{distribuída em vários documentos especializados} já produzidos no Sprint inicial do projeto (TP1). O escopo de cada um é apresentado na Tabela~\ref{tab:doctec}.
+
+\begin{table}[H]
+\centering
+\small
+\rowcolors{2}{tabrow}{white}
+\begin{tabularx}{\textwidth}{@{}lX@{}}
+\toprule
+\rowcolor{tabheader}\textcolor{white}{\textbf{Item exigido pela P2}} & \textcolor{white}{\textbf{Documento(s)}}\\
+\midrule
+Descrição detalhada da arquitetura & \texttt{docs/04-diagramas-arquitetura.md} --- 8 diagramas (alto nível, componentes, deployment, sequência NDVI, sequência classificação, estrutura de diretórios, fluxo de dados)\\
+Tecnologias utilizadas & \texttt{docs/04-diagramas-arquitetura.md} \S 8 --- stack consolidada frontend + backend\\
+Decisões de design e justificativas & \texttt{docs/04-diagramas-arquitetura.md} \S 9 (DA-01 a DA-05) + complemento na Seção~\ref{sec:decisoes} deste documento (DA-06 a DA-11)\\
+Requisitos funcionais e não funcionais & \texttt{docs/03-especificacao-requisitos-SRS.md} --- 20 RFs e 8 RNFs\\
+Backlog priorizado e rastreabilidade & \texttt{docs/02-backlog-produto.md} --- 33 histórias em 6 épicos\\
+Visão de produto e usuários-alvo & \texttt{docs/01-documento-visao-produto.md}\\
+Protótipo de interface & \texttt{docs/05-prototipo-interface.md}\\
+Plano de projeto & \texttt{docs/06-plano-projeto-inicial.md}\\
+\bottomrule
+\end{tabularx}
+\caption{Mapeamento dos itens da documentação técnica}
+\label{tab:doctec}
+\end{table}
+
+\begin{infobox}
+Os documentos do TP1 também estão consolidados em \texttt{docs/tp1/documento-unificado.pdf}, gerado a partir de \texttt{docs/tp1/documento-unificado.tex}.
+\end{infobox}
+
+% ══════════════════════════════════════════════════════════════
+\section{Decisões de Design Complementares}
+\label{sec:decisoes}
+% ══════════════════════════════════════════════════════════════
+
+Em complemento às decisões DA-01 a DA-05 já documentadas em \texttt{docs/04-diagramas-arquitetura.md} \S 9, estas são as decisões adicionais relevantes para a entrega do MVP.
+
+\subsection*{DA-06 --- Separação \texttt{SentinelProcessor} \(\leftrightarrow\) Camada de Rotas}
+
+\textbf{Decisão.} A classe \texttt{SentinelProcessor} (em \texttt{api/sentinel\_processor.py}) concentra toda a lógica de I/O geoespacial e cálculo numérico. As rotas FastAPI em \texttt{api/main.py} apenas orquestram e serializam.
+
+\textbf{Justificativa.} Permite testar a camada de processamento em isolamento sem precisar subir o servidor HTTP --- exatamente o que fazemos em \texttt{tests/test\_sentinel\_processor.py}. Reduz acoplamento e melhora a manutenibilidade (RNF-05).
+
+\subsection*{DA-07 --- Tipagem Estática End-to-End}
+
+\textbf{Decisão.} TypeScript estrito no frontend e Pydantic no backend, com modelos espelhados (\texttt{Coordinate}, \texttt{IndexResult}, \texttt{ClassificationResult}).
+
+\textbf{Justificativa.} Erros de contrato entre cliente e servidor são detectados em build/runtime, não em produção. O Pydantic também valida automaticamente a entrada do usuário, eliminando código manual de validação.
+
+\subsection*{DA-08 --- Resolução do Produto Sentinel-2 mais Recente como Padrão}
+
+\textbf{Decisão.} Quando \texttt{product\_name} é omitido, o backend ordena os produtos \texttt{.SAFE} por nome (que contém data ISO) e usa o mais recente.
+
+\textbf{Justificativa.} Otimiza o caminho feliz do usuário leigo, que normalmente quer ``ver agora''. O usuário avançado ainda pode passar um produto específico para comparações temporais.
+
+\subsection*{DA-09 --- Suavização Gaussiana com Preservação de NaN}
+
+\textbf{Decisão.} O filtro gaussiano (\texttt{apply\_smooth\_filter}) divide o resultado pela máscara também filtrada, preservando o limite do polígono do talhão.
+
+\textbf{Justificativa.} Aplicar gaussiano direto ``sangra'' os valores válidos para fora do talhão, criando halos artificiais. A correção por máscara é a abordagem padrão em sensoriamento remoto.
+
+\subsection*{DA-10 --- Visualização 3D via Downsampling}
+
+\textbf{Decisão.} Para o terreno 3D (\texttt{web/components/terrain-3d-viewer.tsx}), reduz-se a resolução por fator 4 antes de enviar ao cliente.
+
+\textbf{Justificativa.} Talhões grandes podem ter milhões de pixels. Renderizar isso direto em WebGL trava navegadores em GPU integrada (RNF-01). O downsample mantém a interpretação visual sem custo de performance.
+
+\subsection*{DA-11 --- Gerenciamento de Dependências Python via \texttt{uv}}
+
+\textbf{Decisão.} Usar \texttt{uv} (\texttt{pyproject.toml + uv.lock}) em vez de \texttt{pip + requirements.txt}.
+
+\textbf{Justificativa.} O \texttt{uv} é cerca de dez vezes mais rápido em instalação, garante builds reprodutíveis via \textit{lock file} e simplifica o setup em máquinas novas (\texttt{uv sync} resolve tudo). \textit{Trade-off:} dependência extra que o usuário precisa instalar --- mitigado pela documentação clara no \texttt{README.md}.
+
+% ══════════════════════════════════════════════════════════════
+\section{Tecnologias --- Justificativa Resumida}
+% ══════════════════════════════════════════════════════════════
+
+A tabela completa está em \texttt{docs/04-diagramas-arquitetura.md} \S 8. As justificativas-chave estão na Tabela~\ref{tab:tech}.
+
+\begin{table}[H]
+\centering
+\small
+\rowcolors{2}{tabrow}{white}
+\begin{tabularx}{\textwidth}{@{}lX@{}}
+\toprule
+\rowcolor{tabheader}\textcolor{white}{\textbf{Tecnologia}} & \textcolor{white}{\textbf{Por que esta e não outra}}\\
+\midrule
+FastAPI & Validação automática via Pydantic, OpenAPI grátis (\texttt{/docs}), \textit{async} nativo. Alternativas (Flask) exigiriam plugins para o mesmo nível.\\
+rasterio & Padrão de fato para I/O de imagens geoespaciais em Python. Wrapper Pythonic sobre GDAL.\\
+Next.js + React & App Router permite SSR + API routes no mesmo projeto (ex.: \texttt{/api/fields} lê KML do disco sem expor o filesystem).\\
+Leaflet & Maduro, leve, integra bem com tiles do Esri/OSM. Alternativas (Mapbox GL) exigem token e são pagas.\\
+Three.js / react-three-fiber & Visualização 3D nativa em WebGL. Alternativa (Cesium) é \textit{overkill} para terreno simples.\\
+Tailwind + shadcn/ui & Componentes acessíveis (Radix por baixo), sem CSS-in-JS, sem bundler extra.\\
+fast-xml-parser & KML é XML; este parser é o mais rápido em Node.js sem dependências nativas.\\
+\bottomrule
+\end{tabularx}
+\caption{Justificativas de escolha de tecnologias}
+\label{tab:tech}
+\end{table}
+
+% ══════════════════════════════════════════════════════════════
+\section{Como Avaliar Esta Entrega}
+% ══════════════════════════════════════════════════════════════
+
+\subsection{Setup rápido (5 minutos)}
+
+\begin{lstlisting}[style=shellstyle]
+# Pre-requisitos: Python 3.12+, Node 18+, GDAL (brew install gdal)
+uv sync                       # instala dependencias Python
+cd web && npm install         # instala dependencias Node
+cd ..
+
+# Em 2 terminais:
+./run_api.sh                  # backend na porta 8000
+cd web && npm run dev         # frontend na porta 3000
+\end{lstlisting}
+
+\subsection{Roteiro de demonstração (5 minutos)}
+
+\begin{enumerate}
+  \item Abrir \url{http://localhost:3000}
+  \item Selecionar talhão \texttt{crop field 1}
+  \item Calcular NDVI \(\rightarrow\) ver overlay no mapa, estatísticas e histograma
+  \item Trocar para EVI \(\rightarrow\) comparar
+  \item Ativar visualização 3D \(\rightarrow\) rotacionar terreno
+  \item Ir em \texttt{/classification} \(\rightarrow\) rodar K-Means com 3 classes \(\rightarrow\) ver áreas em hectares
+\end{enumerate}
+
+\subsection{Para executar a suíte de testes}
+
+\begin{lstlisting}[style=shellstyle]
+uv sync --group dev           # instala pytest e dependencias de teste
+uv run pytest tests/ -v       # roda 28 testes - ver relatorio em docs/09
+\end{lstlisting}
+
+% ══════════════════════════════════════════════════════════════
+\section{Estrutura Final do Repositório}
+% ══════════════════════════════════════════════════════════════
+
+\begin{lstlisting}[style=shellstyle]
+icev-remote-sensing-software/
+|-- README.md                  # Setup + instrucoes de execucao
+|-- pyproject.toml             # Dependencias Python
+|-- api/                       # Backend FastAPI
+|   |-- main.py
+|   `-- sentinel_processor.py
+|-- web/                       # Frontend Next.js
+|   |-- app/
+|   |-- components/
+|   |-- lib/
+|   `-- types/
+|-- data/
+|   |-- products/              # Imagens Sentinel-2 .SAFE
+|   `-- KML Fields/            # Poligonos de talhoes
+|-- tests/                     # Suite de testes (pytest)  [NOVO P2]
+|   |-- conftest.py
+|   |-- test_sentinel_processor.py
+|   `-- test_api_endpoints.py
+`-- docs/
+    |-- README.md                  # Indice geral
+    |-- 01-documento-visao-produto.md      # TP1 - referenciados pela P2
+    |-- 02-backlog-produto.md
+    |-- 03-especificacao-requisitos-SRS.md
+    |-- 04-diagramas-arquitetura.md
+    |-- 05-prototipo-interface.md
+    |-- 06-plano-projeto-inicial.md
+    |-- p2/                        # [NOVO] Entrega P2
+    |   |-- 00-ENTREGA-P2.{tex,pdf}     # <- Voce esta aqui
+    |   |-- 07-manual-usuario.{tex,pdf}
+    |   |-- 08-plano-de-testes.{tex,pdf}
+    |   |-- 09-relatorio-de-testes.{tex,pdf}
+    |   |-- apresentacao-p2.{tex,pdf,pptx}
+    |   |-- p2-preamble.tex
+    |   |-- Makefile
+    |   |-- build_slides.py
+    |   `-- md-sources/            # Originais markdown
+    `-- tp1/                       # Material complementar do TP1
+        |-- documento-unificado.{tex,pdf}
+        |-- canvas-experimento.tex
+        |-- canvas-experimentofinal.pdf
+        |-- atividade-unidade4.{tex,pdf}
+        `-- images/
+\end{lstlisting}
+
+\end{document}

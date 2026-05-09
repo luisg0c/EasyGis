@@ -1,0 +1,174 @@
+\documentclass[10pt, a4paper, twocolumn]{article}
+
+% ── Codificação e idioma ──
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+
+% ── Layout ──
+\usepackage[left=1.4cm, right=1.4cm, top=1.5cm, bottom=0.7cm, columnsep=0.55cm]{geometry}
+\setlength{\parindent}{0.8cm}
+\setlength{\parskip}{0pt}
+\raggedbottom
+\setlength{\dbltextfloatsep}{0pt}
+\setlength{\textfloatsep}{2pt}
+\setlength{\intextsep}{2pt}
+
+
+% ── Fontes ──
+\usepackage{times}
+\usepackage{microtype}
+
+% ── Cores ──
+\usepackage{xcolor}
+\definecolor{linkblue}{HTML}{2980B9}
+
+% ── Figuras e tabelas ──
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{caption}
+\captionsetup{font=footnotesize, labelfont=bf, skip=3pt}
+
+% ── Links ──
+\usepackage[colorlinks=true, linkcolor=linkblue, urlcolor=linkblue, citecolor=linkblue]{hyperref}
+
+% ── Seções compactas ──
+\usepackage{titlesec}
+\titleformat{\section}{\normalsize\bfseries\scshape}{\Roman{section}.}{0.5em}{}
+\titlespacing{\section}{0pt}{5pt}{1.5pt}
+
+% ── Cabeçalho ──
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancyhead[L]{\footnotesize\textcolor{gray}{EasyGIS Remote Sensing Software}}
+\fancyhead[R]{\footnotesize\textcolor{gray}{Projeto de Extensão VII, 2026.1}}
+\fancyfoot[C]{\thepage}
+\setlength{\headheight}{14pt}
+
+\begin{document}
+
+% ══════════════════════════════════════════════════════════════
+% TÍTULO
+% ══════════════════════════════════════════════════════════════
+\twocolumn[{%
+\begin{center}
+  \vspace{-0.5cm}
+  {\large\bfseries Canvas de Experimento: Validação do Pipeline de Cálculo de NDVI do EasyGIS}\\[3pt]
+  {\small Projeto de Extensão VII \,--\, Prof.\ Francisco Luciani}\\[2pt]
+  {\footnotesize
+    Luis Gustavo Olimpio \quad Lauan Matheus \quad João Leonardi \quad
+    João Vinícius Castello \quad Vinícius Henrique \quad
+    Lucas Benevinuto \quad José Melquíades}\\[1pt]
+  {\scriptsize ICEV -- Teresina, PI \,|\, Março de 2026}
+\end{center}
+\vspace{2pt}
+\hrule
+\vspace{4pt}
+}]
+
+\footnotesize
+
+% ══════════════════════════════════════════════════════════════
+\section{Identificação do Protótipo}
+% ══════════════════════════════════════════════════════════════
+
+O protótipo submetido a exame experimental é o \textbf{EasyGIS Remote Sensing Software}, plataforma web orientada à agricultura de precisão e desenvolvida como produto da disciplina de Projeto de Extensão~VII do ICEV. Sua arquitetura segue o paradigma cliente-servidor com desacoplamento integral entre camadas: o backend consiste numa API RESTful construída sobre Python~3.12 e o framework assíncrono FastAPI, recorrendo a rasterio para ingestão de rasters multiespectrais em formato JPEG\,2000, a pyproj para transformações geodésicas entre distintos sistemas de referência de coordenadas e a NumPy para as operações de álgebra matricial sobre os arrays de reflectância; o frontend, implementado em Next.js~16, React~19 e TypeScript, disponibiliza interface cartográfica interativa via Leaflet e renderização tridimensional do relevo por intermédio de Three.js.
+
+O componente particular que se submete a validação é o endpoint \texttt{POST /calculate-index}, o qual encadeia seis estágios de processamento: (i)~leitura das bandas espectrais dos grânulos Sentinel-2 L2A, cujas reflectâncias BOA já vêm corrigidas atmosfericamente pelo processador Sen2Cor; (ii)~reprojeção do polígono do talhão de WGS\,84 para a projeção UTM nativa do grânulo via \texttt{pyproj.Transformer}; (iii)~recorte espacial mediante máscara binária obtida pela rasterização do polígono sobre a grade do raster; (iv)~cálculo vetorizado do índice em aritmética \texttt{float64}, com tratamento explícito de divisão por zero; (v)~renderização do mapa resultante como imagem PNG de 8\,bits por canal com mapeamento RGBA; e (vi)~cômputo de estatísticas descritivas ($\mu$, $\sigma$, min, max) acompanhadas de histograma com 50\,bins equiespaçados. O payload de retorno, serializado em JSON, agrega a imagem codificada em Base64, o vetor de estatísticas e a matriz de elevação destinada à visualização tridimensional (Anexo~A).
+
+% ══════════════════════════════════════════════════════════════
+\section{Problema}
+% ══════════════════════════════════════════════════════════════
+
+O NDVI, dado pela razão normalizada $(B_{08}\!-\!B_{04})/(B_{08}\!+\!B_{04})$ entre a banda do infravermelho próximo (NIR, centrada em 842\,nm com largura de 115\,nm) e a do vermelho visível (Red, 665\,nm, largura de 30\,nm) do instrumento MSI embarcado nos satélites Sentinel-2A e 2B, constitui o índice espectral de maior emprego na agronomia contemporânea, servindo tanto à quantificação do vigor fotossintético da cobertura vegetal quanto à identificação precoce de estresse hídrico ou carência nutricional e à orientação de práticas de manejo diferenciado, como irrigação localizada, fertirrigação em taxa variável e monitoramento fitossanitário~[2]. O fundamento biofísico do índice repousa na absorção seletiva da radiação visível pelos pigmentos clorofilianos e na intensa reflectância que o mesófilo esponjoso exibe no infravermelho próximo. Convém notar que erros no cômputo do NDVI, mesmo de pequena monta, propagam-se de modo não linear através da razão normalizada, podendo inverter a classificação de vigor em zonas de transição espectral~[3].
+
+O processamento convencional dessas imagens requer ferramentas como ArcGIS Pro, ENVI, ESA SNAP ou QGIS com o plugin Semi-Automatic Classification, todas exigindo domínio aprofundado de sistemas de referência de coordenadas, correção atmosférica e manipulação de rasters multibanda~[1]. O EasyGIS se propõe a tornar esse processamento acessível por meio de uma plataforma web gratuita e de código aberto que automatiza a totalidade do pipeline. O presente experimento busca responder a duas perguntas: o pipeline produz valores de NDVI numericamente confiáveis frente a uma implementação de referência independente? E o tempo de resposta satisfaz o requisito de interatividade RNF-01 ($\leq 30$\,s para talhões de até 500\,ha)?
+
+% ══════════════════════════════════════════════════════════════
+\section{Hipótese}
+% ══════════════════════════════════════════════════════════════
+
+\textbf{H\textsubscript{1}:} A API do EasyGIS calcula o NDVI com erro absoluto médio (MAE) inferior a 0,02 em relação a um script Python independente (rasterio + NumPy, sem intermediação da API) e conclui o processamento em menos de 30\,s para talhões de até 500\,ha. O limiar de 0,02 encontra respaldo na literatura de sensoriamento remoto quantitativo, em que incertezas dessa grandeza decorrem da heterogeneidade intrapixel, do ruído radiométrico inerente ao sensor MSI (SNR\,$>$\,100:1) e das incertezas remanescentes do algoritmo de correção atmosférica Sen2Cor ($\pm$0,05 para reflectância BOA)~[1,\,3].
+
+\textbf{H\textsubscript{0}:} MAE $\geq 0{,}02$ ou tempo $> 30$\,s para talhões de até 500\,ha. A rejeição de H\textsubscript{0} requer que ambas as condições de H\textsubscript{1} se verifiquem em todos os 12 cenários. Precisão sem desempenho aceitável inviabiliza a experiência interativa que diferencia a plataforma; desempenho satisfatório acompanhado de valores incorretos conduz o produtor a decisões de manejo lastreadas em dados espectrais equivocados, situação que pode acarretar prejuízos superiores aos da simples ausência da ferramenta.
+
+% ══════════════════════════════════════════════════════════════
+\section{Variáveis do Experimento}
+% ══════════════════════════════════════════════════════════════
+
+\textbf{Independentes} (fatores deliberadamente manipulados): (i)~área do talhão em quatro patamares (50\,ha, 100\,ha, 200\,ha e 500\,ha), fator que determina o volume de pixels a processar ($10^4$\,px/ha na resolução de 10\,m das bandas B04 e B08), a quantidade de memória consumida e a latência total do pipeline; (ii)~três grânulos Sentinel-2 L2A adquiridos em datas distintas sobre o cerrado piauiense, abrangendo estágios fenológicos contrastantes (solo exposto, pleno crescimento vegetativo e maturação fisiológica), com o propósito de aferir a robustez do cálculo perante distribuições espectrais heterogêneas.
+
+\textbf{Dependentes:} MAE do NDVI computado pixel a pixel entre a saída da API e a referência; tempo de resposta em milissegundos (englobando I/O, reprojeção, recorte, cálculo, renderização e serialização JSON); pico de memória RSS em MB, aferido via \texttt{psutil.Process().memory\_info()}.
+
+\textbf{Controladas:} hardware de execução invariável, mesmo arquivo KML por cenário, Uvicorn em modo single-worker isento de carga concorrente, código-fonte e ambiente virtual Python congelados (\texttt{pip freeze}), assegurando reprodutibilidade e isolamento de variáveis espúrias.
+
+% ══════════════════════════════════════════════════════════════
+\section{Métricas de Avaliação}
+% ══════════════════════════════════════════════════════════════
+
+\begin{table}[H]
+\centering
+\caption{Métricas, valores-alvo e instrumentos de aferição.}
+\label{tab:metricas}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}lcp{3.0cm}@{}}
+\toprule
+\textbf{Métrica} & \textbf{Alvo} & \textbf{Instrumento} \\
+\midrule
+MAE do NDVI & $<0{,}02$ & Comparação pixel a pixel \\
+Coeficiente r² & $>0{,}99$ & Regressão linear (scipy) \\
+Tempo de resposta & $<30$\,s & \texttt{perf\_counter()} \\
+Pico de RAM & $<2$\,GB & \texttt{psutil} \\
+Taxa de sucesso & $100\%$ & HTTP 200 / total \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Um MAE de 0,02 se inscreve dentro da própria incerteza dos produtos L2A, cujo erro de reflectância BOA é da ordem de $\pm$0,05~[1], sendo portanto desprovido de significância para a tomada de decisão agronômica. O r² superior a 0,99 atesta a inexistência de viés sistemático e a preservação da coerência espacial do índice ao longo de toda a extensão do talhão. O teto de 2\,GB de RAM permite a execução em instâncias de nuvem de custo reduzido. A taxa de sucesso integral (100\%) figura como pré-requisito inegociável para homologação do pipeline antes da entrega do MVP.
+
+% ══════════════════════════════════════════════════════════════
+\section{Método Experimental}
+% ══════════════════════════════════════════════════════════════
+
+O delineamento adotado é o fatorial completo com $4 \times 3 = 12$ cenários (4~patamares de área $\times$ 3~datas), cada qual replicado 5 vezes, perfazendo 60 medições independentes. A sequência de execução é permutada pelo algoritmo de Fisher-Yates a fim de neutralizar efeitos de aquecimento de cache de disco e fragmentação progressiva do heap do interpretador CPython. Após cada medição, invoca-se \texttt{gc.collect()} para restabelecer o estado do garbage collector geracional.
+
+O protocolo de cada execução segue cinco etapas: (1)~obter o NDVI de referência via script Python autônomo, que carrega as bandas B08 (NIR, 842\,nm) e B04 (Red, 665\,nm) com \texttt{rasterio.open()}, reprojeta o polígono KML para UTM, gera máscara com \texttt{geometry\_mask()} e computa $(NIR\!-\!Red)/(NIR\!+\!Red)$ em \texttt{float64}; (2)~disparar POST em \texttt{/calculate-index} com parâmetros idênticos; (3)~cronometrar com \texttt{perf\_counter()} (relógio monotônico, resolução de nanossegundos) e amostrar RSS via \texttt{psutil}; (4)~cotejar os arrays pixel a pixel, extraindo MAE e r² com \texttt{scipy.stats.linregress}; (5)~persistir em CSV indexado por cenário e repetição. Na etapa analítica, os dados são agregados ($\mu$, $\sigma$, min, max, IC\,95\%), representados em gráficos de dispersão, barras e box\,plot com matplotlib, e submetidos a validação programática dos cinco critérios por pytest (\texttt{@parametrize}).
+
+% ══════════════════════════════════════════════════════════════
+\section{Resultado Esperado}
+% ══════════════════════════════════════════════════════════════
+
+Projeta-se MAE $< 0{,}02$ e r² $> 0{,}99$ na totalidade dos cenários, porquanto a API e o script de referência recorrem à mesma biblioteca rasterio e à mesma formulação normalizada. As únicas fontes de discrepância residem nos arredondamentos IEEE\,754 inerentes à reprojeção de coordenadas e na quantização da renderização PNG, que discretiza o intervalo contínuo $[-1,+1]$ em 256 níveis por canal (erro máximo teórico $\approx 0{,}008$), grandezas substancialmente inferiores ao limiar. O tempo de resposta deverá apresentar crescimento linear com o número de pixels: cerca de 5\,s para 50\,ha, 10\,s para 100\,ha, 18\,s para 200\,ha e abaixo de 30\,s para 500\,ha. O pico de memória RSS é estimado em aproximadamente 500\,MB para o cenário de 500\,ha. Taxa de sucesso projetada: 100\%.
+
+Na eventualidade de H\textsubscript{0} não ser rejeitada, serão perscrutadas três fontes de divergência: (a)~discrepâncias subpixel na rasterização do polígono de recorte; (b)~degradação de precisão pela quantização RGBA em 8\,bits; e (c)~tratamento díspar dos pixels de borda (\textit{boundary effects}).
+
+\vspace{3pt}
+\hrule
+\vspace{2pt}
+
+{\scriptsize\textbf{Ref.}\;
+{[1]} ESA, \textit{Sentinel-2 User Handbook}, 2015.\;
+{[2]} Rouse et al., \textit{3rd ERTS-1 Symp.}, 1974.\;
+{[3]} Huete et al., \textit{Rem.\,Sens.\,Env.}, v.\,83, 2002.\;
+{[4]} \url{rasterio.readthedocs.io}\;
+{[5]} \url{fastapi.tiangolo.com}}
+
+% ══════════════════════════════════════════════════════════════
+\newpage
+\onecolumn
+\section*{Anexo A -- Interface do EasyGIS Remote Sensing Software}
+\label{sec:anexo}
+% ══════════════════════════════════════════════════════════════
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.92\textwidth]{image.png}
+\caption{Interface principal do EasyGIS Remote Sensing Software exibindo visualização de NDVI sobre talhões agrícolas em mapa interativo Leaflet, com painel lateral de gerenciamento de zonas e ferramentas de análise espacial.}
+\label{fig:interface}
+\end{figure}
+
+\end{document}

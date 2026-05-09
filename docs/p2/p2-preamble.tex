@@ -1,0 +1,133 @@
+% ══════════════════════════════════════════════════════════════
+% Preâmbulo compartilhado pelos documentos da P2
+% Reaproveita o estilo de docs/documento-unificado.tex
+% ══════════════════════════════════════════════════════════════
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+
+\usepackage[top=2.5cm, bottom=2.5cm, left=3cm, right=2cm]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{pifont}
+\newcommand{\cmark}{\ding{51}}
+\newcommand{\xmark}{\ding{55}}
+
+\usepackage[table,dvipsnames]{xcolor}
+\definecolor{accent}{HTML}{2C7A4B}
+\definecolor{accentdim}{HTML}{1E5934}
+\definecolor{accentlight}{HTML}{E8F4ED}
+\definecolor{tabheader}{HTML}{2C3E50}
+\definecolor{tabrow}{HTML}{F5F6FA}
+\definecolor{linkblue}{HTML}{2980B9}
+\definecolor{codebg}{HTML}{F5F5F5}
+\definecolor{codeborder}{HTML}{D0D0D0}
+\definecolor{ndvilow}{HTML}{8B4513}
+\definecolor{ndvimid}{HTML}{DAA520}
+\definecolor{ndvihigh}{HTML}{006400}
+\definecolor{warnyellow}{HTML}{F39C12}
+\definecolor{successgreen}{HTML}{27AE60}
+\definecolor{errorred}{HTML}{E74C3C}
+
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{makecell}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{array}
+
+\usepackage{enumitem}
+\setlist[itemize]{itemsep=2pt, parsep=0pt, topsep=4pt, leftmargin=*}
+\setlist[enumerate]{itemsep=2pt, parsep=0pt, topsep=4pt, leftmargin=*}
+
+\usepackage[colorlinks=true, linkcolor=linkblue, urlcolor=linkblue, citecolor=linkblue]{hyperref}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textcolor{gray}{ICEV Remote Sensing Software}}
+\fancyhead[R]{\small\textcolor{gray}{P2 — Engenharia de Software, 2026.1}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\usepackage{titlesec}
+\titleformat{\section}
+  {\Large\bfseries\color{accentdim}}
+  {\thesection.}{0.5em}{}
+\titleformat{\subsection}
+  {\large\bfseries\color{accent}}
+  {\thesubsection}{0.5em}{}
+\titleformat{\subsubsection}
+  {\normalsize\bfseries}
+  {\thesubsubsection}{0.5em}{}
+
+% Listings (código)
+\usepackage{listings}
+\lstdefinestyle{shellstyle}{
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color{codebg},
+  frame=single,
+  rulecolor=\color{codeborder},
+  framesep=4pt,
+  xleftmargin=8pt,
+  xrightmargin=4pt,
+  breaklines=true,
+  showstringspaces=false,
+  keepspaces=true,
+  literate={─}{{-}}1 {├}{{|}}1 {│}{{|}}1 {└}{{`}}1
+}
+\lstdefinestyle{pythonstyle}{
+  basicstyle=\ttfamily\footnotesize,
+  language=Python,
+  backgroundcolor=\color{codebg},
+  frame=single,
+  rulecolor=\color{codeborder},
+  framesep=4pt,
+  xleftmargin=8pt,
+  xrightmargin=4pt,
+  breaklines=true,
+  keywordstyle=\color{accent}\bfseries,
+  stringstyle=\color{ndvimid},
+  commentstyle=\color{gray}\itshape,
+  showstringspaces=false,
+  keepspaces=true
+}
+\lstset{style=shellstyle}
+
+% Caixas para código inline
+\newcommand{\code}[1]{\texttt{\colorbox{codebg}{\strut#1}}}
+
+% Caixas de destaque
+\usepackage{tcolorbox}
+\tcbuselibrary{skins, breakable}
+
+\newtcolorbox{infobox}[1][]{%
+  colback=accentlight, colframe=accent,
+  boxrule=0.6pt, arc=2pt,
+  left=8pt, right=8pt, top=4pt, bottom=4pt,
+  fonttitle=\bfseries, breakable, #1
+}
+
+\newtcolorbox{warnbox}[1][]{%
+  colback=yellow!8, colframe=warnyellow,
+  boxrule=0.6pt, arc=2pt,
+  left=8pt, right=8pt, top=4pt, bottom=4pt,
+  breakable, #1
+}
+
+\newtcolorbox{successbox}[1][]{%
+  colback=green!4, colframe=successgreen,
+  boxrule=0.6pt, arc=2pt,
+  left=8pt, right=8pt, top=4pt, bottom=4pt,
+  breakable, #1
+}
