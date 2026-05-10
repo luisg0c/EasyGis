@@ -1,564 +1,576 @@
 \documentclass[aspectratio=169, 11pt]{beamer}
 
-% ── Codificação ───────────────────────────────────────────────
+% ─── Codificação e fontes ──────────────────────────────────────
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[brazil]{babel}
 \usepackage{lmodern}
 \usepackage{microtype}
-\usepackage{amssymb, amsmath}
+\usepackage{tgheros}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{amssymb}
 \usepackage{tikz}
 \usepackage{xcolor}
-\usepackage{booktabs}
-\usepackage{tabularx}
-\usepackage{listings}
-\usepackage{pifont}
-\usepackage{graphicx}
 
-% ── Paleta de cores ──────────────────────────────────────────
-\definecolor{bgdark}{HTML}{0F171F}
-\definecolor{bgpanel}{HTML}{18222E}
-\definecolor{textmain}{HTML}{E6EDF3}
-\definecolor{textmuted}{HTML}{9AA8B6}
-\definecolor{accent}{HTML}{3FB950}
-\definecolor{accentdim}{HTML}{236E35}
+\usetikzlibrary{calc, positioning}
+
+% ─── Paleta (consistente com a app) ─────────────────────────
+\definecolor{paper}{HTML}{F5F1E8}
+\definecolor{cream}{HTML}{FAF7EE}
+\definecolor{ivory}{HTML}{FCFAF2}
+\definecolor{moss950}{HTML}{0E1F18}
+\definecolor{moss900}{HTML}{1B3A2F}
+\definecolor{moss800}{HTML}{2D5544}
+\definecolor{moss700}{HTML}{3F6F58}
+\definecolor{moss600}{HTML}{4F8068}
+\definecolor{moss500}{HTML}{6B9080}
+\definecolor{moss300}{HTML}{A4C3B2}
+\definecolor{moss100}{HTML}{DDE5DD}
+\definecolor{moss50}{HTML}{EEF2EE}
+\definecolor{terra}{HTML}{B08968}
+\definecolor{clay}{HTML}{C66E47}
+\definecolor{amber}{HTML}{DDA853}
+\definecolor{lime}{HTML}{A7C957}
+\definecolor{charcoal}{HTML}{1A1F1B}
+\definecolor{smoke}{HTML}{4A5147}
+\definecolor{stone}{HTML}{7B8378}
 \definecolor{ndvilow}{HTML}{8B4513}
 \definecolor{ndvimid}{HTML}{DAA520}
-\definecolor{ndvihigh}{HTML}{006400}
 
-% ── Tema Beamer custom ────────────────────────────────────────
-\setbeamercolor{background canvas}{bg=bgdark}
-\setbeamercolor{normal text}{fg=textmain}
-\setbeamercolor{frametitle}{fg=textmain, bg=bgdark}
-\setbeamercolor{title}{fg=textmain}
-\setbeamercolor{subtitle}{fg=textmuted}
-\setbeamercolor{author}{fg=textmuted}
-\setbeamercolor{date}{fg=textmuted}
-\setbeamercolor{institute}{fg=textmuted}
-\setbeamercolor{itemize item}{fg=accent}
-\setbeamercolor{itemize subitem}{fg=accent}
-\setbeamercolor{enumerate item}{fg=accent}
-\setbeamercolor{section in toc}{fg=textmain}
-\setbeamercolor{block title}{fg=textmain, bg=accentdim}
-\setbeamercolor{block body}{fg=textmain, bg=bgpanel}
-\setbeamercolor{alerted text}{fg=accent}
-\setbeamercolor{footline}{fg=textmuted}
-
-\setbeamerfont{frametitle}{size=\Large, series=\bfseries}
-\setbeamerfont{title}{size=\huge, series=\bfseries}
-\setbeamerfont{subtitle}{size=\large}
-\setbeamerfont{footline}{size=\scriptsize}
-
+% ─── Tema Beamer ──────────────────────────────────────────────
+\setbeamercolor{background canvas}{bg=paper}
+\setbeamercolor{normal text}{fg=charcoal}
+\setbeamercolor{title}{fg=moss950}
 \setbeamertemplate{navigation symbols}{}
-\setbeamertemplate{itemize item}{\textcolor{accent}{\textbullet}}
-\setbeamertemplate{itemize subitem}{\textcolor{accent}{\(\circ\)}}
+\setbeamertemplate{frametitle}{}
+\setbeamertemplate{footline}{}
 
-% Frame title com barra accent à esquerda
-\setbeamertemplate{frametitle}{%
-  \nointerlineskip
-  \begin{beamercolorbox}[wd=\paperwidth, ht=2.5ex, dp=1.5ex, leftskip=0.4cm]{frametitle}
-    \begin{tikzpicture}[remember picture, overlay]
-      \fill[accent] ([xshift=0.4cm, yshift=-0.2cm]current page.north west)
-                    rectangle ([xshift=0.55cm, yshift=-2.0cm]current page.north west);
-    \end{tikzpicture}%
-    \hspace{0.4em}\insertframetitle\strut
-  \end{beamercolorbox}
-}
+% ─── Helpers ───────────────────────────────────────────────────
+\newcommand{\eyebrow}[1]{%
+  \begingroup\sffamily\fontsize{9pt}{11pt}\selectfont\bfseries\color{moss700}%
+  \MakeUppercase{#1}\endgroup}
 
-% Footer customizado
-\setbeamertemplate{footline}{%
-  \begin{beamercolorbox}[wd=\paperwidth, ht=2.5ex, dp=1ex, leftskip=0.5cm, rightskip=0.5cm]{footline}
-    ICEV Remote Sensing Software \(\cdot\) P2 Engenharia de Software
-    \hfill
-    \insertframenumber{} / \inserttotalframenumber
-  \end{beamercolorbox}
-}
+\newcommand{\kicker}[1]{%
+  \begingroup\sffamily\fontsize{8pt}{10pt}\selectfont\bfseries\color{stone}%
+  \MakeUppercase{#1}\endgroup}
 
-\setbeamertemplate{title page}{%
-  \begin{tikzpicture}[remember picture, overlay]
-    \fill[accent] ([xshift=0.5cm, yshift=-2.5cm]current page.north west)
-                  rectangle ([xshift=0.7cm, yshift=-5.0cm]current page.north west);
+% Logotipo EasyGis em TikZ (mark + wordmark)
+\newcommand{\egmark}[1][0.5]{%
+  \begin{tikzpicture}[scale=#1]
+    \fill[moss900, rounded corners=2pt] (0,0) rectangle (1.1,1.1);
+    \fill[lime, rounded corners=0.5pt] (0.24,0.84) rectangle (0.86,0.92);
+    \fill[ivory, rounded corners=0.5pt, opacity=0.88] (0.24,0.66) rectangle (0.72,0.74);
+    \fill[ivory, rounded corners=0.5pt, opacity=0.58] (0.24,0.48) rectangle (0.58,0.56);
+    \fill[ivory, rounded corners=0.5pt, opacity=0.32] (0.24,0.30) rectangle (0.44,0.38);
+    \node[anchor=west, inner sep=0, font=\sffamily\bfseries\fontsize{14pt}{14pt}\selectfont]
+      at (1.3, 0.55) {\textcolor{moss950}{Easy}\textcolor{moss600}{Gis}};
   \end{tikzpicture}
-  \vspace{2cm}
-  \begin{flushleft}
-    \hspace{0.9cm}{\small\textcolor{accent}{\textbf{AVALIAÇÃO P2 \(\cdot\) ENGENHARIA DE SOFTWARE}}}\\[10pt]
-    \hspace{0.9cm}{\Huge\textbf{\inserttitle}}\\[10pt]
-    \hspace{0.9cm}{\large\textcolor{textmuted}{\insertsubtitle}}\\[30pt]
-    \hspace{0.9cm}{\small\textcolor{accent}{\textbf{EQUIPE}}}\\[5pt]
-    \hspace{0.9cm}{\normalsize\insertauthor}\\[20pt]
-    \hspace{0.9cm}{\small\textcolor{textmuted}{\insertdate}}
-  \end{flushleft}
 }
 
-% Estilo de listings (código)
-\lstdefinestyle{darkshell}{
-  basicstyle=\ttfamily\small\color{textmain},
-  backgroundcolor=\color{bgpanel},
-  frame=none,
-  framesep=4pt,
-  xleftmargin=8pt,
-  xrightmargin=8pt,
-  breaklines=true,
-  keywordstyle=\color{accent}\bfseries,
-  showstringspaces=false,
-  keepspaces=true
-}
-\lstset{style=darkshell}
-
-% Comandos auxiliares
-\newcommand{\panel}[1]{%
-  \begin{beamercolorbox}[wd=\linewidth, sep=8pt, rounded=true]{block body}
-    #1
-  \end{beamercolorbox}
+% Header padronizado (eyebrow + título)
+\newcommand{\slidehead}[2]{%
+  \eyebrow{#1}\\[6pt]
+  {\sffamily\bfseries\fontsize{26pt}{30pt}\selectfont\color{moss950}#2}\\[8pt]
+  {\color{moss100}\rule{0.25\textwidth}{0.5pt}}
+  \vspace{0.3cm}
 }
 
-\newcommand{\kicker}[1]{{\small\textcolor{accent}{\textbf{#1}}}}
-
-% ── Metadados ───────────────────────────────────────────────
-\title{ICEV Remote Sensing Software}
-\subtitle{Plataforma Web de Sensoriamento Remoto para Agricultura de Precisão}
-\author{%
-  João Leonardi da Silva Melo \(\cdot\) João Vinícius Passos Castello Branco Carvalho\\
-  José Melquíades Neto \(\cdot\) Lauan Matheus da Rocha Alves\\
-  Lucas Benevinuto Pereira \(\cdot\) Luis Gustavo Olimpio\\
-  Sammuel Moura Saraiva \(\cdot\) Vinicius Henrique Albino Andrade
+% Rodapé minimalista: logo discreto canto superior direito + número canto inferior direito
+\newcommand{\footchrome}{%
+  \begin{tikzpicture}[remember picture, overlay]
+    \node[anchor=north east] at ([xshift=-0.6cm, yshift=-0.5cm]current page.north east) {%
+      \egmark[0.26]};
+    \node[anchor=south east, inner sep=0,
+          font=\sffamily\fontsize{8pt}{9pt}\selectfont\color{stone}]
+      at ([xshift=-0.6cm, yshift=0.35cm]current page.south east)
+      {\insertframenumber\,/\,\inserttotalframenumber};
+  \end{tikzpicture}
 }
-\date{Maio \(\cdot\) 2026}
 
-% ══════════════════════════════════════════════════════════════
+\title{EasyGis}
+\date{Maio · 2026}
+
+% ════════════════════════════════════════════════════════════
 \begin{document}
 
-% ─── Slide 1 — Capa ──────────────────────────────────────────
-{\setbeamertemplate{footline}{}
-\begin{frame}[plain]
-  \titlepage
-\end{frame}}
-
-% ─── Slide 2 — Agenda ────────────────────────────────────────
-\begin{frame}{Agenda}
-  \kicker{ROTEIRO DE 20 MIN}
-  \vspace{0.4cm}
-  \begin{itemize}\itemsep0.4em
-    \item Problema e contexto --- agricultura de precisão no Brasil
-    \item Solução --- visão geral do produto
-    \item Backlog priorizado e funcionalidades do MVP
-    \item Arquitetura --- frontend, backend, dados
-    \item Tecnologias e decisões de design
-    \item Demonstração ao vivo (NDVI, 3D, classificação)
-    \item Estratégia de testes e resultados
-    \item Limitações, próximos passos e divisão da equipe
-    \item Encerramento e dúvidas
-  \end{itemize}
-\end{frame}
-
-% ─── Slide 3 — Problema ──────────────────────────────────────
-\begin{frame}{O problema}
-  \kicker{POR QUE EXISTIR?}
-  \vspace{0.3cm}
-
-  {\large\bfseries Monitorar saúde de culturas é caro, complexo e fragmentado.}
-  \vspace{0.4cm}
-
-  \panel{%
-    \begin{itemize}\itemsep0.3em
-      \item Softwares GIS comerciais (ArcGIS, ENVI) custam milhares de R\$ por ano
-      \item Ferramentas profissionais exigem treinamento especializado
-      \item Ausência de soluções integradas: visualização + análise + classificação
-      \item Imagens Sentinel-2 (gratuitas, 10\,m, revisita 5 dias) subutilizadas no Brasil
-      \item Decisões tardias = perdas de produtividade e custos operacionais
-    \end{itemize}
-  }
-\end{frame}
-
-% ─── Slide 4 — Solução ───────────────────────────────────────
-\begin{frame}{A solução}
-  \kicker{ICEV REMOTE SENSING SOFTWARE}
-  \vspace{0.3cm}
-
-  Plataforma web local que processa imagens Sentinel-2 sobre talhões e gera
-  índices, classificações e visualizações 3D --- \textbf{sem custo de licenciamento}.
-
-  \vspace{0.5cm}
-  \begin{columns}[t]
-    \column{0.5\textwidth}
-      \panel{%
-        \textbf{\textcolor{accent}{Importar Talhões}}\\
-        \footnotesize\textcolor{textmuted}{KML do Google Earth ou desenho direto no mapa}
-      }
-      \vspace{0.3cm}
-      \panel{%
-        \textbf{\textcolor{accent}{Calcular Índices}}\\
-        \footnotesize\textcolor{textmuted}{NDVI \(\cdot\) EVI \(\cdot\) SAVI \(\cdot\) NDWI \(\cdot\) NDBI + 13 bandas}
-      }
-    \column{0.5\textwidth}
-      \panel{%
-        \textbf{\textcolor{accent}{Classificar Zonas}}\\
-        \footnotesize\textcolor{textmuted}{K-Means \(\cdot\) Threshold \(\cdot\) Supervisionada simulada}
-      }
-      \vspace{0.3cm}
-      \panel{%
-        \textbf{\textcolor{accent}{Visualizar em 3D}}\\
-        \footnotesize\textcolor{textmuted}{Renderização Three.js com elevação por valor}
-      }
-  \end{columns}
-\end{frame}
-
-% ─── Slide 5 — Usuários-alvo ─────────────────────────────────
-\begin{frame}{Para quem é?}
-  \kicker{USUÁRIOS-ALVO}
-  \vspace{0.4cm}
-
-  \begin{tabular}{@{}p{3.5cm}p{12cm}@{}}
-    \textbf{\textcolor{accent}{Produtor Rural}} & Monitorar lavouras, identificar áreas de estresse, otimizar insumos\\[0.4cm]
-    \textbf{\textcolor{accent}{Agrônomo}} & Mapas de variabilidade, prescrição de insumos, análise de vigor\\[0.4cm]
-    \textbf{\textcolor{accent}{Pesquisador}} & Experimentar algoritmos sobre dados reais, comparar índices\\[0.4cm]
-    \textbf{\textcolor{accent}{Estudante}} & Aprender sensoriamento remoto na prática\\
-  \end{tabular}
-\end{frame}
-
-% ─── Slide 6 — Backlog ──────────────────────────────────────
-\begin{frame}{Backlog priorizado}
-  \kicker{6 ÉPICOS \(\cdot\) 35 HISTÓRIAS \(\cdot\) MoSCoW}
-  \vspace{0.3cm}
-
-  \footnotesize
-  \begin{itemize}\itemsep0.2em
-    \item Épico 1 --- Gestão de Talhões (KML, mapa, desenho) \hfill 6 histórias
-    \item Épico 2 --- Índices Espectrais (NDVI/EVI/SAVI/NDWI/NDBI/bandas) \hfill 9 histórias
-    \item Épico 3 --- Visualização \& Mapa Interativo (2D, 3D, popup) \hfill 5 histórias
-    \item Épico 4 --- Lab. de Experimentos (filtros, bordas, morfologia) \hfill 6 histórias
-    \item Épico 5 --- Classificação (K-Means, Threshold, Supervisionada) \hfill 6 histórias
-    \item Épico 6 --- Gestão de Dados Sentinel-2 (multi-produto) \hfill 3 histórias
-  \end{itemize}
-
-  \vspace{0.4cm}
-  \panel{%
-    \textbf{\textcolor{accent}{MVP entregue: 28 implementadas + 2 parciais funcionais (85,7\%)}}\\
-    \footnotesize\textcolor{textmuted}{\textbf{Won't Have:} persistência de talhões \(\cdot\) classificação supervisionada com modelo treinado \(\cdot\) exportação GeoTIFF/CSV \(\cdot\) auth multiusuário \(\cdot\) download Copernicus automático}
-  }
-\end{frame}
-
-% ─── Slide 7 — Arquitetura ──────────────────────────────────
-\begin{frame}{Arquitetura}
-  \kicker{VISÃO GERAL}
-  \vspace{0.3cm}
-
-  \footnotesize
-  \begin{columns}[t]
-    \column{0.5\textwidth}
-      \panel{%
-        \textcolor{accent}{\textbf{FRONTEND \(\cdot\) porta 3000}}\\[3pt]
-        \textbf{Next.js 16 \(\cdot\) React 19 \(\cdot\) TypeScript}\\[3pt]
-        \begin{itemize}\itemsep0.2em
-          \item Mapa Leaflet 2D + leaflet-draw
-          \item Three.js / @react-three/fiber (3D)
-          \item shadcn/ui + Tailwind CSS 4
-        \end{itemize}
-      }
-    \column{0.5\textwidth}
-      \panel{%
-        \textcolor{accent}{\textbf{BACKEND \(\cdot\) porta 8000}}\\[3pt]
-        \textbf{FastAPI + Uvicorn \(\cdot\) Python 3.12}\\[3pt]
-        \begin{itemize}\itemsep0.2em
-          \item rasterio (JP2 Sentinel-2)
-          \item NumPy \(\cdot\) SciPy \(\cdot\) scikit-learn \(\cdot\) OpenCV
-          \item Shapely \(\cdot\) pyproj (geometria, reprojeção)
-        \end{itemize}
-      }
-  \end{columns}
-  \vspace{0.4cm}
-
-  \panel{%
-    \textcolor{accent}{\textbf{DADOS LOCAIS}}\\[3pt]
-    \begin{itemize}\itemsep0.2em
-      \item \texttt{data/products/} \(\rightarrow\) Sentinel-2 .SAFE (granules em R10m, R20m, R60m)
-      \item \texttt{data/KML Fields/} \(\rightarrow\) polígonos de talhões (KML do Google Earth)
-    \end{itemize}
-  }
-
-  \vspace{0.2cm}
-  \begin{center}
-    \scriptsize\textcolor{textmuted}{Comunicação REST/JSON \(\cdot\) imagens em base64 \(\cdot\) sem banco de dados}
-  \end{center}
-\end{frame}
-
-% ─── Slide 8 — Stack tecnológica ────────────────────────────
-\begin{frame}{Stack tecnológica}
-  \kicker{POR QUE ESCOLHEMOS CADA UMA}
-  \vspace{0.3cm}
-
-  \footnotesize
-  \begin{tabular}{@{}p{4cm}p{12cm}@{}}
-    \textbf{\textcolor{accent}{FastAPI}} & Validação Pydantic automática, OpenAPI grátis, async nativo\\[0.25cm]
-    \textbf{\textcolor{accent}{rasterio}} & Padrão de fato em I/O geoespacial Python (wrapper sobre GDAL)\\[0.25cm]
-    \textbf{\textcolor{accent}{Next.js 16 + React 19}} & App Router unifica páginas e rotas API server-side\\[0.25cm]
-    \textbf{\textcolor{accent}{Leaflet}} & Maduro, leve, integra com Esri/OSM sem token pago\\[0.25cm]
-    \textbf{\textcolor{accent}{Three.js / R3F}} & Visualização 3D nativa em WebGL, sem peso de Cesium\\[0.25cm]
-    \textbf{\textcolor{accent}{Tailwind + shadcn/ui}} & Componentes acessíveis (Radix), zero CSS-in-JS\\[0.25cm]
-    \textbf{\textcolor{accent}{uv}} & Build reprodutível e \(\sim 10\times\) mais rápido que pip\\
-  \end{tabular}
-\end{frame}
-
-% ─── Slide 9 — Decisões de design ───────────────────────────
-\begin{frame}{Decisões de design}
-  \kicker{TRADE-OFFS EXPLÍCITOS}
-  \vspace{0.2cm}
-
-  \footnotesize
-  \begin{itemize}\itemsep0.35em
-    \item \textbf{\textcolor{accent}{DA-01}} \(\cdot\) Frontend e backend em processos separados\\
-          {\scriptsize\textcolor{textmuted}{Permite que o processamento Python pesado não bloqueie a UI}}
-    \item \textbf{\textcolor{accent}{DA-02}} \(\cdot\) Imagens via base64 dentro do JSON\\
-          {\scriptsize\textcolor{textmuted}{API simples, uma resposta = todos os dados; trade-off: +33\% de tamanho}}
-    \item \textbf{\textcolor{accent}{DA-04}} \(\cdot\) Reprojeção dinâmica (WGS84 \(\rightarrow\) UTM)\\
-          {\scriptsize\textcolor{textmuted}{Frontend trabalha em lat/lon, backend trata projeções via pyproj}}
-    \item \textbf{\textcolor{accent}{DA-06}} \(\cdot\) SentinelProcessor isolado das rotas HTTP\\
-          {\scriptsize\textcolor{textmuted}{Permite testes unitários sem subir o servidor}}
-    \item \textbf{\textcolor{accent}{DA-07}} \(\cdot\) Tipagem end-to-end (TS + Pydantic)\\
-          {\scriptsize\textcolor{textmuted}{Erros de contrato detectados em build, não em produção}}
-    \item \textbf{\textcolor{accent}{DA-09}} \(\cdot\) Suavização gaussiana com máscara\\
-          {\scriptsize\textcolor{textmuted}{Evita ``sangramento'' de valores nas bordas do polígono}}
-  \end{itemize}
-\end{frame}
-
-% ─── Slide 10 — Fluxo NDVI ──────────────────────────────────
-\begin{frame}{Fluxo de cálculo de NDVI}
-  \kicker{DIAGRAMA DE SEQUÊNCIA}
-  \vspace{0.2cm}
-
-  \footnotesize
-  \begin{enumerate}\itemsep0.18em
-    \item Usuário seleciona talhão e índice ``NDVI'' na UI
-    \item Frontend envia \texttt{POST /calculate-index} com coordenadas WGS84
-    \item Backend resolve produto Sentinel-2 .SAFE mais recente
-    \item rasterio lê bandas B08 (NIR) e B04 (Red) em 10\,m
-    \item pyproj reprojeta polígono WGS84 \(\rightarrow\) CRS nativo da imagem (UTM)
-    \item rasterio.mask recorta as bandas ao polígono
-    \item NumPy calcula NDVI = (NIR \(-\) Red) / (NIR + Red), clipa a \([-1, 1]\)
-    \item Pillow gera PNG colorido (gradiente \textcolor{ndvilow}{marrom} \(\rightarrow\) \textcolor{ndvimid}{amarelo} \(\rightarrow\) \textcolor{ndvihigh}{verde})
-    \item Backend retorna JSON com base64, estatísticas, histograma e dados 3D
-    \item Frontend sobrepõe imagem ao mapa Leaflet + atualiza painel de stats
-  \end{enumerate}
-\end{frame}
-
-% ─── Slide 11 — Demo ────────────────────────────────────────
-\begin{frame}{Demonstração ao vivo}
-  \kicker{6 MINUTOS}
-  \vspace{0.2cm}
-
-  \begin{columns}[T]
-    \column{0.45\textwidth}
-      \footnotesize
-      \begin{enumerate}\itemsep0.4em
-        \item Abrir \url{http://localhost:3000}
-        \item Selecionar \texttt{crop field 1}
-        \item Calcular NDVI $\rightarrow$ ver overlay
-        \item Clicar no mapa $\rightarrow$ popup
-        \item Trocar para EVI $\rightarrow$ comparar
-        \item Ativar 3D $\rightarrow$ rotacionar
-        \item \texttt{/classification} $\rightarrow$ K-Means
-      \end{enumerate}
-    \column{0.55\textwidth}
-      \includegraphics[width=\linewidth]{screenshots/MAN-03_ndvi-resultado}
-  \end{columns}
-
-  \vspace{0.2cm}
-  \begin{center}
-    \scriptsize\textcolor{textmuted}{Capturas e roteiro completo em \texttt{docs/p2/ROTEIRO\_DEMO.md}}
-  \end{center}
-\end{frame}
-
-% ─── Slide 11.5 — Demo (3D + Classificação) ─────────────────
-\begin{frame}{Demonstração: visualização 3D e classificação}
-  \kicker{COMPLEMENTOS DA DEMO}
-  \vspace{0.2cm}
-
-  \begin{columns}[T]
-    \column{0.5\textwidth}
-      \begin{center}
-        \includegraphics[width=\linewidth]{screenshots/MAN-06_3d-view}\\[2pt]
-        \scriptsize\textcolor{textmuted}{3D --- relevo proporcional ao NDVI}
-      \end{center}
-    \column{0.5\textwidth}
-      \begin{center}
-        \includegraphics[width=\linewidth]{screenshots/MAN-07_classification}\\[2pt]
-        \scriptsize\textcolor{textmuted}{K-Means --- zonas com hectares}
-      \end{center}
-  \end{columns}
-\end{frame}
-
-% ─── Slide 12 — Estratégia de testes ────────────────────────
-\begin{frame}[fragile]{Estratégia de testes}
-  \kicker{PLANO EM TRÊS NÍVEIS}
-  \vspace{0.3cm}
-
-  \footnotesize
-  \begin{columns}[t]
-    \column{0.32\textwidth}
-      \panel{%
-        \textcolor{accent}{\textbf{UNITÁRIO}}\\[3pt]
-        \textbf{pytest + NumPy}\\[3pt]
-        \begin{itemize}\itemsep0.15em
-          \item Cálculo NDVI/EVI
-          \item Estatísticas
-          \item Histograma
-          \item Casos de borda
-        \end{itemize}
-      }
-    \column{0.32\textwidth}
-      \panel{%
-        \textcolor{accent}{\textbf{INTEGRAÇÃO}}\\[3pt]
-        \textbf{FastAPI TestClient}\\[3pt]
-        \begin{itemize}\itemsep0.15em
-          \item /, /health, /products
-          \item Validação Pydantic (422)
-          \item Erros 400 / 404 / 500
-          \item Conversão de coords
-        \end{itemize}
-      }
-    \column{0.32\textwidth}
-      \panel{%
-        \textcolor{accent}{\textbf{MANUAL}}\\[3pt]
-        \textbf{Demo end-to-end}\\[3pt]
-        \begin{itemize}\itemsep0.15em
-          \item Sentinel-2 real (1\,GB)
-          \item Frontend Next.js
-          \item Renderização 3D
-          \item Apresentação ao vivo
-        \end{itemize}
-      }
-  \end{columns}
-  \vspace{0.4cm}
-
-  \begin{center}
-  \footnotesize\textcolor{textmuted}{Fixtures sintéticas (NumPy) substituem produtos reais --- suite roda em \(< 1\) s}
-  \end{center}
-
-  \vspace{0.2cm}
-  \begin{lstlisting}[style=darkshell, basicstyle=\ttfamily\small\color{accent}]
-$ uv run pytest tests/ -v --cov=api
-  \end{lstlisting}
-\end{frame}
-
-% ─── Slide 13 — Resultados ──────────────────────────────────
-\begin{frame}{Resultados dos testes}
-  \kicker{EXECUÇÃO DE 09/05/2026}
-  \vspace{0.3cm}
-
-  \begin{columns}[t]
-    \column{0.24\textwidth}
-      \panel{%
-        \begin{center}
-          {\Large\bfseries\textcolor{accent}{28}}\\[2pt]
-          \scriptsize\textcolor{textmuted}{casos executados}
-        \end{center}
-      }
-    \column{0.24\textwidth}
-      \panel{%
-        \begin{center}
-          {\Large\bfseries\textcolor{accent}{100\%}}\\[2pt]
-          \scriptsize\textcolor{textmuted}{taxa de sucesso}
-        \end{center}
-      }
-    \column{0.24\textwidth}
-      \panel{%
-        \begin{center}
-          {\Large\bfseries\textcolor{accent}{0,79\,s}}\\[2pt]
-          \scriptsize\textcolor{textmuted}{tempo total}
-        \end{center}
-      }
-    \column{0.24\textwidth}
-      \panel{%
-        \begin{center}
-          {\Large\bfseries\textcolor{accent}{55\%}}\\[2pt]
-          \scriptsize\textcolor{textmuted}{cobertura do core}
-        \end{center}
-      }
-  \end{columns}
-  \vspace{0.4cm}
-
-  \scriptsize
-  \panel{%
-    \textcolor{accent}{\textbf{Cobertura por requisito}}\\[2pt]
-    \begin{itemize}\itemsep0.1em
-      \item RF-04 (produtos) \(\cdot\) RF-05 (NDVI) \(\cdot\) RF-06 (EVI) \(\cdot\) RF-10 (stats)
-      \item RF-11 (histograma) \(\cdot\) RF-20 (health)
-      \item RNF-04 (confiabilidade) \(\cdot\) RNF-05 (manutenibilidade)
-      \item Validação Pydantic exercitada com payloads inválidos (HTTP 422)
-    \end{itemize}
-  }
-\end{frame}
-
-% ─── Slide 14 — Limitações ──────────────────────────────────
-\begin{frame}{Limitações conhecidas}
-  \kicker{O QUE NÃO ESTÁ NO MVP}
-  \vspace{0.3cm}
-
-  \footnotesize
-  \begin{itemize}\itemsep0.4em
-    \item \textbf{\textcolor{accent}{Sem persistência de dados}} \(\cdot\) talhões desenhados são perdidos ao recarregar
-    \item \textbf{\textcolor{accent}{Classificação supervisionada simulada}} \(\cdot\) não usa modelo treinado real
-    \item \textbf{\textcolor{accent}{Imagens Sentinel-2 baixadas manualmente}} \(\cdot\) sem download automático via API Copernicus
-    \item \textbf{\textcolor{accent}{Single-user em localhost}} \(\cdot\) sem autenticação ou multi-tenancy
-    \item \textbf{\textcolor{accent}{Cobertura de I/O limitada}} \(\cdot\) read\_band/crop dependem de .SAFE real, testes manuais cobrem
-  \end{itemize}
-\end{frame}
-
-% ─── Slide 15 — Próximos passos ─────────────────────────────
-\begin{frame}{Próximos passos}
-  \kicker{ROADMAP PÓS-MVP}
-  \vspace{0.3cm}
-
-  \begin{itemize}\itemsep0.3em
-    \item Integração com a API do Copernicus (download automático)
-    \item Persistência via SQLite ou PostgreSQL/PostGIS
-    \item Modelo Random Forest treinado para classificação supervisionada real
-    \item Exportação dos resultados em GeoTIFF / Shapefile / CSV
-    \item Comparação temporal (multi-data) lado a lado
-    \item Aplicação web hospedada (multi-usuário, autenticação)
-    \item Pipeline CI com pytest + GitHub Actions
-  \end{itemize}
-\end{frame}
-
-% ─── Slide 16 — Divisão de Responsabilidades ───────────────
-\begin{frame}{Como o trabalho foi dividido}
-  \kicker{PARTICIPAÇÃO DOS MEMBROS}
-  \vspace{0.2cm}
-
-  \scriptsize
-  \begin{tabular}{@{}p{4.6cm}p{4.4cm}p{6cm}@{}}
-    \textbf{\textcolor{accent}{Integrante}} & \textbf{\textcolor{accent}{Área principal}} & \textbf{\textcolor{accent}{Bloco na apresentação}}\\[0.15cm]
-    João Leonardi da Silva Melo                       & Backend + integração Git         & Slide 9 --- Decisões de design \\[0.15cm]
-    João Vinícius Passos Castello B.\ Carvalho         & Frontend (mapa, UI, 3D)          & Slides 5, 11 --- Personas + Demo \\[0.15cm]
-    José Melquíades Neto                               & Modelagem de dados + KML         & Slide 7 --- Arquitetura \\[0.15cm]
-    Lauan Matheus da Rocha Alves                       & Testes automatizados + qualidade & Slides 12--13 --- Estratégia + Resultados \\[0.15cm]
-    Lucas Benevinuto Pereira                           & Apresentação + slides + pitch    & Slides 1--4 --- Capa, Agenda, Problema, Solução \\[0.15cm]
-    Luis Gustavo Olimpio                               & Documentação técnica + ADRs      & Slide 8 --- Stack tecnológica \\[0.15cm]
-    Sammuel Moura Saraiva                              & Manual do usuário + glossário    & Slides 14--15 --- Limitações + Próximos passos \\[0.15cm]
-    Vinicius Henrique Albino Andrade                   & DevOps + roteiro de demo + Q\&A  & Slide 10 --- Fluxo NDVI \\
-  \end{tabular}
-
-  \vspace{0.3cm}
-  \begin{center}
-    \scriptsize\textcolor{textmuted}{Atribuição por área de responsabilidade. Detalhamento da fala em \texttt{docs/p2/PITCH.md}.}
-  \end{center}
-\end{frame}
-
-% ─── Slide 17 — Encerramento ────────────────────────────────
-{\setbeamertemplate{footline}{}
+% ── 1. Capa ────────────────────────────────────────────────
 \begin{frame}[plain]
   \begin{tikzpicture}[remember picture, overlay]
-    \fill[accent] ([xshift=0.5cm, yshift=-3.0cm]current page.north west)
-                  rectangle ([xshift=0.7cm, yshift=-5.5cm]current page.north west);
+    \node[anchor=north west] at ([xshift=1.2cm, yshift=-0.6cm]current page.north west) {%
+      \egmark[1.0]};
+    \node[anchor=north west,
+          font=\sffamily\fontsize{8pt}{10pt}\selectfont\bfseries\color{moss700},
+          inner sep=0]
+      at ([xshift=1.2cm, yshift=-2.2cm]current page.north west)
+      {AVALIAÇÃO P2 · ENGENHARIA DE SOFTWARE · 2026.1};
+    \node[anchor=north west,
+          font=\sffamily\bfseries\fontsize{34pt}{34pt}\selectfont\color{moss950},
+          inner sep=0]
+      at ([xshift=1.2cm, yshift=-2.8cm]current page.north west)
+      {Agricultura};
+    \node[anchor=north west,
+          font=\sffamily\bfseries\fontsize{34pt}{34pt}\selectfont\color{moss950},
+          inner sep=0]
+      at ([xshift=1.2cm, yshift=-3.8cm]current page.north west)
+      {de precisão};
+    \node[anchor=north west,
+          font=\sffamily\bfseries\fontsize{34pt}{34pt}\selectfont\color{moss700},
+          inner sep=0]
+      at ([xshift=1.2cm, yshift=-4.8cm]current page.north west)
+      {por satélite.};
+    % Equipe — 4 linhas (8 nomes)
+    \node[anchor=south west,
+          font=\sffamily\fontsize{9pt}{12pt}\selectfont\color{smoke},
+          inner sep=0]
+      at ([xshift=1.2cm, yshift=2.7cm]current page.south west)
+      {João Leonardi da Silva Melo · João Vinícius Passos Castello Branco Carvalho};
+    \node[anchor=south west,
+          font=\sffamily\fontsize{9pt}{12pt}\selectfont\color{smoke},
+          inner sep=0]
+      at ([xshift=1.2cm, yshift=2.2cm]current page.south west)
+      {José Melquíades Neto · Lauan Matheus da Rocha Alves};
+    \node[anchor=south west,
+          font=\sffamily\fontsize{9pt}{12pt}\selectfont\color{smoke},
+          inner sep=0]
+      at ([xshift=1.2cm, yshift=1.7cm]current page.south west)
+      {Lucas Benevinuto Pereira · Luis Gustavo Olimpio};
+    \node[anchor=south west,
+          font=\sffamily\fontsize{9pt}{12pt}\selectfont\color{smoke},
+          inner sep=0]
+      at ([xshift=1.2cm, yshift=1.2cm]current page.south west)
+      {Sammuel Moura Saraiva · Vinicius Henrique Albino Andrade};
+    \node[anchor=south west,
+          font=\sffamily\bfseries\fontsize{8pt}{10pt}\selectfont\color{stone},
+          inner sep=0]
+      at ([xshift=1.2cm, yshift=0.5cm]current page.south west)
+      {MAIO · 2026};
   \end{tikzpicture}
-  \vspace{2.7cm}
-  \begin{flushleft}
-    \hspace{0.9cm}{\small\textcolor{accent}{\textbf{OBRIGADO}}}\\[10pt]
-    \hspace{0.9cm}{\Huge\textbf{Perguntas e demonstração}}\\[16pt]
-    \hspace{0.9cm}{\large\textcolor{textmuted}{github.com / icev-remote-sensing-software}}\\[34pt]
-    \hspace{0.9cm}{\small\textcolor{accent}{\textbf{ENTREGÁVEIS DA P2}}}\\[6pt]
-    \hspace{0.9cm}\parbox{14cm}{\normalsize MVP funcional \(\cdot\) Plano e relatório de testes \(\cdot\) Manual do usuário \(\cdot\) Documentação técnica \(\cdot\) Apresentação}
-  \end{flushleft}
-\end{frame}}
+\end{frame}
+
+% ── 2. Problema ─────────────────────────────────────────────
+\begin{frame}[plain]
+  \vspace{0.5cm}
+  \hspace{1.2cm}\begin{minipage}{0.85\textwidth}
+    \slidehead{Problema}{Monitorar lavouras\\custa caro.}
+
+    {\sffamily\fontsize{13pt}{18pt}\selectfont\color{charcoal}%
+    Softwares GIS profissionais cobram \textbf{milhares de R\$/ano}.\\[2pt]
+    Imagens Sentinel-2 são \textbf{gratuitas}, mas exigem expertise.\par}
+
+    \vspace{0.8cm}
+
+    \begin{tikzpicture}[every node/.style={anchor=north west, inner sep=0}]
+      \node[font=\sffamily\bfseries\fontsize{32pt}{32pt}\selectfont\color{moss950}] at (0,0) {66\,M};
+      \node[font=\sffamily\bfseries\fontsize{8pt}{10pt}\selectfont\color{stone}, text width=4cm] at (0,-1.5)
+        {HECTARES PLANTADOS NO BRASIL};
+
+      \node[font=\sffamily\bfseries\fontsize{32pt}{32pt}\selectfont\color{moss950}] at (5.5,0) {5};
+      \node[font=\sffamily\bfseries\fontsize{8pt}{10pt}\selectfont\color{stone}, text width=4cm] at (5.5,-1.5)
+        {DIAS DE REVISITA SENTINEL-2};
+
+      \node[font=\sffamily\bfseries\fontsize{32pt}{32pt}\selectfont\color{moss950}] at (11,0) {10\,m};
+      \node[font=\sffamily\bfseries\fontsize{8pt}{10pt}\selectfont\color{stone}, text width=4cm] at (11,-1.5)
+        {RESOLUÇÃO NATIVA POR PIXEL};
+    \end{tikzpicture}
+  \end{minipage}
+  \footchrome
+\end{frame}
+
+% ── 3. Solução ──────────────────────────────────────────────
+\begin{frame}[plain]
+  \vspace{0.5cm}
+  \hspace{1.2cm}\begin{minipage}{0.85\textwidth}
+    \slidehead{Solução}{Uma plataforma web,\\sem custo.}
+
+    {\sffamily\fontsize{11pt}{16pt}\selectfont\color{smoke}%
+    Ingerimos imagens Sentinel-2, processamos talhões em KML, geramos índices
+    de vegetação e classificações, tudo no navegador.\par}
+
+    \vspace{0.6cm}
+
+    \begin{tikzpicture}[
+      box/.style={draw=moss100, fill=cream, rounded corners=2pt,
+                  text width=3.6cm, inner sep=10pt, minimum height=1.8cm,
+                  anchor=north west}]
+      \node[box] at (0,0) {%
+        {\sffamily\bfseries\fontsize{10pt}{12pt}\selectfont\color{moss900}Importar talhões}\\[4pt]
+        {\sffamily\fontsize{8pt}{10pt}\selectfont\color{smoke}KML do Google Earth\\ou desenho no mapa}};
+      \node[box] at (4.0,0) {%
+        {\sffamily\bfseries\fontsize{10pt}{12pt}\selectfont\color{moss900}Calcular índices}\\[4pt]
+        {\sffamily\fontsize{8pt}{10pt}\selectfont\color{smoke}NDVI · EVI · SAVI\\13 bandas Sentinel-2}};
+      \node[box] at (8.0,0) {%
+        {\sffamily\bfseries\fontsize{10pt}{12pt}\selectfont\color{moss900}Classificar zonas}\\[4pt]
+        {\sffamily\fontsize{8pt}{10pt}\selectfont\color{smoke}Threshold · K-Means\\Supervisionada}};
+    \end{tikzpicture}
+  \end{minipage}
+  \footchrome
+\end{frame}
+
+% ── 4. Para quem ───────────────────────────────────────────
+\begin{frame}[plain]
+  \vspace{0.5cm}
+  \hspace{1.2cm}\begin{minipage}{0.85\textwidth}
+    \slidehead{Para quem}{Quatro perfis,\\um produto.}
+
+    \vspace{0.4cm}
+
+    \begin{tikzpicture}[
+      box/.style={draw=moss100, fill=cream, rounded corners=2pt,
+                  text width=5.6cm, inner sep=10pt, minimum height=1.4cm,
+                  anchor=north west}]
+      \node[box] at (0,0) {%
+        {\sffamily\bfseries\fontsize{12pt}{14pt}\selectfont\color{moss950}Produtor rural}\\[2pt]
+        {\sffamily\fontsize{8pt}{10pt}\selectfont\color{smoke}Monitorar lavouras, identificar estresse, otimizar insumos}};
+      \node[box] at (6.0,0) {%
+        {\sffamily\bfseries\fontsize{12pt}{14pt}\selectfont\color{moss950}Agrônomo}\\[2pt]
+        {\sffamily\fontsize{8pt}{10pt}\selectfont\color{smoke}Mapas de variabilidade, prescrição de insumos}};
+      \node[box] at (0,-1.7) {%
+        {\sffamily\bfseries\fontsize{12pt}{14pt}\selectfont\color{moss950}Pesquisador}\\[2pt]
+        {\sffamily\fontsize{8pt}{10pt}\selectfont\color{smoke}Experimentar algoritmos sobre dados reais}};
+      \node[box] at (6.0,-1.7) {%
+        {\sffamily\bfseries\fontsize{12pt}{14pt}\selectfont\color{moss950}Estudante}\\[2pt]
+        {\sffamily\fontsize{8pt}{10pt}\selectfont\color{smoke}Aprender sensoriamento remoto na prática}};
+    \end{tikzpicture}
+  \end{minipage}
+  \footchrome
+\end{frame}
+
+% ── 5. Backlog ──────────────────────────────────────────────
+\begin{frame}[plain]
+  \vspace{0.5cm}
+  \hspace{1.2cm}\begin{minipage}{0.85\textwidth}
+    \slidehead{Escopo}{O backlog.}
+
+    \vspace{0.6cm}
+
+    \begin{tikzpicture}
+      \node[anchor=north west, inner sep=0,
+            font=\sffamily\bfseries\fontsize{90pt}{90pt}\selectfont\color{moss950}]
+        at (0,0) {35};
+      \node[anchor=north west, inner sep=0, text width=8cm,
+            font=\sffamily\fontsize{11pt}{16pt}\selectfont\color{charcoal}]
+        at (6.5, -0.6) {%
+        \textbf{histórias} em \textbf{6 épicos},\\
+        priorizadas por MoSCoW.\\[6pt]
+        \textcolor{moss700}{\textbf{28 implementadas}} + 2 parciais.\\[2pt]
+        5 conscientemente fora do escopo.\par};
+    \end{tikzpicture}
+  \end{minipage}
+  \footchrome
+\end{frame}
+
+% ── 6. Arquitetura ──────────────────────────────────────────
+\begin{frame}[plain]
+  \vspace{0.5cm}
+  \hspace{1.2cm}\begin{minipage}{0.85\textwidth}
+    \slidehead{Arquitetura}{Dois processos.}
+
+    \vspace{0.8cm}
+
+    \begin{tikzpicture}[
+      box/.style={draw=moss100, fill=cream, rounded corners=3pt,
+                  text width=5.8cm, inner sep=12pt, minimum height=2.8cm,
+                  anchor=north west},
+      arrow/.style={->, >=stealth, line width=1.0pt, color=moss700}]
+
+      \node[box] at (0,0) {%
+        \kicker{frontend · porta 3000}\\[6pt]
+        {\sffamily\bfseries\fontsize{14pt}{16pt}\selectfont\color{moss950}Next.js 16}\\[2pt]
+        {\sffamily\fontsize{8pt}{11pt}\selectfont\color{smoke}React 19 · TypeScript · Tailwind 4\\Leaflet · Three.js · shadcn/ui}};
+
+      \node[box] at (6.5,0) {%
+        \kicker{backend · porta 8000}\\[6pt]
+        {\sffamily\bfseries\fontsize{14pt}{16pt}\selectfont\color{moss950}FastAPI}\\[2pt]
+        {\sffamily\fontsize{8pt}{11pt}\selectfont\color{smoke}Python 3.12 · Uvicorn\\rasterio · NumPy · OpenCV · sklearn}};
+
+      \draw[arrow] (5.95,-1.4) -- (6.5,-1.4);
+      \node[anchor=south, font=\sffamily\fontsize{7pt}{9pt}\selectfont\color{stone}]
+        at (6.2,-1.35) {REST};
+
+      \node[anchor=north west, inner sep=0, text width=12.5cm,
+            font=\sffamily\fontsize{9pt}{12pt}\selectfont\color{stone}]
+        at (0,-3.5) {%
+        Comunicação por JSON, imagens em base64. Sem banco de dados.};
+    \end{tikzpicture}
+  \end{minipage}
+  \footchrome
+\end{frame}
+
+% ── 7. Stack ────────────────────────────────────────────────
+\begin{frame}[plain]
+  \vspace{0.5cm}
+  \hspace{1.2cm}\begin{minipage}{0.85\textwidth}
+    \slidehead{Stack}{O que usamos.}
+
+    \vspace{0.6cm}
+
+    \begin{tikzpicture}[
+      every node/.style={anchor=north west, inner sep=0, font=\sffamily}]
+      \node[font=\fontsize{8pt}{10pt}\selectfont\bfseries\color{moss700}] at (0,0) {FRONTEND};
+      \node[text width=6.0cm, font=\fontsize{10pt}{15pt}\selectfont\color{charcoal}] at (0,-0.5) {%
+        Next.js 16 · React 19\\
+        TypeScript 5 · Tailwind 4\\
+        Leaflet · Three.js / R3F\\
+        shadcn/ui · Radix · fast-xml-parser};
+
+      \node[font=\fontsize{8pt}{10pt}\selectfont\bfseries\color{moss700}] at (6.8,0) {BACKEND};
+      \node[text width=6.0cm, font=\fontsize{10pt}{15pt}\selectfont\color{charcoal}] at (6.8,-0.5) {%
+        Python 3.12 · FastAPI\\
+        Uvicorn · Pydantic v2\\
+        rasterio (GDAL) · NumPy · SciPy\\
+        OpenCV · scikit-learn · Shapely};
+    \end{tikzpicture}
+
+    \vspace{0.8cm}
+
+    {\sffamily\fontsize{9pt}{12pt}\selectfont\color{smoke}%
+    Gerência de dependências: \texttt{uv} (Python) · \texttt{npm} (Node)\par}
+  \end{minipage}
+  \footchrome
+\end{frame}
+
+% ── 8. Decisão · DA-01 ─────────────────────────────────────
+\begin{frame}[plain]
+  \vspace{0.5cm}
+  \hspace{1.2cm}\begin{minipage}{0.85\textwidth}
+    \slidehead{Decisão · DA-01}{Dois processos\\independentes.}
+
+    \vspace{0.4cm}
+
+    {\sffamily\fontsize{13pt}{19pt}\selectfont\color{charcoal}%
+    \textbf{Por quê?}\\[6pt]
+    Processamento pesado em Python não bloqueia a UI.\\
+    Frontend e backend evoluem em paralelo.\par}
+
+    \vspace{0.6cm}
+
+    {\sffamily\fontsize{10pt}{14pt}\selectfont\color{stone}%
+    \textit{Trade-off:} \textcolor{charcoal}{exige rodar dois servidores em dev e gerenciar CORS.}\par}
+  \end{minipage}
+  \footchrome
+\end{frame}
+
+% ── 9. Decisão · DA-07 ─────────────────────────────────────
+\begin{frame}[plain]
+  \vspace{0.5cm}
+  \hspace{1.2cm}\begin{minipage}{0.85\textwidth}
+    \slidehead{Decisão · DA-07}{Tipagem\\end-to-end.}
+
+    \vspace{0.4cm}
+
+    {\sffamily\fontsize{13pt}{19pt}\selectfont\color{charcoal}%
+    \textbf{Por quê?}\\[6pt]
+    TypeScript estrito no frontend, Pydantic v2 no backend.\\
+    Erros de contrato detectados em build/runtime — não em produção.\par}
+
+    \vspace{0.6cm}
+
+    {\sffamily\fontsize{10pt}{14pt}\selectfont\color{stone}%
+    \textit{Trade-off:} \textcolor{charcoal}{tipos duplicados em duas linguagens — verificamos via revisão sistemática.}\par}
+  \end{minipage}
+  \footchrome
+\end{frame}
+
+% ── 10. Fluxo NDVI ─────────────────────────────────────────
+\begin{frame}[plain]
+  \vspace{0.5cm}
+  \hspace{1.2cm}\begin{minipage}{0.85\textwidth}
+    \slidehead{Fluxo}{Cálculo de NDVI.}
+
+    \vspace{0.6cm}
+
+    \begin{tikzpicture}[
+      stepbox/.style={draw=moss100, fill=cream, rounded corners=2pt,
+                   minimum width=2.2cm, minimum height=1.4cm, inner sep=6pt,
+                   font=\sffamily\fontsize{8pt}{10pt}\selectfont\color{charcoal},
+                   align=center},
+      arrow/.style={->, >=stealth, line width=0.8pt, color=moss300}]
+
+      \node[stepbox] (s1) at (0,0)    {Usuário\\seleciona\\talhão};
+      \node[stepbox] (s2) at (2.7,0)  {POST\\\texttt{/calculate-}\\\texttt{index}};
+      \node[stepbox] (s3) at (5.4,0)  {\texttt{rasterio}\\lê B08\\e B04};
+      \node[stepbox] (s4) at (8.1,0)  {Recorte +\\NDVI =\\$\frac{N{-}R}{N{+}R}$};
+      \node[stepbox] (s5) at (10.8,0) {PNG +\\stats\\$\rightarrow$ mapa};
+
+      \draw[arrow] (s1) -- (s2);
+      \draw[arrow] (s2) -- (s3);
+      \draw[arrow] (s3) -- (s4);
+      \draw[arrow] (s4) -- (s5);
+    \end{tikzpicture}
+
+    \vspace{1cm}
+
+    {\sffamily\fontsize{9pt}{12pt}\selectfont\color{smoke}%
+    Polígono em WGS84 reprojetado pra CRS nativo do Sentinel-2 via \texttt{pyproj}.\\
+    Gradiente \textcolor{ndvilow}{marrom} $\rightarrow$ \textcolor{ndvimid}{amarelo} $\rightarrow$ \textcolor{moss700}{verde}.\par}
+  \end{minipage}
+  \footchrome
+\end{frame}
+
+% ── 11. Demo ────────────────────────────────────────────────
+\begin{frame}[plain]
+  \vspace{0.5cm}
+  \hspace{1.2cm}\begin{minipage}{0.85\textwidth}
+    \slidehead{Demonstração}{O produto, ao vivo.}
+
+    \vspace{0.8cm}
+
+    \begin{tikzpicture}[every node/.style={anchor=north west, inner sep=0}]
+      \node[font=\sffamily\bfseries\fontsize{12pt}{16pt}\selectfont\color{moss950}] at (0,0)
+        {\textcolor{moss700}{01}\quad Carregar talhão \texttt{crop field 1}};
+      \node[font=\sffamily\bfseries\fontsize{12pt}{16pt}\selectfont\color{moss950}] at (0,-0.9)
+        {\textcolor{moss700}{02}\quad Visualizar NDVI};
+      \node[font=\sffamily\bfseries\fontsize{12pt}{16pt}\selectfont\color{moss950}] at (0,-1.8)
+        {\textcolor{moss700}{03}\quad Ler insight de IA};
+      \node[font=\sffamily\bfseries\fontsize{12pt}{16pt}\selectfont\color{moss950}] at (0,-2.7)
+        {\textcolor{moss700}{04}\quad Trocar para EVI · comparar};
+      \node[font=\sffamily\bfseries\fontsize{12pt}{16pt}\selectfont\color{moss950}] at (0,-3.6)
+        {\textcolor{moss700}{05}\quad Ativar terreno 3D};
+      \node[font=\sffamily\bfseries\fontsize{12pt}{16pt}\selectfont\color{moss950}] at (0,-4.5)
+        {\textcolor{moss700}{06}\quad Classificar zonas (K-Means · 3 classes)};
+    \end{tikzpicture}
+  \end{minipage}
+  \footchrome
+\end{frame}
+
+% ── 12. Testes ──────────────────────────────────────────────
+\begin{frame}[plain]
+  \vspace{0.5cm}
+  \hspace{1.2cm}\begin{minipage}{0.85\textwidth}
+    \slidehead{Testes}{Cobertura crítica.}
+
+    \vspace{0.4cm}
+
+    \begin{tikzpicture}
+      \node[anchor=north west, inner sep=0,
+            font=\sffamily\bfseries\fontsize{84pt}{84pt}\selectfont\color{moss950}]
+        at (0,0) {40};
+      \node[anchor=north west, inner sep=0,
+            font=\sffamily\bfseries\fontsize{56pt}{56pt}\selectfont\color{moss700}]
+        at (3.8,0.4) {/40};
+
+      \node[anchor=north west, inner sep=0,
+            text width=6cm,
+            font=\sffamily\fontsize{10pt}{14pt}\selectfont\color{charcoal}]
+        at (7.0,-0.2) {%
+        \textbf{casos passando}\\[6pt]
+        \textcolor{smoke}{Unitário · pytest}\\
+        \textcolor{smoke}{Integração · FastAPI TestClient}\\
+        \textcolor{smoke}{Fixtures sintéticas NumPy}\par};
+    \end{tikzpicture}
+
+    \vspace{0.6cm}
+
+    {\sffamily\fontsize{9pt}{12pt}\selectfont\color{smoke}%
+    Cobertura de \texttt{sentinel\_processor.py}: \textbf{\textcolor{moss950}{55\%}} · suite roda em \textbf{\textcolor{moss950}{<\,1\,s}}.\par}
+  \end{minipage}
+  \footchrome
+\end{frame}
+
+% ── 13. Resultados ──────────────────────────────────────────
+\begin{frame}[plain]
+  \vspace{0.5cm}
+  \hspace{1.2cm}\begin{minipage}{0.85\textwidth}
+    \slidehead{Métricas}{O que entregamos.}
+
+    \vspace{0.6cm}
+
+    \begin{tikzpicture}[
+      stat/.style={anchor=north west, inner sep=0}]
+
+      \node[stat, font=\sffamily\bfseries\fontsize{36pt}{36pt}\selectfont\color{moss950}] at (0, 0) {28};
+      \node[stat, font=\sffamily\fontsize{8pt}{10pt}\selectfont\bfseries\color{stone},
+            text width=2.6cm] at (0, -1.3) {HISTÓRIAS\\ENTREGUES};
+
+      \node[stat, font=\sffamily\bfseries\fontsize{36pt}{36pt}\selectfont\color{moss950}] at (3.4, 0) {100\%};
+      \node[stat, font=\sffamily\fontsize{8pt}{10pt}\selectfont\bfseries\color{stone},
+            text width=2.6cm] at (3.4, -1.3) {TESTES\\PASSANDO};
+
+      \node[stat, font=\sffamily\bfseries\fontsize{36pt}{36pt}\selectfont\color{moss950}] at (7.4, 0) {1\,s};
+      \node[stat, font=\sffamily\fontsize{8pt}{10pt}\selectfont\bfseries\color{stone},
+            text width=2.6cm] at (7.4, -1.3) {SUITE\\COMPLETA};
+
+      \node[stat, font=\sffamily\bfseries\fontsize{36pt}{36pt}\selectfont\color{moss950}] at (10.4, 0) {55\%};
+      \node[stat, font=\sffamily\fontsize{8pt}{10pt}\selectfont\bfseries\color{stone},
+            text width=2.6cm] at (10.4, -1.3) {COBERTURA};
+    \end{tikzpicture}
+  \end{minipage}
+  \footchrome
+\end{frame}
+
+% ── 14. Limitações ─────────────────────────────────────────
+\begin{frame}[plain]
+  \vspace{0.5cm}
+  \hspace{1.2cm}\begin{minipage}{0.85\textwidth}
+    \slidehead{Honestidade}{O que falta.}
+
+    \vspace{0.8cm}
+
+    {\sffamily\fontsize{12pt}{18pt}\selectfont\color{charcoal}%
+    \textcolor{moss700}{\textbf{—}}\quad Imagens Sentinel-2 baixadas manualmente.\\[6pt]
+    \textcolor{moss700}{\textbf{—}}\quad Classificação supervisionada por assinatura, não modelo treinado.\\[6pt]
+    \textcolor{moss700}{\textbf{—}}\quad Sem persistência: talhões desenhados somem ao recarregar.\par}
+  \end{minipage}
+  \footchrome
+\end{frame}
+
+% ── 15. Próximos passos ────────────────────────────────────
+\begin{frame}[plain]
+  \vspace{0.5cm}
+  \hspace{1.2cm}\begin{minipage}{0.85\textwidth}
+    \slidehead{Próximos passos}{O que vem.}
+
+    \vspace{0.8cm}
+
+    \begin{tikzpicture}[every node/.style={anchor=north west, inner sep=0}]
+      \node[font=\sffamily\fontsize{8pt}{10pt}\selectfont\bfseries\color{moss700}] at (0, 0) {01};
+      \node[font=\sffamily\bfseries\fontsize{15pt}{18pt}\selectfont\color{moss950}, text width=12cm] at (0.6, 0)
+        {Integração com Copernicus STAC};
+      \node[font=\sffamily\fontsize{10pt}{14pt}\selectfont\color{smoke}, text width=12cm] at (0.6, -0.55)
+        {Dispensa download manual — leitura por range HTTP de COGs.};
+
+      \node[font=\sffamily\fontsize{8pt}{10pt}\selectfont\bfseries\color{moss700}] at (0, -1.6) {02};
+      \node[font=\sffamily\bfseries\fontsize{15pt}{18pt}\selectfont\color{moss950}, text width=12cm] at (0.6, -1.6)
+        {Persistência via PostgreSQL/PostGIS};
+      \node[font=\sffamily\fontsize{10pt}{14pt}\selectfont\color{smoke}, text width=12cm] at (0.6, -2.15)
+        {Histórico de análises, comparação temporal, multi-usuário.};
+
+      \node[font=\sffamily\fontsize{8pt}{10pt}\selectfont\bfseries\color{moss700}] at (0, -3.2) {03};
+      \node[font=\sffamily\bfseries\fontsize{15pt}{18pt}\selectfont\color{moss950}, text width=12cm] at (0.6, -3.2)
+        {Random Forest para classificação real};
+      \node[font=\sffamily\fontsize{10pt}{14pt}\selectfont\color{smoke}, text width=12cm] at (0.6, -3.75)
+        {Treino com rótulos do MapBiomas + bandas Sentinel-2.};
+    \end{tikzpicture}
+  \end{minipage}
+  \footchrome
+\end{frame}
+
+% ── 16. Encerramento ───────────────────────────────────────
+\begin{frame}[plain]
+  \begin{tikzpicture}[remember picture, overlay]
+    \node[anchor=north west] at ([xshift=1.2cm, yshift=-1.0cm]current page.north west) {%
+      \egmark[1.2]};
+    \node[anchor=north west,
+          font=\sffamily\fontsize{8pt}{10pt}\selectfont\bfseries\color{moss700},
+          inner sep=0]
+      at ([xshift=1.2cm, yshift=-3.6cm]current page.north west)
+      {OBRIGADO};
+    \node[anchor=north west,
+          font=\sffamily\bfseries\fontsize{56pt}{60pt}\selectfont\color{moss950},
+          inner sep=0]
+      at ([xshift=1.2cm, yshift=-4.2cm]current page.north west)
+      {Perguntas?};
+    \node[anchor=south west,
+          font=\sffamily\bfseries\fontsize{10pt}{12pt}\selectfont\color{smoke},
+          inner sep=0]
+      at ([xshift=1.2cm, yshift=2.4cm]current page.south west)
+      {github.com/luisg0c/EasyGis};
+    \node[anchor=south west,
+          font=\sffamily\fontsize{9pt}{12pt}\selectfont\color{stone},
+          inner sep=0]
+      at ([xshift=1.2cm, yshift=1.8cm]current page.south west)
+      {Demo · http://localhost:3001 · MVP funcional em modo demo};
+  \end{tikzpicture}
+\end{frame}
 
 \end{document}
