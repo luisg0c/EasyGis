@@ -4,7 +4,7 @@
 
 **Versão:** 1.0
 **Data:** 08/03/2026
-**Equipe:** Luis Gustavo Olimpio, Lauan Matheus, João Leonardi, João Vinícius Castello, Vinícius Henrique, Lucas Benevinuto, José Melquíades
+**Equipe:** João Leonardi da Silva Melo, João Vinícius Passos Castello Branco Carvalho, José Melquíades Neto, Lauan Matheus da Rocha Alves, Lucas Benevinuto Pereira, Luis Gustavo Olimpio, Sammuel Moura Saraiva, Vinicius Henrique Albino Andrade
 
 ---
 
@@ -133,4 +133,17 @@ US-03, US-04, US-09, US-10, US-12, US-14, US-15, US-18, US-19, US-21–US-25, US
 US-05, US-06, US-13, US-17, US-26, US-31, US-34
 
 ### Won't Have (this release)
+
 US-35
+
+**Funcionalidades conscientemente fora do escopo desta versão (não foram para o backlog porque exigem infraestrutura que ultrapassa o escopo do MVP):**
+
+| Item | Por que fora do escopo |
+|------|------------------------|
+| Persistência de talhões desenhados manualmente entre sessões | Sem banco de dados no MVP; salvar em disco implicaria endpoint de escrita e gerenciamento de concorrência |
+| Autenticação multiusuário com perfis e permissões | MVP é single-user local. Adicionar auth requer banco, hashing (bcrypt/argon2) e gestão de sessão — escopo de uma futura versão SaaS |
+| Pipeline automático de download de produtos Sentinel-2 do Copernicus | Os ~1 GB por produto e a integração com a API do Copernicus exigem credenciais e fila de download — adiado |
+| Comparação temporal multi-produto (séries de NDVI ao longo do tempo) | Backend processa um produto por requisição; séries temporais exigem UX nova (timeline) e cache |
+| Exportação de resultados (CSV, GeoTIFF, PDF de relatório) | Trade-off de tempo: priorizamos completude da análise interativa sobre relatórios estáticos |
+| CI/CD com execução automática de testes em PR | Sem CI no escopo da P2 (testes rodam localmente). Próxima iteração |
+| Classificação supervisionada com modelo treinado em rótulos reais | Requer dataset rotulado de campo, etiquetagem e validação cruzada — fora do prazo |
