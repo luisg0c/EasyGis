@@ -74,28 +74,11 @@ Se algo der errado, peça ajuda ao administrador. Se aparecer ``Frontend OK'' e 
 \section{Tela Inicial --- o que cada coisa faz}
 % ══════════════════════════════════════════════════════════════
 
-\begin{lstlisting}[style=shellstyle]
-+------------------------------------------------------------------+
-| [Logo ICEV]                              [Analytics][Research]   | <- Abas
-+----------+-------------------------------------------------------+
-|          |                                                       |
-| Talhao   |                                                       |
-| [v]      |                  M A P A                              |
-|          |                  D O                                  |
-| Indice   |                  S A T E L I T E                      |
-| [v]      |                                                       |
-|          |            (com seu talhao destacado)                 |
-|[Calcular]|                                                       |
-|          |                                                       |
-| Stats:   |                                                       |
-| Min: ..  |                                                       |
-| Max: ..  |                                                       |
-| Med: ..  |                                                       |
-|          |                                                       |
-| [Histo]  |                                                       |
-| [3D]     |                                                       |
-+----------+-------------------------------------------------------+
-\end{lstlisting}
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{screenshots/MAN-01_home}
+\caption{Tela inicial do sistema --- visão geral com talhões disponíveis e ações rápidas.}
+\end{figure}
 
 \renewcommand{\arraystretch}{1.3}
 \begin{table}[H]
@@ -130,6 +113,15 @@ Botão 3D & Liga visualização 3D & Vê o índice como ``relevo''\\
 \begin{enumerate}
   \item \textbf{Abrir} \url{http://localhost:3000}
   \item No painel lateral esquerdo, clique no dropdown ``Talhão'' e escolha o seu (ex.: \texttt{crop field 1}). O mapa centraliza na área.
+\end{enumerate}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{screenshots/MAN-02_dropdown-talhao}
+\caption{Selecionando o talhão no dropdown lateral --- o mapa centraliza automaticamente na área escolhida.}
+\end{figure}
+
+\begin{enumerate}\setcounter{enumi}{2}
   \item No dropdown ``Índice'', escolha \texttt{NDVI}. Clique em \textbf{Calcular}.
   \item Aguarde o resultado (5--30 segundos). Quando ficar pronto, você verá:
   \begin{itemize}
@@ -139,6 +131,12 @@ Botão 3D & Liga visualização 3D & Vê o índice como ``relevo''\\
     \item Um histograma mostrando a distribuição
   \end{itemize}
 \end{enumerate}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{screenshots/MAN-03_ndvi-resultado}
+\caption{Resultado de NDVI calculado sobre o talhão --- overlay colorido no mapa, estatísticas descritivas e histograma de distribuição no painel lateral.}
+\end{figure}
 
 \begin{infobox}[title={Como interpretar o NDVI}]
 Se a média está \textbf{acima de 0,6}, a vegetação está saudável.\\
@@ -156,6 +154,12 @@ Depois do NDVI calculado, \textbf{clique em qualquer ponto} dentro do talhão. A
   \item \textbf{Leve} ($0{,}4$ a $0{,}6$)
   \item \textcolor{successgreen}{\textbf{Saudável}} ($\geq 0{,}6$)
 \end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{screenshots/MAN-04_popup-pixel}
+\caption{Popup pixel-a-pixel ao clicar em um ponto do talhão --- mostra a classificação local de estresse vegetativo.}
+\end{figure}
 
 % ══════════════════════════════════════════════════════════════
 \section{Outras análises disponíveis}
@@ -180,6 +184,12 @@ B01--B12 & Bandas individuais do satélite --- para usuários avançados que sab
 \bottomrule
 \end{tabularx}
 \end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{screenshots/MAN-05_evi-comparacao}
+\caption{Resultado de EVI no mesmo talhão --- útil para comparar com o NDVI em vegetação densa, onde o NDVI satura.}
+\end{figure}
 
 \subsection{Suavização (opcional)}
 
@@ -206,6 +216,12 @@ Você pode:
 
 Útil para enxergar variabilidade dentro do talhão de forma intuitiva.
 
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{screenshots/MAN-06_3d-view}
+\caption{Visualização 3D do índice como relevo --- picos altos indicam vegetação saudável, vales indicam estresse ou solo exposto.}
+\end{figure}
+
 % ══════════════════════════════════════════════════════════════
 \section{Classificação de Culturas (página \texttt{/classification})}
 % ══════════════════════════════════════════════════════════════
@@ -226,9 +242,21 @@ Divide o talhão em 3 zonas usando NDVI:
 
 Cada zona vem com \textbf{\% e área em hectares} --- útil para planejar aplicação de insumos.
 
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{screenshots/MAN-08_threshold-vigor}
+\caption{Classificação por Limiar (\textit{threshold}) --- 3 zonas de vigor com porcentagem e área em hectares.}
+\end{figure}
+
 \subsubsection{2. K-Means (Não-supervisionado) --- para análise exploratória}
 
 Você escolhe quantas classes (de 2 a 6) e o sistema agrupa automaticamente. Bom para descobrir padrões que você não esperava.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{screenshots/MAN-07_classification}
+\caption{Classificação K-Means com 3 classes --- agrupamento automático por similaridade espectral, ideal para encontrar zonas de manejo.}
+\end{figure}
 
 \subsubsection{3. Supervisionada (Simulada) --- demonstrativa}
 

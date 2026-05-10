@@ -9,9 +9,10 @@
   {\normalsize\itshape Plataforma de Sensoriamento Remoto para Agricultura de Precisão}
 }
 \author{%
-  Luis Gustavo Olimpio \and Lauan Matheus \and João Leonardi\\
-  \and João Vinícius Castello \and Vinícius Henrique\\
-  \and Lucas Benevinuto \and José Melquíades
+  João Leonardi da Silva Melo \and João Vinícius Passos Castello Branco Carvalho\\
+  \and José Melquíades Neto \and Lauan Matheus da Rocha Alves\\
+  \and Lucas Benevinuto Pereira \and Luis Gustavo Olimpio\\
+  \and Sammuel Moura Saraiva \and Vinicius Henrique Albino Andrade
 }
 \date{Maio de 2026}
 
@@ -75,7 +76,7 @@ Descrição detalhada da arquitetura & \texttt{docs/04-diagramas-arquitetura.md}
 Tecnologias utilizadas & \texttt{docs/04-diagramas-arquitetura.md} \S 8 --- stack consolidada frontend + backend\\
 Decisões de design e justificativas & \texttt{docs/04-diagramas-arquitetura.md} \S 9 (DA-01 a DA-05) + complemento na Seção~\ref{sec:decisoes} deste documento (DA-06 a DA-11)\\
 Requisitos funcionais e não funcionais & \texttt{docs/03-especificacao-requisitos-SRS.md} --- 20 RFs e 8 RNFs\\
-Backlog priorizado e rastreabilidade & \texttt{docs/02-backlog-produto.md} --- 33 histórias em 6 épicos\\
+Backlog priorizado e rastreabilidade & \texttt{docs/02-backlog-produto.md} --- 35 histórias em 6 épicos (28 implementadas + 2 parciais funcionais; 5 conscientemente fora do escopo --- ver Won't Have)\\
 Visão de produto e usuários-alvo & \texttt{docs/01-documento-visao-produto.md}\\
 Protótipo de interface & \texttt{docs/05-prototipo-interface.md}\\
 Plano de projeto & \texttt{docs/06-plano-projeto-inicial.md}\\
@@ -158,6 +159,120 @@ fast-xml-parser & KML é XML; este parser é o mais rápido em Node.js sem depen
 \caption{Justificativas de escolha de tecnologias}
 \label{tab:tech}
 \end{table}
+
+% ══════════════════════════════════════════════════════════════
+\section{Manutenibilidade do Sistema}
+\label{sec:manutenibilidade}
+% ══════════════════════════════════════════════════════════════
+
+Esta seção documenta explicitamente a manutenibilidade do MVP, usando referências da literatura de Engenharia de Software (\textbf{ISO/IEC 25010}, \textbf{IEEE/ISO 14764}) e catalogando dívida técnica reconhecida.
+
+\subsection{Atributos de Manutenibilidade (ISO/IEC 25010)}
+
+Auto-avaliação honesta das cinco sub-características da norma, em escala 1--5:
+
+\renewcommand{\arraystretch}{1.4}
+\begin{table}[H]
+\centering
+\small
+\rowcolors{2}{tabrow}{white}
+\begin{tabularx}{\textwidth}{@{}lcXX@{}}
+\toprule
+\rowcolor{tabheader}\textcolor{white}{\textbf{Sub-característica}} & \textcolor{white}{\textbf{Nota}} & \textcolor{white}{\textbf{Como atendemos}} & \textcolor{white}{\textbf{Onde melhoraria}}\\
+\midrule
+Modularidade     & 4/5 & Camada \texttt{SentinelProcessor} isolada das rotas (DA-06); separação \texttt{api/web/tests/data} & Funções utilitárias (\texttt{ndvi\_to\_image}, \texttt{apply\_smooth\_filter}) deveriam estar em \texttt{api/image\_utils.py}\\
+Reusabilidade    & 3/5 & \texttt{SentinelProcessor} reutilizável em scripts; componentes shadcn/ui & Colormap acoplado à codificação base64 em \texttt{ndvi\_to\_image}\\
+Analisabilidade  & 4/5 & Type hints, docstrings, vínculo CT$\times$RF nos testes facilita rastrear bug a requisito & Faltam logs estruturados com \textit{request\_id} para diagnóstico\\
+Modificabilidade & 3/5 & Adicionar índice novo exige tocar \texttt{main.py}; cobertura de testes (55\% no \textit{core}) protege & Refatorar para \textit{registry pattern}: \texttt{INDEX\_HANDLERS = \{"NDVI": \dots\}}\\
+Testabilidade    & 4/5 & Suíte determinística (\texttt{seed=42}), \(<1\)\,s, sem dependência de produto real para a maior parte da lógica & Endpoints de processamento sem teste de \textit{smoke} com produto sintético JP2\\
+\bottomrule
+\end{tabularx}
+\caption{Atributos de manutenibilidade segundo ISO/IEC 25010}
+\end{table}
+
+\subsection{Tipos de Manutenção Praticados (IEEE/ISO 14764)}
+
+\renewcommand{\arraystretch}{1.4}
+\begin{table}[H]
+\centering
+\small
+\rowcolors{2}{tabrow}{white}
+\begin{tabularx}{\textwidth}{@{}lX@{}}
+\toprule
+\rowcolor{tabheader}\textcolor{white}{\textbf{Tipo}} & \textcolor{white}{\textbf{Exemplo concreto neste projeto}}\\
+\midrule
+\textbf{Corretiva} (defeitos) & Commit \texttt{6073c14 fix: add coordinate reprojection for KML geometries} corrigiu recorte vazio quando o CRS do KML diferia do da imagem Sentinel-2.\\
+\textbf{Adaptativa} (ambiente) & Adoção do \texttt{uv} em vez de \texttt{pip} (DA-11) e migração para \texttt{pyproject.toml} adapta o setup para um gerenciador moderno reprodutível.\\
+\textbf{Perfectiva} (melhoria) & Decisão DA-04 (\textit{downsampling} fator 4 no 3D) e DA-09 (suavização sem halo) são manutenção perfectiva visando experiência do usuário.\\
+\textbf{Preventiva} (débito) & Separação \texttt{SentinelProcessor} $\leftrightarrow$ rotas (DA-06) é manutenção preventiva: evita que bugs no I/O contaminem testes da lógica de cálculo.\\
+\bottomrule
+\end{tabularx}
+\caption{Tipos de manutenção segundo IEEE/ISO 14764}
+\end{table}
+
+\subsection{Dívida Técnica Catalogada}
+
+\textbf{Todo projeto tem débito} --- afirmar que não tem é desonesto. Os itens abaixo estão reconhecidos e priorizados:
+
+\renewcommand{\arraystretch}{1.4}
+\begin{table}[H]
+\centering
+\small
+\rowcolors{2}{tabrow}{white}
+\begin{tabularx}{\textwidth}{@{}llcX@{}}
+\toprule
+\rowcolor{tabheader}\textcolor{white}{\textbf{ID}} & \textcolor{white}{\textbf{Item}} & \textcolor{white}{\textbf{Severidade}} & \textcolor{white}{\textbf{Mitigação proposta}}\\
+\midrule
+DT-01 & \texttt{if/elif} extenso para \texttt{index\_type} em \texttt{calculate\_index} (\(\sim\)150 linhas) & Média & \textit{Registry pattern} mapeando string $\rightarrow$ \textit{handler}\\
+DT-02 & Loops \texttt{for i, j} em pixels para colorir imagem (Python puro, lento) & Alta (perf) & Vetorizar com \texttt{np.where}/indexação fancy; usar \texttt{matplotlib} \textit{cmap}\\
+DT-03 & Endpoints de processamento sem teste de integração com produto real & Alta & \textit{Fixture} com produto Sentinel-2 mínimo (10$\times$10\,px JP2 sintético)\\
+DT-04 & NDWI e NDBI listados como aceitos mas caem no fluxo padrão sem \textit{branch} dedicado & Média & Implementar \textit{branches} dedicados no \texttt{calculate\_index} ou rejeitar com 400 explícito\\
+DT-05 & Funções utilitárias (\texttt{apply\_smooth\_filter}, \texttt{ndvi\_to\_image}, \dots) misturadas com \textit{handlers} em \texttt{api/main.py} & Baixa & Extrair para \texttt{api/image\_utils.py}\\
+DT-06 & Frontend Next.js sem testes automatizados & Alta & Adicionar Playwright para 3 fluxos críticos\\
+DT-07 & Dependências do frontend com vulnerabilidades transitivas (\texttt{npm audit}) & Média & Executar \texttt{npm audit fix} controlado e revalidar build\\
+\bottomrule
+\end{tabularx}
+\caption{Dívida técnica reconhecida e mitigações planejadas}
+\end{table}
+
+\subsection{Versionamento e Histórico de Mudanças}
+
+\begin{itemize}
+  \item \textbf{Versão atual do MVP:} \texttt{0.1.0} --- \textit{pre-release}, indicando que a API REST do backend ainda pode mudar sem aviso. Critério para \texttt{1.0.0}: API estável o suficiente para clientes externos consumirem.
+  \item \textbf{Versionamento:} \textbf{Semantic Versioning 2.0} (\texttt{MAJOR.MINOR.PATCH}, ver \href{https://semver.org/lang/pt-BR/}{semver.org}).
+  \item \textbf{Mensagens de commit:} padrão \textbf{Conventional Commits} (\texttt{feat:}, \texttt{fix:}, \texttt{docs:}, \texttt{refactor:}, \texttt{test:}, \texttt{chore:}).
+  \item \textbf{Branching:} \textit{trunk-based} (toda integração em \texttt{master}); \texttt{dependabot} ativo para atualizações de dependências.
+\end{itemize}
+
+\subsection{Segurança --- OWASP Top 10 (2021)}
+
+Avaliação de cada risco do OWASP Top 10 contra o código do MVP:
+
+\renewcommand{\arraystretch}{1.3}
+\begin{table}[H]
+\centering
+\footnotesize
+\rowcolors{2}{tabrow}{white}
+\begin{tabularx}{\textwidth}{@{}clcX@{}}
+\toprule
+\rowcolor{tabheader}\textcolor{white}{\textbf{\#}} & \textcolor{white}{\textbf{Risco}} & \textcolor{white}{\textbf{Status}} & \textcolor{white}{\textbf{Mitigação no MVP}}\\
+\midrule
+A01 & Broken Access Control                 & N/A    & Sistema \textit{single-user} local sem multi-tenancy\\
+A02 & Cryptographic Failures                & N/A    & Nenhum dado sensível persistido; sem auth; HTTPS é responsabilidade do \textit{deploy}\\
+A03 & Injection                             & \cmark & Pydantic valida tipos (CT-09); \texttt{glob} restrito em \texttt{data/products/}; sem SQL\\
+A04 & Insecure Design                       & \cmark & Separação de camadas (DA-06); validação na borda (Pydantic)\\
+A05 & Security Misconfiguration             & \cmark & CORS explícito \texttt{["http://localhost:3000"]} (não \texttt{*}); \texttt{.env} no \texttt{.gitignore}\\
+A06 & Vulnerable \& Outdated Components     & \xmark & 10 vulnerabilidades \textit{transitivas} no \texttt{npm audit} (DT-07) --- aceitas como risco para esta entrega\\
+A07 & Identification \& Auth Failures       & N/A    & Sem autenticação no MVP\\
+A08 & Software \& Data Integrity Failures   & \cmark & Pydantic valida \textit{payloads}; \texttt{uv.lock} e \texttt{package-lock.json} versionados\\
+A09 & Security Logging \& Monitoring Failures & N/A  & Apenas \textit{stdout} do uvicorn; sem ataque a auditar em ambiente local\\
+A10 & Server-Side Request Forgery           & N/A    & Backend não faz requisições HTTP a partir de \textit{input} do usuário\\
+\bottomrule
+\end{tabularx}
+\caption{Checklist OWASP Top 10 aplicado ao MVP}
+\end{table}
+
+\textbf{Confirmações:} \texttt{.env} ausente do repositório (busca \texttt{find . -name '.env*'} retorna vazio); \textit{grep} por \texttt{password|secret|token|bearer} em \texttt{api/}, \texttt{web/}, \texttt{tests/} retorna 0 \textit{matches} em código vivo; CORS explícito em \texttt{api/main.py:28}.
 
 % ══════════════════════════════════════════════════════════════
 \section{Como Avaliar Esta Entrega}

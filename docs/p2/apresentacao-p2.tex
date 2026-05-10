@@ -13,6 +13,7 @@
 \usepackage{tabularx}
 \usepackage{listings}
 \usepackage{pifont}
+\usepackage{graphicx}
 
 % ── Paleta de cores ──────────────────────────────────────────
 \definecolor{bgdark}{HTML}{0F171F}
@@ -117,8 +118,10 @@
 \title{ICEV Remote Sensing Software}
 \subtitle{Plataforma Web de Sensoriamento Remoto para Agricultura de Precisão}
 \author{%
-  Luis Gustavo Olimpio \(\cdot\) Lauan Matheus \(\cdot\) João Leonardi \(\cdot\) João Vinícius Castello\\
-  Vinícius Henrique \(\cdot\) Lucas Benevinuto \(\cdot\) José Melquíades
+  João Leonardi da Silva Melo \(\cdot\) João Vinícius Passos Castello Branco Carvalho\\
+  José Melquíades Neto \(\cdot\) Lauan Matheus da Rocha Alves\\
+  Lucas Benevinuto Pereira \(\cdot\) Luis Gustavo Olimpio\\
+  Sammuel Moura Saraiva \(\cdot\) Vinicius Henrique Albino Andrade
 }
 \date{Maio \(\cdot\) 2026}
 
@@ -143,7 +146,8 @@
     \item Tecnologias e decisões de design
     \item Demonstração ao vivo (NDVI, 3D, classificação)
     \item Estratégia de testes e resultados
-    \item Encerramento, próximos passos e dúvidas
+    \item Limitações, próximos passos e divisão da equipe
+    \item Encerramento e dúvidas
   \end{itemize}
 \end{frame}
 
@@ -214,7 +218,7 @@
 
 % ─── Slide 6 — Backlog ──────────────────────────────────────
 \begin{frame}{Backlog priorizado}
-  \kicker{6 ÉPICOS \(\cdot\) 33 HISTÓRIAS}
+  \kicker{6 ÉPICOS \(\cdot\) 35 HISTÓRIAS \(\cdot\) MoSCoW}
   \vspace{0.3cm}
 
   \footnotesize
@@ -224,13 +228,13 @@
     \item Épico 3 --- Visualização \& Mapa Interativo (2D, 3D, popup) \hfill 5 histórias
     \item Épico 4 --- Lab. de Experimentos (filtros, bordas, morfologia) \hfill 6 histórias
     \item Épico 5 --- Classificação (K-Means, Threshold, Supervisionada) \hfill 6 histórias
-    \item Épico 6 --- Gestão de Dados Sentinel-2 (multi-produto) \hfill 1 história
+    \item Épico 6 --- Gestão de Dados Sentinel-2 (multi-produto) \hfill 3 histórias
   \end{itemize}
 
   \vspace{0.4cm}
   \panel{%
-    \textbf{\textcolor{accent}{MVP entregue: 28 das 33 histórias (84,8\%)}}\\
-    \footnotesize\textcolor{textmuted}{Pendentes: persistência de talhões desenhados \(\cdot\) classificação supervisionada real \(\cdot\) exportação de experimentos}
+    \textbf{\textcolor{accent}{MVP entregue: 28 implementadas + 2 parciais funcionais (85,7\%)}}\\
+    \footnotesize\textcolor{textmuted}{\textbf{Won't Have:} persistência de talhões \(\cdot\) classificação supervisionada com modelo treinado \(\cdot\) exportação GeoTIFF/CSV \(\cdot\) auth multiusuário \(\cdot\) download Copernicus automático}
   }
 \end{frame}
 
@@ -340,23 +344,47 @@
 % ─── Slide 11 — Demo ────────────────────────────────────────
 \begin{frame}{Demonstração ao vivo}
   \kicker{6 MINUTOS}
-  \vspace{0.3cm}
+  \vspace{0.2cm}
 
-  \panel{%
-    \begin{enumerate}\itemsep0.5em
-      \item Abrir \url{http://localhost:3000} \(\rightarrow\) selecionar talhão ``crop field 1''
-      \item Calcular NDVI \(\rightarrow\) ver overlay colorido + stats + histograma
-      \item Clicar no mapa \(\rightarrow\) popup com nível de estresse
-      \item Trocar para EVI \(\rightarrow\) comparar resultado
-      \item Ativar visualização 3D \(\rightarrow\) rotacionar terreno
-      \item Ir em \texttt{/classification} \(\rightarrow\) rodar K-Means com 3 classes \(\rightarrow\) hectares por classe
-    \end{enumerate}
-  }
+  \begin{columns}[T]
+    \column{0.45\textwidth}
+      \footnotesize
+      \begin{enumerate}\itemsep0.4em
+        \item Abrir \url{http://localhost:3000}
+        \item Selecionar \texttt{crop field 1}
+        \item Calcular NDVI $\rightarrow$ ver overlay
+        \item Clicar no mapa $\rightarrow$ popup
+        \item Trocar para EVI $\rightarrow$ comparar
+        \item Ativar 3D $\rightarrow$ rotacionar
+        \item \texttt{/classification} $\rightarrow$ K-Means
+      \end{enumerate}
+    \column{0.55\textwidth}
+      \includegraphics[width=\linewidth]{screenshots/MAN-03_ndvi-resultado}
+  \end{columns}
 
-  \vspace{0.3cm}
+  \vspace{0.2cm}
   \begin{center}
-    \scriptsize\textcolor{textmuted}{Caso a internet falhe, prints da execução estão em \texttt{docs/}}
+    \scriptsize\textcolor{textmuted}{Capturas e roteiro completo em \texttt{docs/p2/ROTEIRO\_DEMO.md}}
   \end{center}
+\end{frame}
+
+% ─── Slide 11.5 — Demo (3D + Classificação) ─────────────────
+\begin{frame}{Demonstração: visualização 3D e classificação}
+  \kicker{COMPLEMENTOS DA DEMO}
+  \vspace{0.2cm}
+
+  \begin{columns}[T]
+    \column{0.5\textwidth}
+      \begin{center}
+        \includegraphics[width=\linewidth]{screenshots/MAN-06_3d-view}\\[2pt]
+        \scriptsize\textcolor{textmuted}{3D --- relevo proporcional ao NDVI}
+      \end{center}
+    \column{0.5\textwidth}
+      \begin{center}
+        \includegraphics[width=\linewidth]{screenshots/MAN-07_classification}\\[2pt]
+        \scriptsize\textcolor{textmuted}{K-Means --- zonas com hectares}
+      \end{center}
+  \end{columns}
 \end{frame}
 
 % ─── Slide 12 — Estratégia de testes ────────────────────────
@@ -492,7 +520,31 @@ $ uv run pytest tests/ -v --cov=api
   \end{itemize}
 \end{frame}
 
-% ─── Slide 16 — Encerramento ────────────────────────────────
+% ─── Slide 16 — Divisão de Responsabilidades ───────────────
+\begin{frame}{Como o trabalho foi dividido}
+  \kicker{PARTICIPAÇÃO DOS MEMBROS}
+  \vspace{0.2cm}
+
+  \scriptsize
+  \begin{tabular}{@{}p{4.6cm}p{4.4cm}p{6cm}@{}}
+    \textbf{\textcolor{accent}{Integrante}} & \textbf{\textcolor{accent}{Área principal}} & \textbf{\textcolor{accent}{Bloco na apresentação}}\\[0.15cm]
+    João Leonardi da Silva Melo                       & Backend + integração Git         & Slide 9 --- Decisões de design \\[0.15cm]
+    João Vinícius Passos Castello B.\ Carvalho         & Frontend (mapa, UI, 3D)          & Slides 5, 11 --- Personas + Demo \\[0.15cm]
+    José Melquíades Neto                               & Modelagem de dados + KML         & Slide 7 --- Arquitetura \\[0.15cm]
+    Lauan Matheus da Rocha Alves                       & Testes automatizados + qualidade & Slides 12--13 --- Estratégia + Resultados \\[0.15cm]
+    Lucas Benevinuto Pereira                           & Apresentação + slides + pitch    & Slides 1--4 --- Capa, Agenda, Problema, Solução \\[0.15cm]
+    Luis Gustavo Olimpio                               & Documentação técnica + ADRs      & Slide 8 --- Stack tecnológica \\[0.15cm]
+    Sammuel Moura Saraiva                              & Manual do usuário + glossário    & Slides 14--15 --- Limitações + Próximos passos \\[0.15cm]
+    Vinicius Henrique Albino Andrade                   & DevOps + roteiro de demo + Q\&A  & Slide 10 --- Fluxo NDVI \\
+  \end{tabular}
+
+  \vspace{0.3cm}
+  \begin{center}
+    \scriptsize\textcolor{textmuted}{Atribuição por área de responsabilidade. Detalhamento da fala em \texttt{docs/p2/PITCH.md}.}
+  \end{center}
+\end{frame}
+
+% ─── Slide 17 — Encerramento ────────────────────────────────
 {\setbeamertemplate{footline}{}
 \begin{frame}[plain]
   \begin{tikzpicture}[remember picture, overlay]

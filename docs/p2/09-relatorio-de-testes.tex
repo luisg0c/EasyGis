@@ -254,6 +254,24 @@ CT-10.2 & Centroide dentro do bbox & \cmark\ PASSED & $<10$\,ms\\
 \end{table}
 
 % ══════════════════════════════════════════════════════════════
+\section{Evidências Visuais (Demonstração ao Vivo)}
+% ══════════════════════════════════════════════════════════════
+
+Além dos testes automatizados, o sistema foi exercitado em demonstração ao vivo. As capturas abaixo evidenciam o caminho feliz dos requisitos funcionais cobertos pela apresentação --- complementam os \textit{logs} de \texttt{pytest} desta seção.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{screenshots/MAN-03_ndvi-resultado}
+\caption{Evidência visual de RF-05 (NDVI) + RF-10 (estatísticas) + RF-11 (histograma) --- saída da rota \texttt{POST /calculate-index} com \texttt{index\_type=NDVI} sobre o talhão \texttt{crop field 1}.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{screenshots/MAN-07_classification}
+\caption{Evidência visual da rota \texttt{POST /api/classification/classify} --- método K-Means com 3 classes, retornando porcentagem e área em hectares por classe.}
+\end{figure}
+
+% ══════════════════════════════════════════════════════════════
 \section{Análise dos Resultados}
 % ══════════════════════════════════════════════════════════════
 
