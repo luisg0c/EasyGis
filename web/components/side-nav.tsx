@@ -5,9 +5,6 @@ import {
   LayoutDashboard,
   Map as MapIcon,
   Layers,
-  Settings,
-  HelpCircle,
-  User,
 } from 'lucide-react';
 
 export type ActiveRoute = 'home' | 'atlas' | 'classification';
@@ -64,25 +61,6 @@ export function SideNav({ active }: SideNavProps) {
       })}
 
       <div className="flex-1" />
-
-      <button
-        aria-label="Configurações"
-        className="rounded-sm p-2.5 text-stone transition-colors hover:text-moss-900"
-      >
-        <Settings className="h-4 w-4" strokeWidth={1.5} />
-      </button>
-      <button
-        aria-label="Ajuda"
-        className="rounded-sm p-2.5 text-stone transition-colors hover:text-moss-900"
-      >
-        <HelpCircle className="h-4 w-4" strokeWidth={1.5} />
-      </button>
-      <button
-        aria-label="Conta"
-        className="rounded-sm p-2.5 text-stone transition-colors hover:text-moss-900"
-      >
-        <User className="h-4 w-4" strokeWidth={1.5} />
-      </button>
     </aside>
   );
 }
