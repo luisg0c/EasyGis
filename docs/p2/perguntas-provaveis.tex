@@ -1,0 +1,325 @@
+\documentclass[12pt,a4paper]{article}
+
+\input{p2-preamble}
+
+\title{\textbf{Perguntas Prováveis · Apresentação P2}\\[6pt]
+       \large EasyGis — Banco de respostas preparadas}
+\author{Engenharia de Software · 2026.1}
+\date{Maio · 2026}
+
+\begin{document}
+\maketitle
+
+\section*{Como usar este documento}
+
+As perguntas estão agrupadas em \textbf{8 blocos temáticos}. Cada
+pergunta tem:
+
+\begin{itemize}[noitemsep]
+  \item \textbf{Q:} a pergunta literal que o professor pode fazer.
+  \item \textbf{A:} resposta preparada, curta e direta.
+  \item \textbf{Quem responde:} o integrante com domínio do assunto.
+\end{itemize}
+
+\textbf{Estratégia geral:}
+\begin{itemize}
+  \item Se a pergunta cair no seu slide, responda você. Se for sobre área
+        de outro, passe a bola: \textquotedblleft\,O X tem mais contexto sobre isso.\,\textquotedblright
+  \item \textbf{Nunca chute.} Se não souber, diga \textquotedblleft\,Não
+        documentamos isso ainda, mas está em [doc X]\,\textquotedblright\
+        ou \textquotedblleft\,Posso voltar com a resposta após a
+        sessão.\,\textquotedblright
+  \item \textbf{Cite o documento} sempre que possível
+        (\texttt{00-ENTREGA-P2.pdf}, \texttt{04-diagramas-arquitetura.md}, etc.).
+\end{itemize}
+
+\newpage
+
+\section*{Bloco 1 — Arquitetura}
+
+\subsection*{Q1.1 — Por que dois processos separados e não monólito?}
+\textbf{A:} Cada lado fala a linguagem ideal: Python tem o ecossistema
+geoespacial (rasterio, NumPy, GDAL); JavaScript renderiza mapa e 3D em WebGL.
+Acoplar tudo em um único processo nos forçaria a escolher um lado e perder o
+outro. REST + JSON é o contrato mais simples e debugável entre os dois mundos.
+\\[2pt] \textit{Responde: Vinicius Henrique.}
+
+\subsection*{Q1.2 — Por que não tem banco de dados?}
+\textbf{A:} Decisão consciente, registrada em \textbf{DA-02}. O escopo do MVP
+é single-user em localhost, processando arquivos \texttt{.SAFE} e KMLs já no
+filesystem. Adicionar banco aumentaria complexidade sem benefício imediato.
+Está no roadmap (próximo passo 02: SQLite ou PostGIS) quando virar
+multi-usuário.
+\\[2pt] \textit{Responde: Vinicius Henrique.}
+
+\subsection*{Q1.3 — Por que imagem em base64 dentro do JSON, e não um endpoint que retorna binário?}
+\textbf{A:} Por simplicidade do contrato: uma resposta única
+(\texttt{IndexResult}) traz a imagem, as estatísticas e o histograma juntos.
+O frontend processa em um só lugar. O custo do base64 é ~33\% de overhead,
+aceitável para imagens de talhão (~100\,KB). Se virasse gargalo, trocaríamos
+para endpoint binário separado.
+\\[2pt] \textit{Responde: João Leonardi.}
+
+\subsection*{Q1.4 — O sistema é escalável?}
+\textbf{A:} Hoje não — é single-user em localhost. Mas a separação
+frontend/backend permite escalar horizontalmente o backend FastAPI atrás de
+um load balancer quando precisar. O processador é sem estado, então
+escala trivialmente.
+\\[2pt] \textit{Responde: Vinicius Henrique.}
+
+\section*{Bloco 2 — Stack tecnológica}
+
+\subsection*{Q2.1 — Por que FastAPI e não Django ou Flask?}
+\textbf{A:} FastAPI dá validação automática via Pydantic e gera OpenAPI em
+\texttt{/docs} sem código extra. Django é overkill (ORM, admin, autenticação
+nativos) para o que é essencialmente um endpoint de cálculo. Flask exigiria
+plugins (\texttt{flask-pydantic}, \texttt{flasgger}) para o mesmo nível.
+\\[2pt] \textit{Responde: Luis Gustavo.}
+
+\subsection*{Q2.2 — Por que Leaflet e não Mapbox / Cesium?}
+\textbf{A:} Leaflet é maduro, leve e \textbf{não exige token pago}. Mapbox
+GL cobra após cota. Cesium é overkill para terreno 2D — usamos Three.js
+diretamente para o 3D, com mais controle.
+\\[2pt] \textit{Responde: Luis Gustavo.}
+
+\subsection*{Q2.3 — Por que Next.js e não React puro?}
+\textbf{A:} O App Router do Next.js permite ler KMLs server-side via API
+routes (\texttt{/api/fields}), sem expor o filesystem ao cliente. Em React
+puro precisaríamos de um servidor separado só pra isso.
+\\[2pt] \textit{Responde: Luis Gustavo.}
+
+\subsection*{Q2.4 — Por que \texttt{uv} e não pip + requirements.txt?}
+\textbf{A:} \texttt{uv} é cerca de 10\,× mais rápido em instalação, gera lock
+file determinístico (\texttt{uv.lock}) e simplifica setup com um único comando
+\texttt{uv sync}. Trade-off: dependência extra a instalar — mitigado pela
+documentação no README.
+\\[2pt] \textit{Responde: Luis Gustavo.}
+
+\section*{Bloco 3 — Backlog e priorização}
+
+\subsection*{Q3.1 — Como vocês priorizaram o que entrar e o que ficar de fora?}
+\textbf{A:} Aplicamos MoSCoW. Tudo que era \textbf{Must Have} (núcleo de
+processamento — RF-01 a 11) entrou primeiro. Os 5 \textbf{Won't Have}
+(autenticação, persistência em banco, exportação, multi-usuário, integração
+Copernicus) foram excluídos do MVP \textbf{conscientemente}: o objetivo era
+validar o núcleo geoespacial em um semestre, não construir um SaaS completo.
+\\[2pt] \textit{Responde: José Melquíades.}
+
+\subsection*{Q3.2 — Por que 30/35 e não 35/35?}
+\textbf{A:} Das 35 histórias: 28 entregues completas + 2 parciais
+(download manual de imagem) + 5 conscientemente fora (Won't Have). Os 5
+fora não falharam — \textbf{foram planejados como fora desde o início}.
+85,7\% é a entrega real do que prometemos.
+\\[2pt] \textit{Responde: José Melquíades.}
+
+\subsection*{Q3.3 — Como vocês garantem que o backlog está rastreado para os testes?}
+\textbf{A:} Matriz RF\,×\,US em \texttt{03-especificacao-requisitos-SRS.md
+§\,6}. Cada caso de teste em \texttt{tests/} cita o RF coberto no docstring.
+RF-04, 05, 06, 10, 11, 20 têm cobertura direta.
+\\[2pt] \textit{Responde: Lauan Matheus.}
+
+\section*{Bloco 4 — Testes}
+
+\subsection*{Q4.1 — A cobertura global de 24\% não é baixa demais?}
+\textbf{A:} À primeira vista sim, mas é \textbf{honesto e explicado}. Esse
+número é puxado para baixo pelos endpoints HTTP, que exigem um produto
+Sentinel-2 \texttt{.SAFE} real (1\,GB) para serem exercitados. Onde a lógica
+de cálculo realmente vive — no \texttt{sentinel\_processor.py} — a cobertura
+é \textbf{55\%}. Declaramos o gap como \textbf{DT-03} no documento de entrega.
+\\[2pt] \textit{Responde: Lauan Matheus.}
+
+\subsection*{Q4.2 — O que vocês fariam para subir a cobertura?}
+\textbf{A:} Três coisas: \textbf{(1)} mockar o rasterio nos testes de
+endpoint para não depender de \texttt{.SAFE}; \textbf{(2)} criar fixtures de
+produto Sentinel-2 mínimo (uma cena recortada de poucos KB);
+\textbf{(3)} CI com GitHub Actions rodando a suíte em cada PR.
+\\[2pt] \textit{Responde: Lauan Matheus.}
+
+\subsection*{Q4.3 — O que são as \textquotedblleft fixtures sintéticas em NumPy\textquotedblright?}
+\textbf{A:} Em vez de carregar um \texttt{.SAFE} real, geramos arrays NumPy
+com o formato esperado (\texttt{shape=(H,W)}, \texttt{dtype=float32}) e
+valores conhecidos. Permite testar NDVI, EVI, máscaras e estatísticas em
+milissegundos, sem I/O de disco.
+\\[2pt] \textit{Responde: Lauan Matheus.}
+
+\subsection*{Q4.4 — Tem teste de UI / E2E automatizado?}
+\textbf{A:} Hoje não. O \textbf{Nível 3} (manual) cobre o fluxo end-to-end
+durante a demo. Adicionar Playwright ou Cypress está no backlog futuro — foi
+deixado fora porque o custo de manter testes de UI brittle não compensava no
+tempo do semestre.
+\\[2pt] \textit{Responde: Lauan Matheus.}
+
+\section*{Bloco 5 — Algoritmos e processamento}
+
+\subsection*{Q5.1 — Por que NDVI e não outro índice como padrão?}
+\textbf{A:} NDVI é o índice mais estabelecido e validado em sensoriamento
+remoto agrícola — comparável a literatura, software comercial e produtos
+oficiais. EVI e SAVI estão implementados também (RF-06), mas NDVI é o
+\textit{default} por familiaridade do usuário.
+\\[2pt] \textit{Responde: João Leonardi.}
+
+\subsection*{Q5.2 — Como vocês tratam pixels de nuvem ou água?}
+\textbf{A:} Hoje a máscara binária do polígono recorta apenas o talhão.
+Pixels de nuvem dentro do polígono entram no cálculo — limitação consciente.
+A próxima evolução é usar a banda QA60 (\textit{cloud mask}) do Sentinel-2
+para excluir esses pixels.
+\\[2pt] \textit{Responde: João Leonardi.}
+
+\subsection*{Q5.3 — Por que a classificação K-Means e não Random Forest?}
+\textbf{A:} K-Means é \textbf{não-supervisionado} — funciona sem rótulos
+de treinamento, que não temos para Picos-PI. Random Forest exigiria um
+dataset rotulado por agrônomo, fora do escopo do MVP. Está no roadmap
+(próximo passo 03) quando tivermos dados rotulados.
+\\[2pt] \textit{Responde: João Leonardi.}
+
+\subsection*{Q5.4 — O cálculo de área em hectares está correto?}
+\textbf{A:} Sim. Usamos a fórmula do \textbf{laço} (\textit{shoelace}) sobre
+as coordenadas reprojetadas em UTM — sistema métrico nativo. Sem
+reprojeção, o cálculo em graus daria área inflada. Verificável contra área
+no Google Earth.
+\\[2pt] \textit{Responde: João Leonardi.}
+
+\section*{Bloco 6 — Demo / produto}
+
+\subsection*{Q6.1 — Que tipo de imagem o sistema aceita?}
+\textbf{A:} Produtos Sentinel-2 Level-2A no formato \texttt{.SAFE} (estrutura
+padrão da ESA). O usuário hoje baixa do Copernicus Hub manualmente; integração
+direta com a API está no roadmap (próximo passo 01).
+\\[2pt] \textit{Responde: João V. Castello.}
+
+\subsection*{Q6.2 — Quanto tempo leva pra processar uma imagem?}
+\textbf{A:} \textbf{5 a 30 segundos} dependendo do tamanho do talhão e do
+índice. NDVI é o mais rápido (duas bandas); EVI usa três e é ligeiramente
+mais lento. A suavização gaussiana custa cerca de 1\,s extra em talhões grandes.
+\\[2pt] \textit{Responde: João V. Castello.}
+
+\subsection*{Q6.3 — Posso desenhar talhões ou só importar KML?}
+\textbf{A:} Os dois. A versão atual aceita KML do Google Earth e
+também tem ferramenta de desenho de polígono no mapa Leaflet. O desenho
+não persiste entre sessões (limitação 1 do slide 13) — está no roadmap.
+\\[2pt] \textit{Responde: João V. Castello.}
+
+\subsection*{Q6.4 — E se a imagem tiver erro? Quebra a interface?}
+\textbf{A:} Não. O backend faz validação Pydantic da entrada e retorna
+\textbf{422 / 404 / 500} estruturado. O frontend exibe um toast com a
+mensagem de erro. Cobertura desse caminho está no nível de integração
+(FastAPI TestClient).
+\\[2pt] \textit{Responde: João Leonardi.}
+
+\subsection*{Q6.5 — A interface está acessível?}
+\textbf{A:} Componentes shadcn/ui (Radix por baixo) garantem WAI-ARIA básico
+— foco visível, navegação por teclado, contraste mínimo. Não rodamos
+auditoria Lighthouse formal — é uma melhoria de roadmap.
+\\[2pt] \textit{Responde: João V. Castello.}
+
+\section*{Bloco 7 — Processo e equipe}
+
+\subsection*{Q7.1 — Como vocês dividiram o trabalho?}
+\textbf{A:} Por afinidade técnica e área de especialização, registrada no
+\textbf{slide 14}: backend (João Leonardi), frontend (João Castello), dados
+(José), testes (Lauan), pitch (Lucas), docs (Luis Gustavo), manual (Sammuel),
+arquitetura (Vinicius). Cada um teve ownership claro de sua área e código
+revisado por par em PR.
+\\[2pt] \textit{Responde: João Leonardi.}
+
+\subsection*{Q7.2 — Usaram alguma metodologia ágil?}
+\textbf{A:} Sprints curtos com ciclo semanal informal — reuniões de
+alinhamento e merge de PRs. Sem Scrum formal (sem PO/SM definidos), mas com
+backlog priorizado e iteração visível no \texttt{git log}.
+\\[2pt] \textit{Responde: João Leonardi.}
+
+\subsection*{Q7.3 — Quanto tempo a equipe gastou no projeto?}
+\textbf{A:} Aproximadamente um semestre letivo. As 28 histórias entregues
+estão distribuídas em ~50 commits. Histórico completo em \texttt{git log}.
+\\[2pt] \textit{Responde: João Leonardi.}
+
+\subsection*{Q7.4 — Tem code review?}
+\textbf{A:} Sim. Todas as features foram mergeadas via PR no GitHub
+(\texttt{luisg0c/EasyGis}). Cada PR tinha pelo menos um aprovador além do
+autor. Sem CI bloqueando merge — foi limitação consciente
+(próximo passo 07).
+\\[2pt] \textit{Responde: João Leonardi.}
+
+\section*{Bloco 8 — Documentação e decisões de design}
+
+\subsection*{Q8.1 — O que é um ADR?}
+\textbf{A:} Architecture Decision Record. É um registro curto que captura
+\textbf{contexto, decisão e consequências} de uma escolha técnica
+importante. Documentamos 11 deles, de DA-01 (estrutura geral) a DA-11
+(\texttt{uv} em vez de pip). Localizados em
+\texttt{04-diagramas-arquitetura.md §\,9} e \texttt{00-ENTREGA-P2.pdf §\,3}.
+\\[2pt] \textit{Responde: Luis Gustavo.}
+
+\subsection*{Q8.2 — Qual decisão técnica mais difícil vocês tomaram?}
+\textbf{A:} A da \textbf{DA-09} — suavização gaussiana preservando NaN.
+Aplicar gaussiano direto sangrava valores para fora do polígono criando
+halo. A correção pela máscara filtrada é não-óbvia e é o que distingue um
+resultado correto de um plausível-mas-errado.
+\\[2pt] \textit{Responde: Luis Gustavo ou João Leonardi.}
+
+\subsection*{Q8.3 — Vocês consideraram alternativas para a stack atual?}
+\textbf{A:} Sim. Considerei Django + DRF (rejeitada por overkill); Mapbox
+(rejeitada por custo); Cesium para 3D (rejeitada por complexidade);
+pip puro (rejeitada por velocidade). Cada rejeição está documentada como
+ADR ou na seção de comparativos do \texttt{04-diagramas-arquitetura.md §\,8}.
+\\[2pt] \textit{Responde: Luis Gustavo.}
+
+\subsection*{Q8.4 — Como vocês garantem que a documentação não fica desatualizada?}
+\textbf{A:} Documentos versionados no mesmo repo do código. Mudanças
+arquiteturais relevantes exigem PR que atualize o ADR correspondente.
+Não temos verificação automatizada de drift — é um próximo passo
+(\textit{docs-as-code} com lint).
+\\[2pt] \textit{Responde: Luis Gustavo.}
+
+\newpage
+
+\section*{Perguntas armadilha — atenção redobrada}
+
+\begin{itemize}
+
+  \item \textbf{\textquotedblleft Vocês usaram ChatGPT / Claude / IA?\textquotedblright}
+        \\ \textbf{A:} Sim, declarado abertamente no \texttt{README.md}.
+        IA foi usada para tarefas difíceis (processamento geoespacial,
+        debugging de TypeScript, refatoração). Todo código foi
+        revisado, testado e entendido pela equipe. Não somos uma equipe
+        que copia e cola — usamos como pair-programmer.
+
+  \item \textbf{\textquotedblleft Por que tão poucos testes (28)?\textquotedblright}
+        \\ \textbf{A:} O número não é a métrica certa — o que importa é
+        \textbf{o que está coberto}. Os 28 testes cobrem todos os casos
+        de borda do processador (NaN, divisão por zero, máscara de água,
+        polígono inválido). Mais testes redundantes não agregariam.
+
+  \item \textbf{\textquotedblleft O sistema está em produção?\textquotedblright}
+        \\ \textbf{A:} Não — é um MVP em localhost. Foi escolha
+        consciente do escopo da disciplina. Hospedar exigiria autenticação
+        e persistência, ambos no roadmap.
+
+  \item \textbf{\textquotedblleft E se eu quiser usar com outra imagem que não Sentinel-2?\textquotedblright}
+        \\ \textbf{A:} Hoje só Sentinel-2 \texttt{.SAFE}. O processador é
+        agnóstico de fornecedor — qualquer raster com bandas RGB+NIR
+        funcionaria — mas a camada de I/O é específica do formato \texttt{.SAFE}.
+        Generalizar é refatoração de meia tarde.
+
+  \item \textbf{\textquotedblleft Qual a diferença entre vocês e QGIS / ArcGIS?\textquotedblright}
+        \\ \textbf{A:} EasyGis é \textbf{focado em um caso de uso}
+        (agricultura de precisão por índices) com \textbf{zero curva de
+        aprendizado} — abrir e clicar. QGIS é generalista e exige
+        conhecimento de SIG. Não competimos com QGIS — somos uma porta de
+        entrada para quem não vai aprender SIG.
+
+  \item \textbf{\textquotedblleft O que vocês fariam diferente se começassem hoje?\textquotedblright}
+        \\ \textbf{A:} Três coisas: (1) integrar Copernicus API desde o
+        dia 1 (download manual virou gargalo); (2) CI desde o dia 1;
+        (3) persistir talhões em SQLite — barato e adiciona valor de
+        verdade pro usuário.
+
+\end{itemize}
+
+\vspace{8pt}
+\textbf{Lembrete final:} se uma pergunta cair fora do que está aqui, a
+melhor resposta é \textbf{\textquotedblleft Excelente pergunta — está
+documentada em [doc X], mas posso voltar com a resposta após a
+sessão.\textquotedblright}\ Nunca chute.
+
+\end{document}
