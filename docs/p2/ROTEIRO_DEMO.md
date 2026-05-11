@@ -1,4 +1,4 @@
-# Roteiro de Demo — ICEV Remote Sensing Software
+# Roteiro de Demo — EasyGis
 
 > Demonstração ao vivo no slide 11 da apresentação. **Tempo alvo: 6:30 minutos.** Conduzida pelo João Vinícius Castello.
 

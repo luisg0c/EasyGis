@@ -1,4 +1,4 @@
-# Pitch de Apresentação — ICEV Remote Sensing Software
+# Pitch de Apresentação — EasyGis
 
 > Script falado, slide a slide, com cronometragem. Apresentação Beamer em [`apresentacao-p2.pdf`](apresentacao-p2.pdf) — **17 slides** após adição do slide de Divisão de Responsabilidades. **Tempo alvo: 18 minutos** de fala + 1–2 min de Q&A. Rubrica avalia "participação dos membros da equipe" — cada um dos 8 integrantes tem bloco designado.
 
@@ -24,7 +24,7 @@
 
 > Versão curta. Use no corredor, no Slack, ou se a apresentação cair.
 
-> "Pequenos produtores rurais não usam imagens de satélite gratuitas porque as ferramentas existentes são complexas demais. O **ICEV Remote Sensing Software** abre uma imagem Sentinel-2 e, em poucos cliques, calcula NDVI, classifica zonas em hectares e visualiza tudo em mapa 2D ou 3D. É voltado a produtores, agrônomos e pesquisadores que precisam de informação acionável sem horas de aprendizado em GIS. Web, gratuito, com 28 testes automatizados validando a lógica de cálculo."
+> "Pequenos produtores rurais não usam imagens de satélite gratuitas porque as ferramentas existentes são complexas demais. O **EasyGis** abre uma imagem Sentinel-2 e, em poucos cliques, calcula NDVI, classifica zonas em hectares e visualiza tudo em mapa 2D ou 3D. É voltado a produtores, agrônomos e pesquisadores que precisam de informação acionável sem horas de aprendizado em GIS. Web, gratuito, com 28 testes automatizados validando a lógica de cálculo."
 
 ---
 
@@ -33,7 +33,7 @@
 ### Slide 1 — Capa  *(0:00 – 0:30 — Lucas Benevinuto)*
 
 **Fala:**
-> "Boa tarde. Somos o grupo que apresenta o **ICEV Remote Sensing Software**, uma plataforma web que calcula índices de vegetação a partir de imagens Sentinel-2 para qualquer talhão. Eu sou Lucas Benevinuto Pereira, e comigo estão João Leonardi da Silva Melo, João Vinícius Passos Castello Branco Carvalho, José Melquíades Neto, Lauan Matheus da Rocha Alves, Luis Gustavo Olimpio, Sammuel Moura Saraiva e Vinicius Henrique Albino Andrade."
+> "Boa tarde. Somos o grupo que apresenta o **EasyGis**, uma plataforma web que calcula índices de vegetação a partir de imagens Sentinel-2 para qualquer talhão. Eu sou Lucas Benevinuto Pereira, e comigo estão João Leonardi da Silva Melo, João Vinícius Passos Castello Branco Carvalho, José Melquíades Neto, Lauan Matheus da Rocha Alves, Luis Gustavo Olimpio, Sammuel Moura Saraiva e Vinicius Henrique Albino Andrade."
 
 **Transição:**
 > "Vamos começar pela agenda."
