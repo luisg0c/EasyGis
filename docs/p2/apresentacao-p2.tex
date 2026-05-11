@@ -296,113 +296,89 @@
   \footchrome
 \end{frame}
 
-% ── 7. Stack ────────────────────────────────────────────────
+% ── 7. Tecnologia ──────────────────────────────────────────
 \begin{frame}[plain]
   \vspace{0.5cm}
   \hspace{1.2cm}\begin{minipage}{0.85\textwidth}
-    \slidehead{Stack}{O que usamos.}
+    \slidehead{Tecnologia}{Ferramentas\\modernas e abertas.}
 
-    \vspace{0.6cm}
+    \vspace{0.4cm}
 
-    \begin{tikzpicture}[
-      every node/.style={anchor=north west, inner sep=0, font=\sffamily}]
-      \node[font=\fontsize{8pt}{10pt}\selectfont\bfseries\color{moss700}] at (0,0) {FRONTEND};
-      \node[text width=6.0cm, font=\fontsize{10pt}{15pt}\selectfont\color{charcoal}] at (0,-0.5) {%
-        Next.js 16 · React 19\\
-        TypeScript 5 · Tailwind 4\\
-        Leaflet · Three.js / R3F\\
-        shadcn/ui · Radix · fast-xml-parser};
-
-      \node[font=\fontsize{8pt}{10pt}\selectfont\bfseries\color{moss700}] at (6.8,0) {BACKEND};
-      \node[text width=6.0cm, font=\fontsize{10pt}{15pt}\selectfont\color{charcoal}] at (6.8,-0.5) {%
-        Python 3.12 · FastAPI\\
-        Uvicorn · Pydantic v2\\
-        rasterio (GDAL) · NumPy · SciPy\\
-        OpenCV · scikit-learn · Shapely};
-    \end{tikzpicture}
+    {\sffamily\fontsize{12pt}{18pt}\selectfont\color{charcoal}%
+    Site rápido feito em \textbf{Next.js + React} no navegador.\\[4pt]
+    Cálculos em \textbf{Python} com bibliotecas científicas (NumPy, rasterio).\\[4pt]
+    Mapas e visualização 3D com \textbf{Leaflet} e \textbf{Three.js}.\par}
 
     \vspace{0.8cm}
 
-    {\sffamily\fontsize{9pt}{12pt}\selectfont\color{smoke}%
-    Gerência de dependências: \texttt{uv} (Python) · \texttt{npm} (Node)\par}
+    {\sffamily\fontsize{9pt}{12pt}\selectfont\color{stone}%
+    Tudo open source. Sem nenhuma licença paga.\par}
   \end{minipage}
   \footchrome
 \end{frame}
 
-% ── 8. Decisão · DA-01 ─────────────────────────────────────
+% ── 8. Princípios ──────────────────────────────────────────
 \begin{frame}[plain]
   \vspace{0.5cm}
   \hspace{1.2cm}\begin{minipage}{0.85\textwidth}
-    \slidehead{Decisão · DA-01}{Dois processos\\independentes.}
-
-    \vspace{0.4cm}
-
-    {\sffamily\fontsize{13pt}{19pt}\selectfont\color{charcoal}%
-    \textbf{Por quê?}\\[6pt]
-    Processamento pesado em Python não bloqueia a UI.\\
-    Frontend e backend evoluem em paralelo.\par}
+    \slidehead{Princípios}{Como pensamos\\o produto.}
 
     \vspace{0.6cm}
 
-    {\sffamily\fontsize{10pt}{14pt}\selectfont\color{stone}%
-    \textit{Trade-off:} \textcolor{charcoal}{exige rodar dois servidores em dev e gerenciar CORS.}\par}
+    \begin{tikzpicture}[every node/.style={anchor=north west, inner sep=0}]
+      \node[font=\sffamily\fontsize{8pt}{10pt}\selectfont\bfseries\color{moss700}] at (0, 0) {01};
+      \node[font=\sffamily\bfseries\fontsize{14pt}{18pt}\selectfont\color{moss950}, text width=12cm] at (0.6, 0)
+        {Interface fluida no navegador.};
+      \node[font=\sffamily\fontsize{10pt}{14pt}\selectfont\color{smoke}, text width=12cm] at (0.6, -0.55)
+        {Os cálculos pesados rodam num servidor à parte, sem travar a tela.};
+
+      \node[font=\sffamily\fontsize{8pt}{10pt}\selectfont\bfseries\color{moss700}] at (0, -1.7) {02};
+      \node[font=\sffamily\bfseries\fontsize{14pt}{18pt}\selectfont\color{moss950}, text width=12cm] at (0.6, -1.7)
+        {Erros pegos antes do usuário.};
+      \node[font=\sffamily\fontsize{10pt}{14pt}\selectfont\color{smoke}, text width=12cm] at (0.6, -2.25)
+        {Tipos e contratos validados na construção, não em produção.};
+
+      \node[font=\sffamily\fontsize{8pt}{10pt}\selectfont\bfseries\color{moss700}] at (0, -3.4) {03};
+      \node[font=\sffamily\bfseries\fontsize{14pt}{18pt}\selectfont\color{moss950}, text width=12cm] at (0.6, -3.4)
+        {Demonstrável a qualquer hora.};
+      \node[font=\sffamily\fontsize{10pt}{14pt}\selectfont\color{smoke}, text width=12cm] at (0.6, -3.95)
+        {Modo demo embarcado: sem depender de internet ou imagem baixada.};
+    \end{tikzpicture}
   \end{minipage}
   \footchrome
 \end{frame}
 
-% ── 9. Decisão · DA-07 ─────────────────────────────────────
+% ── 10. Fluxo de uso ───────────────────────────────────────
 \begin{frame}[plain]
   \vspace{0.5cm}
   \hspace{1.2cm}\begin{minipage}{0.85\textwidth}
-    \slidehead{Decisão · DA-07}{Tipagem\\end-to-end.}
-
-    \vspace{0.4cm}
-
-    {\sffamily\fontsize{13pt}{19pt}\selectfont\color{charcoal}%
-    \textbf{Por quê?}\\[6pt]
-    TypeScript estrito no frontend, Pydantic v2 no backend.\\
-    Erros de contrato detectados em build/runtime — não em produção.\par}
-
-    \vspace{0.6cm}
-
-    {\sffamily\fontsize{10pt}{14pt}\selectfont\color{stone}%
-    \textit{Trade-off:} \textcolor{charcoal}{tipos duplicados em duas linguagens — verificamos via revisão sistemática.}\par}
-  \end{minipage}
-  \footchrome
-\end{frame}
-
-% ── 10. Fluxo NDVI ─────────────────────────────────────────
-\begin{frame}[plain]
-  \vspace{0.5cm}
-  \hspace{1.2cm}\begin{minipage}{0.85\textwidth}
-    \slidehead{Fluxo}{Cálculo de NDVI.}
+    \slidehead{Fluxo}{Como o usuário usa.}
 
     \vspace{0.6cm}
 
     \begin{tikzpicture}[
       stepbox/.style={draw=moss100, fill=cream, rounded corners=2pt,
-                   minimum width=2.2cm, minimum height=1.4cm, inner sep=6pt,
-                   font=\sffamily\fontsize{8pt}{10pt}\selectfont\color{charcoal},
+                   minimum width=2.8cm, minimum height=1.6cm, inner sep=8pt,
+                   font=\sffamily\fontsize{10pt}{13pt}\selectfont\color{moss950},
                    align=center},
       arrow/.style={->, >=stealth, line width=0.8pt, color=moss300}]
 
-      \node[stepbox] (s1) at (0,0)    {Usuário\\seleciona\\talhão};
-      \node[stepbox] (s2) at (2.7,0)  {POST\\\texttt{/calculate-}\\\texttt{index}};
-      \node[stepbox] (s3) at (5.4,0)  {\texttt{rasterio}\\lê B08\\e B04};
-      \node[stepbox] (s4) at (8.1,0)  {Recorte +\\NDVI =\\$\frac{N{-}R}{N{+}R}$};
-      \node[stepbox] (s5) at (10.8,0) {PNG +\\stats\\$\rightarrow$ mapa};
+      \node[stepbox] (s1) at (0,0)    {Importa\\o talhão};
+      \node[stepbox] (s2) at (3.3,0)  {Escolhe\\o índice};
+      \node[stepbox] (s3) at (6.6,0)  {Vê o mapa\\colorido};
+      \node[stepbox] (s4) at (9.9,0)  {Lê a análise\\da IA};
 
       \draw[arrow] (s1) -- (s2);
       \draw[arrow] (s2) -- (s3);
       \draw[arrow] (s3) -- (s4);
-      \draw[arrow] (s4) -- (s5);
     \end{tikzpicture}
 
     \vspace{1cm}
 
-    {\sffamily\fontsize{9pt}{12pt}\selectfont\color{smoke}%
-    Polígono em WGS84 reprojetado pra CRS nativo do Sentinel-2 via \texttt{pyproj}.\\
-    Gradiente \textcolor{ndvilow}{marrom} $\rightarrow$ \textcolor{ndvimid}{amarelo} $\rightarrow$ \textcolor{moss700}{verde}.\par}
+    {\sffamily\fontsize{11pt}{16pt}\selectfont\color{smoke}%
+    Por dentro: o sistema lê as bandas do satélite, recorta o polígono e
+    pinta cada pixel da cor certa.\\[2pt]
+    \textcolor{ndvilow}{marrom} = solo · \textcolor{ndvimid}{amarelo} = estresse · \textcolor{moss700}{verde} = saudável.\par}
   \end{minipage}
   \footchrome
 \end{frame}
@@ -433,11 +409,11 @@
   \footchrome
 \end{frame}
 
-% ── 12. Testes ──────────────────────────────────────────────
+% ── 12. Qualidade ──────────────────────────────────────────
 \begin{frame}[plain]
   \vspace{0.5cm}
   \hspace{1.2cm}\begin{minipage}{0.85\textwidth}
-    \slidehead{Testes}{Cobertura crítica.}
+    \slidehead{Qualidade}{Tudo testado\\automaticamente.}
 
     \vspace{0.4cm}
 
@@ -450,19 +426,19 @@
         at (3.8,0.4) {/40};
 
       \node[anchor=north west, inner sep=0,
-            text width=6cm,
-            font=\sffamily\fontsize{10pt}{14pt}\selectfont\color{charcoal}]
-        at (7.0,-0.2) {%
-        \textbf{casos passando}\\[6pt]
-        \textcolor{smoke}{Unitário · pytest}\\
-        \textcolor{smoke}{Integração · FastAPI TestClient}\\
-        \textcolor{smoke}{Fixtures sintéticas NumPy}\par};
+            text width=7cm,
+            font=\sffamily\fontsize{11pt}{16pt}\selectfont\color{charcoal}]
+        at (7.0,-0.1) {%
+        \textbf{verificações passando}\\[6pt]
+        \textcolor{smoke}{Antes de qualquer mudança no código,}\\
+        \textcolor{smoke}{um robô confere se nada quebrou.}\par};
     \end{tikzpicture}
 
     \vspace{0.6cm}
 
-    {\sffamily\fontsize{9pt}{12pt}\selectfont\color{smoke}%
-    Cobertura de \texttt{sentinel\_processor.py}: \textbf{\textcolor{moss950}{55\%}} · suite roda em \textbf{\textcolor{moss950}{<\,1\,s}}.\par}
+    {\sffamily\fontsize{10pt}{14pt}\selectfont\color{smoke}%
+    Bateria roda em menos de um segundo. Cobre cálculo de índices, validação
+    de entrada e os principais caminhos da API.\par}
   \end{minipage}
   \footchrome
 \end{frame}
