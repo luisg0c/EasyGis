@@ -5,7 +5,6 @@ Handles reading JP2 files and calculating spectral indices
 import numpy as np
 import rasterio
 from pathlib import Path
-from typing import Dict, Tuple, Optional
 from shapely.geometry import Polygon, mapping
 from rasterio.mask import mask
 from rasterio.warp import calculate_default_transform, reproject, Resampling
@@ -46,7 +45,7 @@ class SentinelProcessor:
 
         return band_files[0]
 
-    def read_band(self, band: str, resolution: str = "10m") -> Tuple[np.ndarray, dict]:
+    def read_band(self, band: str, resolution: str = "10m") -> tuple[np.ndarray, dict]:
         """
         Read a spectral band from JP2 file
 
@@ -76,7 +75,7 @@ class SentinelProcessor:
         band_data: np.ndarray,
         metadata: dict,
         geometry: Polygon
-    ) -> Tuple[np.ndarray, dict]:
+    ) -> tuple[np.ndarray, dict]:
         """
         Crop band data to a polygon geometry
 
@@ -263,7 +262,7 @@ class SentinelProcessor:
         ndbi = (swir - nir) / denominator
         return np.clip(ndbi, -1, 1)
 
-    def calculate_statistics(self, data: np.ndarray) -> Dict[str, float]:
+    def calculate_statistics(self, data: np.ndarray) -> dict[str, float]:
         """
         Calculate statistics for index array
 
@@ -298,7 +297,7 @@ class SentinelProcessor:
         self,
         data: np.ndarray,
         bins: int = 50
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         """
         Calculate histogram of index values
 

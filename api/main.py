@@ -7,7 +7,7 @@ import re
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator
-from typing import List, Literal, Optional
+from typing import Literal
 from pathlib import Path
 import base64
 import io
@@ -51,14 +51,14 @@ class Coordinate(BaseModel):
 
 class CalculateIndexRequest(BaseModel):
     field_id: str = Field(..., min_length=1, max_length=200)
-    coordinates: List[Coordinate] = Field(..., min_length=3)
+    coordinates: list[Coordinate] = Field(..., min_length=3)
     index_type: str  # 'NDVI', 'EVI', 'SAVI', 'NDWI', 'NDBI', 'RGB', 'FALSE_COLOR', 'B01'-'B12'
-    product_name: Optional[str] = None  # If None, uses most recent
+    product_name: str | None = None  # If None, uses most recent
     smooth: bool = False  # Apply Gaussian smoothing filter
 
     @field_validator("product_name")
     @classmethod
-    def validate_product_name(cls, v: Optional[str]) -> Optional[str]:
+    def validate_product_name(cls, v: str | None) -> str | None:
         if v is None or v == "":
             return None
         if not SAFE_PRODUCT_PATTERN.match(v):
@@ -73,10 +73,10 @@ class IndexResult(BaseModel):
     histogram: dict
     image_base64: str
     product_used: str
-    elevation_data: Optional[dict] = None  # For 3D visualization
+    elevation_data: dict | None = None  # For 3D visualization
 
 
-def find_sentinel_product(product_name: Optional[str] = None) -> Path:
+def find_sentinel_product(product_name: str | None = None) -> Path:
     """
     Find Sentinel-2 product directory inside PRODUCTS_DIR.
 
@@ -108,7 +108,7 @@ def find_sentinel_product(product_name: Optional[str] = None) -> Path:
     return products[0]
 
 
-def coordinates_to_polygon(coordinates: List[Coordinate]) -> Polygon:
+def coordinates_to_polygon(coordinates: list[Coordinate]) -> Polygon:
     """
     Convert a coordinate list to a valid Shapely Polygon.
 
@@ -632,14 +632,14 @@ def health_check():
 
 class ExperimentRequest(BaseModel):
     field_id: str = Field(..., min_length=1, max_length=200)
-    coordinates: List[Coordinate] = Field(..., min_length=3)
+    coordinates: list[Coordinate] = Field(..., min_length=3)
     experiment_type: str
     parameters: dict
-    product_name: Optional[str] = None
+    product_name: str | None = None
 
     @field_validator("product_name")
     @classmethod
-    def validate_product_name(cls, v: Optional[str]) -> Optional[str]:
+    def validate_product_name(cls, v: str | None) -> str | None:
         if v is None or v == "":
             return None
         if not SAFE_PRODUCT_PATTERN.match(v):
@@ -904,12 +904,12 @@ def run_experiment(request: ExperimentRequest):
 
 class ClassificationRequest(BaseModel):
     field_id: str = Field(..., min_length=1, max_length=200)
-    coordinates: List[Coordinate] = Field(..., min_length=3)
+    coordinates: list[Coordinate] = Field(..., min_length=3)
     method: Literal["supervised", "unsupervised", "threshold"]
-    crop_type: Optional[Literal["soja", "milho", "cafe", "cana", "multi"]] = "multi"
+    crop_type: Literal["soja", "milho", "cafe", "cana", "multi"] | None = "multi"
     n_classes: int = Field(default=3, ge=2, le=6)
     indices: dict = {'ndvi': True, 'evi': True, 'savi': True}
-    product_name: Optional[str] = None
+    product_name: str | None = None
 
     @field_validator("indices")
     @classmethod
@@ -921,7 +921,7 @@ class ClassificationRequest(BaseModel):
 
     @field_validator("product_name")
     @classmethod
-    def validate_product_name(cls, v: Optional[str]) -> Optional[str]:
+    def validate_product_name(cls, v: str | None) -> str | None:
         if v is None or v == "":
             return None
         if not SAFE_PRODUCT_PATTERN.match(v):
@@ -939,9 +939,9 @@ class CropClass(BaseModel):
 class ClassificationResult(BaseModel):
     field_id: str
     classification_type: str
-    classes: List[CropClass]
+    classes: list[CropClass]
     image_base64: str
-    confidence_map: Optional[str] = None
+    confidence_map: str | None = None
     statistics: dict
     timestamp: str
     product_used: str
