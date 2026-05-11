@@ -1,0 +1,304 @@
+\documentclass[12pt,a4paper]{article}
+
+\input{p2-preamble}
+
+\title{\textbf{Roteiro da Apresentação P2}\\[6pt]
+       \large EasyGis — Distribuição de slides e falas por integrante}
+\author{Engenharia de Software · 2026.1}
+\date{Maio · 2026}
+
+\begin{document}
+\maketitle
+
+\section*{Visão geral}
+
+A apresentação tem \textbf{14 slides} cobrindo o ciclo completo do produto:
+problema, solução, escopo, arquitetura, fluxo técnico, demo ao vivo, testes,
+resultados, limitações e equipe. Tempo previsto: \textbf{17--18 minutos}.
+
+\vspace{4pt}
+A equipe é dividida da seguinte forma:
+
+\begin{center}
+\renewcommand{\arraystretch}{1.35}
+\begin{tabularx}{\textwidth}{@{}l l X@{}}
+\toprule
+\textbf{\#} & \textbf{Slide} & \textbf{Apresentador} \\
+\midrule
+1  & Capa                              & Lucas Benevinuto \\
+2  & Problema                          & Lucas Benevinuto \\
+3  & Solução                           & Lucas Benevinuto \\
+4  & Para quem                         & João Vinícius Castello \\
+5  & Backlog (30/35 entregues)         & José Melquíades \\
+6  & Arquitetura                       & Vinicius Henrique \\
+7  & Stack tecnológica                 & Luis Gustavo \\
+8  & Decisões de design (ADRs)         & Luis Gustavo \\
+9  & Fluxo do NDVI                     & João Leonardi \\
+10 & Demonstração ao vivo              & João Vinícius Castello (condutor) \\
+11 & Estratégia de testes              & Lauan Matheus \\
+12 & Resultados (28/28, cobertura)     & Lauan Matheus \\
+13 & Limitações e próximos passos      & Sammuel Moura \\
+14 & Equipe e Perguntas?               & João Leonardi (encerra) + todos \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\vspace{6pt}
+\textbf{Resumo por integrante:}
+
+\begin{itemize}
+  \item \textbf{Lucas Benevinuto} — slides 1, 2, 3 (abertura + problema + solução)
+  \item \textbf{João V. Castello} — slides 4, 10 (perfis + condução da demo)
+  \item \textbf{José Melquíades} — slide 5 (backlog)
+  \item \textbf{Vinicius Henrique} — slide 6 (arquitetura)
+  \item \textbf{Luis Gustavo} — slides 7, 8 (stack + ADRs)
+  \item \textbf{João Leonardi} — slides 9, 14 (fluxo NDVI + encerramento)
+  \item \textbf{Lauan Matheus} — slides 11, 12 (testes + resultados)
+  \item \textbf{Sammuel Moura} — slide 13 (limitações + próximos passos)
+\end{itemize}
+
+\newpage
+
+\section*{Falas — slide a slide}
+
+\subsection*{Slide 1 — Capa \hfill \textit{Lucas Benevinuto · 30 s}}
+
+\textquotedblleft\,Boa tarde, professor. Somos a equipe que apresenta o
+\textbf{EasyGis} — uma plataforma web de agricultura de precisão por
+sensoriamento remoto. Nosso trabalho foi entregar uma ferramenta que
+transforma imagens Sentinel-2 em decisões sobre uma lavoura, sem custo
+para o produtor. Eu sou o Lucas, vou conduzir a abertura.\,\textquotedblright
+
+\subsection*{Slide 2 — Problema \hfill \textit{Lucas Benevinuto · 60 s}}
+
+\textquotedblleft\,Para entender o porquê do projeto, três números:
+o Brasil tem \textbf{66 milhões de hectares} plantados, a Agência
+Espacial Europeia disponibiliza imagens \textbf{Sentinel-2} de \textbf{10\,m
+de resolução a cada 5 dias}, \textbf{de graça}. Apesar disso, ferramentas
+prontas que usam esses dados custam \textbf{milhares de reais por ano}
+ou exigem que o usuário monte uma stack de GDAL, scripts e SIG no
+desktop. O EasyGis ataca exatamente esse gap: aproximar essa imagem
+gratuita do produtor.\,\textquotedblright
+
+\subsection*{Slide 3 — Solução \hfill \textit{Lucas Benevinuto · 50 s}}
+
+\textquotedblleft\,A solução é uma \textbf{página web local, sem custo}.
+O fluxo é direto: o usuário \textbf{importa um KML} do Google Earth ou
+desenha o talhão no mapa; escolhe o \textbf{índice} (NDVI, EVI, SAVI,
+NDWI, NDBI ou bandas brutas); e em \textbf{5 a 30 segundos} aparece a
+imagem colorida sobreposta ao mapa, com estatísticas e classificação em
+zonas de vigor com área em hectares. Tudo isso em uma única tela.
+Quem vai detalhar para quem isso serve é o João Castello.\,\textquotedblright
+
+\subsection*{Slide 4 — Para quem \hfill \textit{João V. Castello · 60 s}}
+
+\textquotedblleft\,O EasyGis foi pensado para \textbf{quatro perfis} muito
+diferentes, mas que olham para o mesmo mapa. O \textbf{produtor rural}
+quer saber onde aplicar amanhã. O \textbf{agrônomo} precisa de um mapa de
+variabilidade para prescrever insumos. O \textbf{pesquisador} usa a
+ferramenta como sandbox para validar algoritmos contra dados reais. E o
+\textbf{estudante} aprende sensoriamento remoto na prática, sem barreira
+de licença ou setup. Mesmo produto, leituras diferentes — e isso guiou
+nossa priorização. Vou passar para o José falar sobre escopo.\,\textquotedblright
+
+\subsection*{Slide 5 — Backlog \hfill \textit{José Melquíades · 80 s}}
+
+\textquotedblleft\,Sobre o escopo: começamos com \textbf{35 histórias
+distribuídas em 6 épicos} — importação, índices, visualização,
+classificação, 3D e infraestrutura. Priorizamos por \textbf{MoSCoW}:
+\textit{Must Have}, \textit{Should}, \textit{Could} e \textit{Won't
+Have}. Entregamos \textbf{28 histórias completas} e \textbf{2 parciais},
+o que dá \textbf{85,7\% do escopo planejado}, dentro do prazo do
+semestre. Os \textbf{5 \textit{Won't Have}} foram \textbf{conscientes}:
+autenticação, persistência em banco, exportação e multi-usuário ficaram
+fora porque o foco era validar o \textbf{núcleo de processamento}
+geoespacial — e isso foi escolha, não acidente.\,\textquotedblright
+
+\subsection*{Slide 6 — Arquitetura \hfill \textit{Vinicius Henrique · 75 s}}
+
+\textquotedblleft\,Arquitetura: optamos por \textbf{dois processos
+separados}. O \textbf{frontend} é um Next.js 16 rodando na porta 3000 —
+React 19, TypeScript, Tailwind, Leaflet em 2D e Three.js para o relevo em
+3D. O \textbf{backend} é uma API FastAPI em Python 3.12 na porta 8000,
+com rasterio, NumPy, SciPy, OpenCV e scikit-learn. A comunicação entre
+eles é \textbf{REST com JSON}; as imagens processadas viajam em
+\textbf{base64} dentro da resposta. \textbf{Não há banco de dados} — os
+KMLs e os produtos Sentinel ficam no filesystem. Essa decisão está
+registrada como \textbf{DA-02} no documento de ADRs e é o que torna o
+sistema reprodutível: qualquer máquina com Python e Node sobe a
+aplicação em minutos.\,\textquotedblright
+
+\subsection*{Slide 7 — Stack tecnológica \hfill \textit{Luis Gustavo · 75 s}}
+
+\textquotedblleft\,Cada peça da stack tem uma razão. \textbf{FastAPI}
+porque o Pydantic dá validação de contrato automática e gera a doc
+OpenAPI em \texttt{/docs} de graça. \textbf{rasterio} porque é o padrão
+de fato sobre o GDAL no ecossistema Python. \textbf{Next.js App Router}
+porque combina SSR e API routes no mesmo projeto, sem expor o
+filesystem ao cliente. \textbf{Leaflet} em vez de Mapbox porque não há
+custo por tile carregado. \textbf{Three.js} para visualização 3D nativa
+em WebGL. E \textbf{uv} no Python — gerenciador de pacotes
+\textbf{dez vezes mais rápido que o pip}, com lockfile determinístico
+para garantir reprodução em qualquer máquina. Nada foi escolhido por
+hype — toda decisão está justificada.\,\textquotedblright
+
+\subsection*{Slide 8 — Decisões de design \hfill \textit{Luis Gustavo · 80 s}}
+
+\textquotedblleft\,Documentamos \textbf{11 ADRs} no repositório, e
+quero destacar três que são chave para entender por que o sistema é
+robusto.
+
+\textbf{DA-06 — Separação processador / rotas HTTP.} A lógica de
+cálculo dos índices vive numa classe \texttt{SentinelProcessor} que
+\textbf{não conhece HTTP}. Isso permite testar a matemática sem subir
+servidor — são 28 testes unitários em menos de 1 segundo.
+
+\textbf{DA-07 — Tipagem fim-a-fim.} O Pydantic no backend é
+espelhado por interfaces TypeScript no frontend. Um erro de contrato
+vira \textbf{422 ou erro de build}, nunca \textbf{500 silencioso} em
+produção.
+
+\textbf{DA-09 — Suavização gaussiana preservando NaN.} Um filtro
+gaussiano direto \textbf{sangra valores} para fora do polígono e cria
+halo nas bordas. Resolvemos dividindo também pela máscara binária — o
+detalhe técnico que separa o resultado correto do
+plausível-mas-errado.\,\textquotedblright
+
+\subsection*{Slide 9 — Fluxo do NDVI \hfill \textit{João Leonardi · 75 s}}
+
+\textquotedblleft\,Para mostrar como tudo isso se encadeia, vamos pelo
+caminho do NDVI em \textbf{5 etapas}.
+
+\textbf{(01)} O usuário seleciona o talhão e o índice no frontend.
+\textbf{(02)} O Next.js dispara \texttt{POST /calculate-index} para o
+backend. \textbf{(03)} O \texttt{SentinelProcessor} usa rasterio para
+ler as bandas \textbf{B08 (infravermelho próximo)} e \textbf{B04
+(vermelho)} do produto \texttt{.SAFE}. \textbf{(04)} O pyproj reprojeta
+do WGS84 do KML para o UTM do raster. \textbf{(05)} NumPy faz o cálculo
+elemento a elemento e o Pillow gera o PNG colorido, que volta em base64
+e o Leaflet sobrepõe ao mapa.
+
+A fórmula é \textbf{NDVI = (NIR $-$ Red) / (NIR + Red)}, clipada em
+[$-$1, 1]. O gradiente vai de marrom (solo) para amarelo (estresse) até
+verde (vegetação saudável).\,\textquotedblright
+
+\subsection*{Slide 10 — Demonstração \hfill \textit{João V. Castello · 3--4 min}}
+
+\textquotedblleft\,Agora vamos ver isso funcionando. Eu vou conduzir a
+demo enquanto a equipe complementa.\,\textquotedblright
+
+\textbf{Roteiro da demo:}
+\begin{enumerate}[label=\textbf{0\arabic*}]
+  \item Carregar o talhão \texttt{crop\_field\_1} em Picos-PI.
+  \item Visualizar o \textbf{NDVI} — overlay no mapa, estatísticas e histograma.
+  \item Clicar em um pixel — popup com nível de estresse na coordenada.
+  \item Trocar para \textbf{EVI} e comparar lado a lado.
+  \item Ativar o \textbf{terreno 3D} e rotacionar (Three.js).
+  \item Acionar a \textbf{classificação em zonas} (K-Means) — hectares por classe.
+\end{enumerate}
+
+\textbf{Fala de fechamento da demo:} \textquotedblright\,Tudo isso roda
+localmente, sem login, sem nuvem, e em alguns segundos por imagem.
+Vou passar para o Lauan falar sobre testes.\,\textquotedblright
+
+\subsection*{Slide 11 — Estratégia de testes \hfill \textit{Lauan Matheus · 75 s}}
+
+\textquotedblleft\,Sobre testes, montamos uma \textbf{pirâmide em três
+níveis}.
+
+\textbf{Nível 1 — Unitário.} pytest direto no
+\texttt{SentinelProcessor}: NDVI, EVI, estatísticas, casos de borda
+como NaN, divisão por zero e máscara de água. Esse nível roda em
+milissegundos.
+
+\textbf{Nível 2 — Integração.} FastAPI TestClient valida os endpoints
+HTTP, os status codes e a validação Pydantic do contrato.
+
+\textbf{Nível 3 — Manual.} Testes end-to-end com um produto Sentinel-2
+real, executados durante a demonstração que vocês acabaram de ver.
+
+Tudo isso é viabilizado por \textbf{fixtures sintéticas em NumPy}, que
+substituem um produto Sentinel real de 1\,GB. A suíte completa roda em
+\textbf{menos de 1 segundo}.\,\textquotedblright
+
+\subsection*{Slide 12 — Resultados \hfill \textit{Lauan Matheus · 75 s}}
+
+\textquotedblleft\,Os números: \textbf{28 de 28 testes passando} em
+\textbf{0,79 segundos}, com \textbf{zero \textit{flaky}}. A cobertura
+está dividida por camada: \textbf{55\%} no
+\texttt{sentinel\_processor}, que é onde a lógica de cálculo mora;
+e \textbf{24\%} global, porque os endpoints exigem um produto
+Sentinel real para serem exercitados.
+
+E isso é \textbf{honesto}: declaramos esse gap como
+\textbf{dívida técnica DT-03} no documento de entrega.
+Rastreabilidade: os requisitos \textbf{RF-04, 05, 06, 10, 11 e 20}
+estão diretamente cobertos por casos de teste vinculados.\,\textquotedblright
+
+\subsection*{Slide 13 — Limitações + próximos passos \hfill \textit{Sammuel Moura · 90 s}}
+
+\textquotedblleft\,Encerro o bloco técnico com honestidade sobre
+\textbf{limitações conscientes}:
+\begin{itemize}[noitemsep]
+  \item Talhões desenhados \textbf{não persistem} — o estado é em memória.
+  \item A classificação supervisionada está \textbf{simulada} (K-Means + heurística).
+  \item As imagens Sentinel-2 são \textbf{baixadas manualmente} do Copernicus Hub.
+  \item Aplicação \textbf{single-user} em localhost, sem autenticação.
+  \item A cobertura de I/O depende de produto \texttt{.SAFE} real.
+\end{itemize}
+
+E \textbf{sete próximos passos} concretos:
+\textbf{(01)} integração com a API do Copernicus para baixar imagem
+sob demanda; \textbf{(02)} persistência em SQLite ou PostGIS;
+\textbf{(03)} Random Forest para classificação real;
+\textbf{(04)} exportação em GeoTIFF, Shapefile e CSV;
+\textbf{(05)} comparação temporal multi-data;
+\textbf{(06)} hospedar a aplicação para multi-usuário; e
+\textbf{(07)} CI automatizado com pytest + GitHub Actions.
+
+Vou passar para o João Leonardi encerrar.\,\textquotedblright
+
+\subsection*{Slide 14 — Equipe + Perguntas \hfill \textit{João Leonardi · 60 s}}
+
+\textquotedblleft\,Para fechar, a divisão de trabalho da equipe:
+eu fiquei no \textbf{backend FastAPI e integração Git};
+João Castello no \textbf{frontend e na condução desta demo};
+José Melquíades na \textbf{modelagem de dados e parsing KML};
+Lauan Matheus na \textbf{suíte de testes};
+Lucas Benevinuto na \textbf{apresentação};
+Luis Gustavo na \textbf{documentação técnica e ADRs};
+Sammuel Moura no \textbf{manual do usuário e glossário};
+e Vinicius Henrique em \textbf{arquitetura, DevOps e roteiro de demo}.
+
+\textbf{Obrigado pela atenção.} Estamos abertos a perguntas.\,\textquotedblright
+
+\newpage
+
+\section*{Dicas de execução}
+
+\begin{itemize}
+  \item \textbf{Transições.} Cada apresentador encerra com uma frase que
+        \textbf{passa a bola} explicitamente (\textit{``vou passar para
+        o X falar sobre Y''}). Evita pausas mortas e cola o pitch.
+  \item \textbf{Demo (slide 10).} O condutor deve ter o produto
+        \textbf{pré-aberto e com o KML já carregado}. O risco maior é
+        gastar tempo procurando arquivo na hora.
+  \item \textbf{Números que vocês precisam saber de cabeça:}
+        \textbf{35 histórias} (\textbf{30 entregues}, 85{,}7\%),
+        \textbf{11 ADRs}, \textbf{28/28 testes em 0{,}79\,s},
+        cobertura \textbf{55\% processador / 24\% global},
+        \textbf{6 épicos}, \textbf{5 \textit{Won't Have}} conscientes.
+  \item \textbf{Se perguntarem por que não tem banco}: a resposta está
+        em DA-02 — comunicação por JSON+base64, sem persistência, para
+        manter o sistema reprodutível e single-user em localhost.
+  \item \textbf{Se perguntarem sobre cobertura baixa de 24\%}: é um
+        número honesto — declarado como DT-03 — e é consequência direta
+        dos endpoints precisarem de um produto Sentinel \texttt{.SAFE}
+        real, que tem 1\,GB. O que importa é os \textbf{55\% no
+        processador}, que é onde a lógica de cálculo vive.
+  \item \textbf{Ritmo.} Mantenham cerca de \textbf{1 minuto por slide}
+        (exceto a demo). Se ficarem atrasados, é melhor abreviar o
+        slide 7 (Stack) — é o mais denso e menos crítico para a banca.
+\end{itemize}
+
+\end{document}
