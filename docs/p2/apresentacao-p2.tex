@@ -290,7 +290,8 @@
       \node[anchor=north west, inner sep=0, text width=12.5cm,
             font=\sffamily\fontsize{9pt}{12pt}\selectfont\color{stone}]
         at (0,-3.5) {%
-        Comunicação por JSON, imagens em base64. Sem banco de dados.};
+        Contratos validados nos dois lados. Cada análise é isolada
+        e auto-contida — sem estado compartilhado.};
     \end{tikzpicture}
   \end{minipage}
   \footchrome
@@ -383,7 +384,39 @@
   \footchrome
 \end{frame}
 
-% ── 11. Demo ────────────────────────────────────────────────
+% ── 11. Engenharia (robustez) ──────────────────────────────
+\begin{frame}[plain]
+  \vspace{0.5cm}
+  \hspace{1.2cm}\begin{minipage}{0.85\textwidth}
+    \slidehead{Engenharia}{Robusto por dentro.}
+
+    \vspace{0.6cm}
+
+    \begin{tikzpicture}[
+      box/.style={draw=moss100, fill=cream, rounded corners=2pt,
+                  text width=5.6cm, inner sep=10pt, minimum height=1.7cm,
+                  anchor=north west}]
+      \node[box] at (0,0) {%
+        {\sffamily\bfseries\fontsize{11pt}{13pt}\selectfont\color{moss950}Validação na porta da API}\\[3pt]
+        {\sffamily\fontsize{9pt}{12pt}\selectfont\color{smoke}Coordenadas, polígonos e nomes\\de produto checados antes\\de qualquer cálculo.}};
+
+      \node[box] at (6.0,0) {%
+        {\sffamily\bfseries\fontsize{11pt}{13pt}\selectfont\color{moss950}Erros tratados em camadas}\\[3pt]
+        {\sffamily\fontsize{9pt}{12pt}\selectfont\color{smoke}Falhas internas viram mensagens\\seguras; o servidor registra\\contexto pra diagnóstico.}};
+
+      \node[box] at (0,-2.1) {%
+        {\sffamily\bfseries\fontsize{11pt}{13pt}\selectfont\color{moss950}Cálculos vetorizados}\\[3pt]
+        {\sffamily\fontsize{9pt}{12pt}\selectfont\color{smoke}Operações sobre imagens rodam\\dezenas de vezes mais rápido\\que o caminho ingênuo.}};
+
+      \node[box] at (6.0,-2.1) {%
+        {\sffamily\bfseries\fontsize{11pt}{13pt}\selectfont\color{moss950}Auditoria contínua}\\[3pt]
+        {\sffamily\fontsize{9pt}{12pt}\selectfont\color{smoke}40 testes automatizados rodam\\a cada mudança — quebrou,\\a gente vê na hora.}};
+    \end{tikzpicture}
+  \end{minipage}
+  \footchrome
+\end{frame}
+
+% ── 12. Demo ────────────────────────────────────────────────
 \begin{frame}[plain]
   \vspace{0.5cm}
   \hspace{1.2cm}\begin{minipage}{0.85\textwidth}
