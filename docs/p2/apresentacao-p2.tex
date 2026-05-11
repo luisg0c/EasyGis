@@ -47,7 +47,7 @@
 
 % ─── Helpers ───────────────────────────────────────────────────
 \newcommand{\eyebrow}[1]{%
-  \begingroup\sffamily\fontsize{9pt}{11pt}\selectfont\bfseries\color{moss700}%
+  \begingroup\sffamily\fontsize{8pt}{10pt}\selectfont\bfseries\color{moss700}%
   \MakeUppercase{#1}\endgroup}
 
 \newcommand{\kicker}[1]{%
@@ -62,7 +62,7 @@
     \fill[ivory, rounded corners=0.5pt, opacity=0.88] (0.24,0.66) rectangle (0.72,0.74);
     \fill[ivory, rounded corners=0.5pt, opacity=0.58] (0.24,0.48) rectangle (0.58,0.56);
     \fill[ivory, rounded corners=0.5pt, opacity=0.32] (0.24,0.30) rectangle (0.44,0.38);
-    \node[anchor=west, inner sep=0, font=\sffamily\bfseries\fontsize{14pt}{14pt}\selectfont]
+    \node[anchor=west, inner sep=0, font=\sffamily\bfseries\fontsize{12pt}{12pt}\selectfont]
       at (1.3, 0.55) {\textcolor{moss950}{Easy}\textcolor{moss600}{Gis}};
   \end{tikzpicture}
 }
@@ -70,7 +70,7 @@
 % Header padronizado (eyebrow + título)
 \newcommand{\slidehead}[2]{%
   \eyebrow{#1}\\[6pt]
-  {\sffamily\bfseries\fontsize{26pt}{30pt}\selectfont\color{moss950}#2}\\[8pt]
+  {\sffamily\bfseries\fontsize{22pt}{26pt}\selectfont\color{moss950}#2}\\[8pt]
   {\color{moss100}\rule{0.25\textwidth}{0.5pt}}
   \vspace{0.3cm}
 }
@@ -104,37 +104,37 @@
       at ([xshift=1.2cm, yshift=-2.2cm]current page.north west)
       {AVALIAÇÃO P2 · ENGENHARIA DE SOFTWARE · 2026.1};
     \node[anchor=north west,
-          font=\sffamily\bfseries\fontsize{34pt}{34pt}\selectfont\color{moss950},
+          font=\sffamily\bfseries\fontsize{28pt}{30pt}\selectfont\color{moss950},
           inner sep=0]
       at ([xshift=1.2cm, yshift=-2.8cm]current page.north west)
       {Agricultura};
     \node[anchor=north west,
-          font=\sffamily\bfseries\fontsize{34pt}{34pt}\selectfont\color{moss950},
+          font=\sffamily\bfseries\fontsize{28pt}{30pt}\selectfont\color{moss950},
           inner sep=0]
       at ([xshift=1.2cm, yshift=-3.8cm]current page.north west)
       {de precisão};
     \node[anchor=north west,
-          font=\sffamily\bfseries\fontsize{34pt}{34pt}\selectfont\color{moss700},
+          font=\sffamily\bfseries\fontsize{28pt}{30pt}\selectfont\color{moss700},
           inner sep=0]
       at ([xshift=1.2cm, yshift=-4.8cm]current page.north west)
       {por satélite.};
     \node[anchor=south west,
-          font=\sffamily\fontsize{9pt}{12pt}\selectfont\color{smoke},
+          font=\sffamily\fontsize{8pt}{11pt}\selectfont\color{smoke},
           inner sep=0]
       at ([xshift=1.2cm, yshift=2.7cm]current page.south west)
       {João Leonardi da Silva Melo · João Vinícius Passos Castello Branco Carvalho};
     \node[anchor=south west,
-          font=\sffamily\fontsize{9pt}{12pt}\selectfont\color{smoke},
+          font=\sffamily\fontsize{8pt}{11pt}\selectfont\color{smoke},
           inner sep=0]
       at ([xshift=1.2cm, yshift=2.2cm]current page.south west)
       {José Melquíades Neto · Lauan Matheus da Rocha Alves};
     \node[anchor=south west,
-          font=\sffamily\fontsize{9pt}{12pt}\selectfont\color{smoke},
+          font=\sffamily\fontsize{8pt}{11pt}\selectfont\color{smoke},
           inner sep=0]
       at ([xshift=1.2cm, yshift=1.7cm]current page.south west)
       {Lucas Benevinuto Pereira · Luis Gustavo Olimpio};
     \node[anchor=south west,
-          font=\sffamily\fontsize{9pt}{12pt}\selectfont\color{smoke},
+          font=\sffamily\fontsize{8pt}{11pt}\selectfont\color{smoke},
           inner sep=0]
       at ([xshift=1.2cm, yshift=1.2cm]current page.south west)
       {Sammuel Moura Saraiva · Vinicius Henrique Albino Andrade};
@@ -152,7 +152,7 @@
   \hspace{1.2cm}\begin{minipage}{0.85\textwidth}
     \slidehead{Problema}{Monitorar lavouras\\custa caro.}
 
-    {\sffamily\fontsize{13pt}{18pt}\selectfont\color{charcoal}%
+    {\sffamily\fontsize{8.5pt}{12pt}\selectfont\color{charcoal}%
     A ESA libera Sentinel-2 do Brasil inteiro a cada 5 dias, com 10\,m de
     resolução, \textbf{de graça}.\\[2pt]
     Mas ferramentas pra usar custam \textbf{milhares de R\$/ano}, ou exigem
@@ -161,15 +161,15 @@
     \vspace{0.8cm}
 
     \begin{tikzpicture}[every node/.style={anchor=north west, inner sep=0}]
-      \node[font=\sffamily\bfseries\fontsize{30pt}{30pt}\selectfont\color{moss950}] at (0,0) {66\,M};
+      \node[font=\sffamily\bfseries\fontsize{26pt}{28pt}\selectfont\color{moss950}] at (0,0) {66\,M};
       \node[font=\sffamily\bfseries\fontsize{8pt}{10pt}\selectfont\color{stone}, text width=3.2cm] at (0,-1.3)
         {HECTARES PLANTADOS NO BRASIL};
 
-      \node[font=\sffamily\bfseries\fontsize{30pt}{30pt}\selectfont\color{moss950}] at (4.5,0) {5};
+      \node[font=\sffamily\bfseries\fontsize{26pt}{28pt}\selectfont\color{moss950}] at (4.5,0) {5};
       \node[font=\sffamily\bfseries\fontsize{8pt}{10pt}\selectfont\color{stone}, text width=3.2cm] at (4.5,-1.3)
         {DIAS DE REVISITA SENTINEL-2};
 
-      \node[font=\sffamily\bfseries\fontsize{30pt}{30pt}\selectfont\color{moss950}] at (9.0,0) {10\,m};
+      \node[font=\sffamily\bfseries\fontsize{26pt}{28pt}\selectfont\color{moss950}] at (9.0,0) {10\,m};
       \node[font=\sffamily\bfseries\fontsize{8pt}{10pt}\selectfont\color{stone}, text width=3.2cm] at (9.0,-1.3)
         {RESOLUÇÃO POR PIXEL};
     \end{tikzpicture}
@@ -183,7 +183,7 @@
   \hspace{1.2cm}\begin{minipage}{0.85\textwidth}
     \slidehead{Solução}{Página web local,\\sem custo.}
 
-    {\sffamily\fontsize{11pt}{16pt}\selectfont\color{smoke}%
+    {\sffamily\fontsize{8.5pt}{12pt}\selectfont\color{smoke}%
     Importa KML do Google Earth, escolhe índice, clica calcular. Em 5–30 s
     aparece imagem colorida sobre o mapa, estatísticas e classificação em
     zonas com áreas em hectares.\par}
@@ -195,13 +195,13 @@
                   text width=3.6cm, inner sep=10pt, minimum height=1.8cm,
                   anchor=north west}]
       \node[box] at (0,0) {%
-        {\sffamily\bfseries\fontsize{10pt}{12pt}\selectfont\color{moss900}Importar talhão}\\[4pt]
+        {\sffamily\bfseries\fontsize{8pt}{10pt}\selectfont\color{moss900}Importar talhão}\\[4pt]
         {\sffamily\fontsize{8pt}{10pt}\selectfont\color{smoke}KML do Google Earth\\ou desenho no mapa}};
       \node[box] at (4.0,0) {%
-        {\sffamily\bfseries\fontsize{10pt}{12pt}\selectfont\color{moss900}Calcular índice}\\[4pt]
+        {\sffamily\bfseries\fontsize{8pt}{10pt}\selectfont\color{moss900}Calcular índice}\\[4pt]
         {\sffamily\fontsize{8pt}{10pt}\selectfont\color{smoke}NDVI · EVI · SAVI\\NDWI · NDBI + 13 bandas}};
       \node[box] at (8.0,0) {%
-        {\sffamily\bfseries\fontsize{10pt}{12pt}\selectfont\color{moss900}Classificar zonas}\\[4pt]
+        {\sffamily\bfseries\fontsize{8pt}{10pt}\selectfont\color{moss900}Classificar zonas}\\[4pt]
         {\sffamily\fontsize{8pt}{10pt}\selectfont\color{smoke}Vigor baixo/médio/alto\\hectares por classe}};
     \end{tikzpicture}
   \end{minipage}
@@ -221,16 +221,16 @@
                   text width=5.6cm, inner sep=10pt, minimum height=1.4cm,
                   anchor=north west}]
       \node[box] at (0,0) {%
-        {\sffamily\bfseries\fontsize{12pt}{14pt}\selectfont\color{moss950}Produtor rural}\\[2pt]
+        {\sffamily\bfseries\fontsize{8pt}{10pt}\selectfont\color{moss950}Produtor rural}\\[2pt]
         {\sffamily\fontsize{8pt}{10pt}\selectfont\color{smoke}Decide hoje onde aplicar amanhã.}};
       \node[box] at (6.0,0) {%
-        {\sffamily\bfseries\fontsize{12pt}{14pt}\selectfont\color{moss950}Agrônomo}\\[2pt]
+        {\sffamily\bfseries\fontsize{8pt}{10pt}\selectfont\color{moss950}Agrônomo}\\[2pt]
         {\sffamily\fontsize{8pt}{10pt}\selectfont\color{smoke}Prescrição de insumos por mapa de variabilidade.}};
       \node[box] at (0,-1.7) {%
-        {\sffamily\bfseries\fontsize{12pt}{14pt}\selectfont\color{moss950}Pesquisador}\\[2pt]
+        {\sffamily\bfseries\fontsize{8pt}{10pt}\selectfont\color{moss950}Pesquisador}\\[2pt]
         {\sffamily\fontsize{8pt}{10pt}\selectfont\color{smoke}Experimenta algoritmos sobre dados reais.}};
       \node[box] at (6.0,-1.7) {%
-        {\sffamily\bfseries\fontsize{12pt}{14pt}\selectfont\color{moss950}Estudante}\\[2pt]
+        {\sffamily\bfseries\fontsize{8pt}{10pt}\selectfont\color{moss950}Estudante}\\[2pt]
         {\sffamily\fontsize{8pt}{10pt}\selectfont\color{smoke}Aprende sensoriamento remoto na prática.}};
     \end{tikzpicture}
   \end{minipage}
@@ -247,10 +247,10 @@
 
     \begin{tikzpicture}
       \node[anchor=north west, inner sep=0,
-            font=\sffamily\bfseries\fontsize{84pt}{84pt}\selectfont\color{moss950}]
+            font=\sffamily\bfseries\fontsize{68pt}{68pt}\selectfont\color{moss950}]
         at (0,0) {35};
       \node[anchor=north west, inner sep=0, text width=8cm,
-            font=\sffamily\fontsize{11pt}{16pt}\selectfont\color{charcoal}]
+            font=\sffamily\fontsize{8.5pt}{12pt}\selectfont\color{charcoal}]
         at (6.5, -0.4) {%
         \textbf{histórias} em \textbf{6 épicos}.\\[6pt]
         \textcolor{moss700}{\textbf{28 implementadas}} + 2 parciais\\
@@ -278,12 +278,12 @@
 
       \node[box] at (0,0) {%
         \kicker{frontend · porta 3000}\\[6pt]
-        {\sffamily\bfseries\fontsize{14pt}{16pt}\selectfont\color{moss950}Next.js 16}\\[2pt]
+        {\sffamily\bfseries\fontsize{8pt}{10pt}\selectfont\color{moss950}Next.js 16}\\[2pt]
         {\sffamily\fontsize{8pt}{11pt}\selectfont\color{smoke}React 19 · TypeScript · Tailwind\\Leaflet (2D) · Three.js (3D)\\shadcn/ui}};
 
       \node[box] at (6.5,0) {%
         \kicker{backend · porta 8000}\\[6pt]
-        {\sffamily\bfseries\fontsize{14pt}{16pt}\selectfont\color{moss950}FastAPI}\\[2pt]
+        {\sffamily\bfseries\fontsize{8pt}{10pt}\selectfont\color{moss950}FastAPI}\\[2pt]
         {\sffamily\fontsize{8pt}{11pt}\selectfont\color{smoke}Python 3.12 · Uvicorn\\rasterio · NumPy · scipy\\OpenCV · scikit-learn}};
 
       \draw[arrow] (5.95,-1.4) -- (6.5,-1.4);
@@ -291,7 +291,7 @@
         at (6.2,-1.35) {REST};
 
       \node[anchor=north west, inner sep=0, text width=12.5cm,
-            font=\sffamily\fontsize{9pt}{12pt}\selectfont\color{stone}]
+            font=\sffamily\fontsize{8pt}{11pt}\selectfont\color{stone}]
         at (0,-3.5) {%
         Sem banco de dados. KMLs e produtos \texttt{.SAFE} no \textit{filesystem}.
         Comunicação JSON com imagem em base64 (DA-02).};
@@ -309,28 +309,28 @@
     \vspace{0.4cm}
 
     \begin{tikzpicture}[every node/.style={anchor=north west, inner sep=0, font=\sffamily}]
-      \node[font=\fontsize{10pt}{14pt}\selectfont\bfseries\color{moss900}] at (0, 0) {FastAPI};
-      \node[font=\fontsize{9pt}{12pt}\selectfont\color{smoke}, text width=9cm] at (3.9,0)
+      \node[font=\fontsize{8pt}{11pt}\selectfont\bfseries\color{moss900}] at (0, 0) {FastAPI};
+      \node[font=\fontsize{8pt}{11pt}\selectfont\color{smoke}, text width=9cm] at (3.9,0)
         {Pydantic dá validação automática + OpenAPI grátis em \texttt{/docs}.};
 
-      \node[font=\fontsize{10pt}{14pt}\selectfont\bfseries\color{moss900}] at (0, -0.7) {rasterio};
-      \node[font=\fontsize{9pt}{12pt}\selectfont\color{smoke}, text width=9cm] at (3.9,-0.7)
+      \node[font=\fontsize{8pt}{11pt}\selectfont\bfseries\color{moss900}] at (0, -0.7) {rasterio};
+      \node[font=\fontsize{8pt}{11pt}\selectfont\color{smoke}, text width=9cm] at (3.9,-0.7)
         {Padrão de fato sobre GDAL, em Python.};
 
-      \node[font=\fontsize{10pt}{14pt}\selectfont\bfseries\color{moss900}] at (0, -1.4) {Next.js App Router};
-      \node[font=\fontsize{9pt}{12pt}\selectfont\color{smoke}, text width=9cm] at (3.9,-1.4)
+      \node[font=\fontsize{8pt}{11pt}\selectfont\bfseries\color{moss900}] at (0, -1.4) {Next.js App Router};
+      \node[font=\fontsize{8pt}{11pt}\selectfont\color{smoke}, text width=9cm] at (3.9,-1.4)
         {SSR + API routes no mesmo projeto, sem expor o \textit{filesystem}.};
 
-      \node[font=\fontsize{10pt}{14pt}\selectfont\bfseries\color{moss900}] at (0, -2.1) {Leaflet};
-      \node[font=\fontsize{9pt}{12pt}\selectfont\color{smoke}, text width=9cm] at (3.9,-2.1)
+      \node[font=\fontsize{8pt}{11pt}\selectfont\bfseries\color{moss900}] at (0, -2.1) {Leaflet};
+      \node[font=\fontsize{8pt}{11pt}\selectfont\color{smoke}, text width=9cm] at (3.9,-2.1)
         {Mapa leve, sem token pago. (Mapbox cobra após cota.)};
 
-      \node[font=\fontsize{10pt}{14pt}\selectfont\bfseries\color{moss900}] at (0, -2.8) {Three.js};
-      \node[font=\fontsize{9pt}{12pt}\selectfont\color{smoke}, text width=9cm] at (3.9,-2.8)
+      \node[font=\fontsize{8pt}{11pt}\selectfont\bfseries\color{moss900}] at (0, -2.8) {Three.js};
+      \node[font=\fontsize{8pt}{11pt}\selectfont\color{smoke}, text width=9cm] at (3.9,-2.8)
         {3D nativo em WebGL para visualização do relevo do índice.};
 
-      \node[font=\fontsize{10pt}{14pt}\selectfont\bfseries\color{moss900}] at (0, -3.5) {uv};
-      \node[font=\fontsize{9pt}{12pt}\selectfont\color{smoke}, text width=9cm] at (3.9,-3.5)
+      \node[font=\fontsize{8pt}{11pt}\selectfont\bfseries\color{moss900}] at (0, -3.5) {uv};
+      \node[font=\fontsize{8pt}{11pt}\selectfont\color{smoke}, text width=9cm] at (3.9,-3.5)
         {Gerenciador Python 10× mais rápido que pip, com \textit{lock file} determinístico.};
     \end{tikzpicture}
   \end{minipage}
@@ -346,22 +346,22 @@
     \vspace{0.5cm}
 
     \begin{tikzpicture}[every node/.style={anchor=north west, inner sep=0}]
-      \node[font=\sffamily\bfseries\fontsize{9pt}{11pt}\selectfont\color{moss700}] at (0, 0) {DA-06};
-      \node[font=\sffamily\bfseries\fontsize{13pt}{16pt}\selectfont\color{moss950}, text width=12cm] at (1.5, 0)
+      \node[font=\sffamily\bfseries\fontsize{8pt}{10pt}\selectfont\color{moss700}] at (0, 0) {DA-06};
+      \node[font=\sffamily\bfseries\fontsize{11pt}{14pt}\selectfont\color{moss950}, text width=12cm] at (1.5, 0)
         {Separação processador / rotas HTTP};
-      \node[font=\sffamily\fontsize{9pt}{12pt}\selectfont\color{smoke}, text width=12cm] at (1.5, -0.55)
+      \node[font=\sffamily\fontsize{8pt}{11pt}\selectfont\color{smoke}, text width=12cm] at (1.5, -0.55)
         {Permite testar a lógica sem subir HTTP — 28 testes unitários em < 1\,s.};
 
-      \node[font=\sffamily\bfseries\fontsize{9pt}{11pt}\selectfont\color{moss700}] at (0, -1.5) {DA-07};
-      \node[font=\sffamily\bfseries\fontsize{13pt}{16pt}\selectfont\color{moss950}, text width=12cm] at (1.5, -1.5)
+      \node[font=\sffamily\bfseries\fontsize{8pt}{10pt}\selectfont\color{moss700}] at (0, -1.5) {DA-07};
+      \node[font=\sffamily\bfseries\fontsize{11pt}{14pt}\selectfont\color{moss950}, text width=12cm] at (1.5, -1.5)
         {Tipagem fim-a-fim};
-      \node[font=\sffamily\fontsize{9pt}{12pt}\selectfont\color{smoke}, text width=12cm] at (1.5, -2.05)
+      \node[font=\sffamily\fontsize{8pt}{11pt}\selectfont\color{smoke}, text width=12cm] at (1.5, -2.05)
         {Pydantic no backend espelhado em TypeScript no frontend — erro de contrato vira 422 ou build, nunca 500 silencioso.};
 
-      \node[font=\sffamily\bfseries\fontsize{9pt}{11pt}\selectfont\color{moss700}] at (0, -3.0) {DA-09};
-      \node[font=\sffamily\bfseries\fontsize{13pt}{16pt}\selectfont\color{moss950}, text width=12cm] at (1.5, -3.0)
+      \node[font=\sffamily\bfseries\fontsize{8pt}{10pt}\selectfont\color{moss700}] at (0, -3.0) {DA-09};
+      \node[font=\sffamily\bfseries\fontsize{11pt}{14pt}\selectfont\color{moss950}, text width=12cm] at (1.5, -3.0)
         {Suavização gaussiana com preservação de NaN};
-      \node[font=\sffamily\fontsize{9pt}{12pt}\selectfont\color{smoke}, text width=12cm] at (1.5, -3.55)
+      \node[font=\sffamily\fontsize{8pt}{11pt}\selectfont\color{smoke}, text width=12cm] at (1.5, -3.55)
         {Filtro direto sangra valores para fora do polígono e cria halo — dividimos também pela máscara binária.};
     \end{tikzpicture}
   \end{minipage}
@@ -397,12 +397,12 @@
 
     \vspace{0.8cm}
 
-    {\sffamily\fontsize{11pt}{15pt}\selectfont\color{charcoal}%
+    {\sffamily\fontsize{8pt}{11pt}\selectfont\color{charcoal}%
     \textbf{NDVI = (NIR $-$ Red) / (NIR + Red)} — clipado em [$-$1, 1].\par}
 
     \vspace{0.2cm}
 
-    {\sffamily\fontsize{9pt}{12pt}\selectfont\color{smoke}%
+    {\sffamily\fontsize{8pt}{11pt}\selectfont\color{smoke}%
     Gradiente \textcolor{ndvilow}{marrom} (solo) $\rightarrow$ \textcolor{ndvimid}{amarelo} (estresse) $\rightarrow$ \textcolor{moss700}{verde} (saudável).
     Backend devolve JSON com base64 + estatísticas; frontend sobrepõe ao Leaflet.\par}
   \end{minipage}
@@ -418,17 +418,17 @@
     \vspace{0.6cm}
 
     \begin{tikzpicture}[every node/.style={anchor=north west, inner sep=0}]
-      \node[font=\sffamily\bfseries\fontsize{12pt}{16pt}\selectfont\color{moss950}] at (0,0)
+      \node[font=\sffamily\bfseries\fontsize{8pt}{11pt}\selectfont\color{moss950}] at (0,0)
         {\textcolor{moss700}{01}\quad Carregar talhão \texttt{crop field 1} em Picos-PI};
-      \node[font=\sffamily\bfseries\fontsize{12pt}{16pt}\selectfont\color{moss950}] at (0,-0.85)
+      \node[font=\sffamily\bfseries\fontsize{8pt}{11pt}\selectfont\color{moss950}] at (0,-0.85)
         {\textcolor{moss700}{02}\quad Visualizar NDVI · overlay + estatísticas + histograma};
-      \node[font=\sffamily\bfseries\fontsize{12pt}{16pt}\selectfont\color{moss950}] at (0,-1.7)
+      \node[font=\sffamily\bfseries\fontsize{8pt}{11pt}\selectfont\color{moss950}] at (0,-1.7)
         {\textcolor{moss700}{03}\quad Clicar em pixel · popup com nível de estresse};
-      \node[font=\sffamily\bfseries\fontsize{12pt}{16pt}\selectfont\color{moss950}] at (0,-2.55)
+      \node[font=\sffamily\bfseries\fontsize{8pt}{11pt}\selectfont\color{moss950}] at (0,-2.55)
         {\textcolor{moss700}{04}\quad Trocar para EVI · comparar};
-      \node[font=\sffamily\bfseries\fontsize{12pt}{16pt}\selectfont\color{moss950}] at (0,-3.4)
+      \node[font=\sffamily\bfseries\fontsize{8pt}{11pt}\selectfont\color{moss950}] at (0,-3.4)
         {\textcolor{moss700}{05}\quad Ativar terreno 3D · rotacionar};
-      \node[font=\sffamily\bfseries\fontsize{12pt}{16pt}\selectfont\color{moss950}] at (0,-4.25)
+      \node[font=\sffamily\bfseries\fontsize{8pt}{11pt}\selectfont\color{moss950}] at (0,-4.25)
         {\textcolor{moss700}{06}\quad Classificar zonas · K-Means · hectares por classe};
     \end{tikzpicture}
   \end{minipage}
@@ -449,23 +449,23 @@
                   anchor=north west}]
       \node[box] at (0,0) {%
         \kicker{nível 1}\\[4pt]
-        {\sffamily\bfseries\fontsize{13pt}{15pt}\selectfont\color{moss950}Unitário}\\[6pt]
-        {\sffamily\fontsize{9pt}{12pt}\selectfont\color{smoke}\texttt{pytest} sobre o processador. NDVI, EVI, estatísticas, casos de borda (NaN, /0, água).}};
+        {\sffamily\bfseries\fontsize{11pt}{13pt}\selectfont\color{moss950}Unitário}\\[6pt]
+        {\sffamily\fontsize{8pt}{11pt}\selectfont\color{smoke}\texttt{pytest} sobre o processador. NDVI, EVI, estatísticas, casos de borda (NaN, /0, água).}};
 
       \node[box] at (3.9,0) {%
         \kicker{nível 2}\\[4pt]
-        {\sffamily\bfseries\fontsize{13pt}{15pt}\selectfont\color{moss950}Integração}\\[6pt]
-        {\sffamily\fontsize{9pt}{12pt}\selectfont\color{smoke}FastAPI \texttt{TestClient} valida endpoints, status codes e validação Pydantic.}};
+        {\sffamily\bfseries\fontsize{11pt}{13pt}\selectfont\color{moss950}Integração}\\[6pt]
+        {\sffamily\fontsize{8pt}{11pt}\selectfont\color{smoke}FastAPI \texttt{TestClient} valida endpoints, status codes e validação Pydantic.}};
 
       \node[box] at (7.8,0) {%
         \kicker{nível 3}\\[4pt]
-        {\sffamily\bfseries\fontsize{13pt}{15pt}\selectfont\color{moss950}Manual}\\[6pt]
-        {\sffamily\fontsize{9pt}{12pt}\selectfont\color{smoke}\textit{End-to-end} com produto Sentinel-2 real durante a demonstração.}};
+        {\sffamily\bfseries\fontsize{11pt}{13pt}\selectfont\color{moss950}Manual}\\[6pt]
+        {\sffamily\fontsize{8pt}{11pt}\selectfont\color{smoke}\textit{End-to-end} com produto Sentinel-2 real durante a demonstração.}};
     \end{tikzpicture}
 
     \vspace{0.4cm}
 
-    {\sffamily\fontsize{9.5pt}{13pt}\selectfont\color{smoke}%
+    {\sffamily\fontsize{8.5pt}{12pt}\selectfont\color{smoke}%
     \textit{Fixtures} sintéticas em NumPy substituem o produto de 1\,GB — suíte completa em < 1\,s.\par}
   \end{minipage}
   \footchrome
@@ -481,15 +481,15 @@
 
     \begin{tikzpicture}
       \node[anchor=north west, inner sep=0,
-            font=\sffamily\bfseries\fontsize{72pt}{72pt}\selectfont\color{moss950}]
+            font=\sffamily\bfseries\fontsize{58pt}{58pt}\selectfont\color{moss950}]
         at (0,0) {28};
       \node[anchor=north west, inner sep=0,
-            font=\sffamily\bfseries\fontsize{48pt}{48pt}\selectfont\color{moss700}]
+            font=\sffamily\bfseries\fontsize{38pt}{38pt}\selectfont\color{moss700}]
         at (3.4,0.6) {/28};
 
       \node[anchor=north west, inner sep=0,
             text width=5.6cm,
-            font=\sffamily\fontsize{10pt}{14pt}\selectfont\color{charcoal}]
+            font=\sffamily\fontsize{8pt}{11pt}\selectfont\color{charcoal}]
         at (6.4,-0.1) {%
         \textbf{casos passando · 0{,}79\,s}\\[6pt]
         \textcolor{smoke}{Cobertura \textbf{\textcolor{moss950}{55\%}} no processador (onde a lógica de cálculo está).}\\[4pt]
@@ -498,7 +498,7 @@
 
     \vspace{0.4cm}
 
-    {\sffamily\fontsize{10pt}{14pt}\selectfont\color{smoke}%
+    {\sffamily\fontsize{8pt}{11pt}\selectfont\color{smoke}%
     Gap declarado como dívida técnica \textbf{DT-03} no \texttt{00-ENTREGA-P2.pdf}.\\
     Rastreabilidade: RF-04, 05, 06, 10, 11, 20 cobertos por casos vinculados.\par}
   \end{minipage}
@@ -516,7 +516,7 @@
     \begin{tikzpicture}[every node/.style={anchor=north west, inner sep=0}]
       % Coluna esquerda — Limitações
       \node[font=\sffamily\fontsize{8pt}{10pt}\selectfont\bfseries\color{moss700}] at (0, 0) {LIMITAÇÕES (5)};
-      \node[font=\sffamily\fontsize{9pt}{12.5pt}\selectfont\color{charcoal}, text width=6.0cm] at (0, -0.5) {%
+      \node[font=\sffamily\fontsize{8pt}{11pt}\selectfont\color{charcoal}, text width=6.0cm] at (0, -0.5) {%
         \textcolor{moss700}{\textbf{—}} Sem persistência de talhões desenhados\\
         \textcolor{moss700}{\textbf{—}} Classificação supervisionada simulada\\
         \textcolor{moss700}{\textbf{—}} Imagens Sentinel-2 baixadas manualmente\\
@@ -525,7 +525,7 @@
 
       % Coluna direita — Próximos passos
       \node[font=\sffamily\fontsize{8pt}{10pt}\selectfont\bfseries\color{moss700}] at (6.3, 0) {PRÓXIMOS PASSOS (7)};
-      \node[font=\sffamily\fontsize{9pt}{12.5pt}\selectfont\color{charcoal}, text width=6.0cm] at (6.3, -0.5) {%
+      \node[font=\sffamily\fontsize{8pt}{11pt}\selectfont\color{charcoal}, text width=6.0cm] at (6.3, -0.5) {%
         \textbf{01} Integração com API do Copernicus\\
         \textbf{02} Persistência (SQLite ou PostGIS)\\
         \textbf{03} Random Forest para classificação real\\
@@ -547,35 +547,35 @@
     \vspace{0.2cm}
 
     \begin{tikzpicture}[every node/.style={anchor=north west, inner sep=0,
-        font=\sffamily\fontsize{9.5pt}{13pt}\selectfont}]
-      \node[font=\sffamily\bfseries\fontsize{9.5pt}{13pt}\selectfont\color{moss950}] at (0, 0) {João Leonardi};
+        font=\sffamily\fontsize{8.5pt}{12pt}\selectfont}]
+      \node[font=\sffamily\bfseries\fontsize{8.5pt}{12pt}\selectfont\color{moss950}] at (0, 0) {João Leonardi};
       \node[color=smoke] at (4.5, 0) {Backend FastAPI + integração Git};
 
-      \node[font=\sffamily\bfseries\fontsize{9.5pt}{13pt}\selectfont\color{moss950}] at (0, -0.48) {João Vinícius Castello};
+      \node[font=\sffamily\bfseries\fontsize{8.5pt}{12pt}\selectfont\color{moss950}] at (0, -0.48) {João Vinícius Castello};
       \node[color=smoke] at (4.5, -0.48) {Frontend Next.js + condução da demo};
 
-      \node[font=\sffamily\bfseries\fontsize{9.5pt}{13pt}\selectfont\color{moss950}] at (0, -0.96) {José Melquíades};
+      \node[font=\sffamily\bfseries\fontsize{8.5pt}{12pt}\selectfont\color{moss950}] at (0, -0.96) {José Melquíades};
       \node[color=smoke] at (4.5, -0.96) {Modelagem de dados + parsing KML};
 
-      \node[font=\sffamily\bfseries\fontsize{9.5pt}{13pt}\selectfont\color{moss950}] at (0, -1.44) {Lauan Matheus};
+      \node[font=\sffamily\bfseries\fontsize{8.5pt}{12pt}\selectfont\color{moss950}] at (0, -1.44) {Lauan Matheus};
       \node[color=smoke] at (4.5, -1.44) {Suíte de testes automatizados};
 
-      \node[font=\sffamily\bfseries\fontsize{9.5pt}{13pt}\selectfont\color{moss950}] at (0, -1.92) {Lucas Benevinuto};
+      \node[font=\sffamily\bfseries\fontsize{8.5pt}{12pt}\selectfont\color{moss950}] at (0, -1.92) {Lucas Benevinuto};
       \node[color=smoke] at (4.5, -1.92) {Apresentação e \textit{pitch}};
 
-      \node[font=\sffamily\bfseries\fontsize{9.5pt}{13pt}\selectfont\color{moss950}] at (0, -2.40) {Luis Gustavo};
+      \node[font=\sffamily\bfseries\fontsize{8.5pt}{12pt}\selectfont\color{moss950}] at (0, -2.40) {Luis Gustavo};
       \node[color=smoke] at (4.5, -2.40) {Documentação técnica + ADRs};
 
-      \node[font=\sffamily\bfseries\fontsize{9.5pt}{13pt}\selectfont\color{moss950}] at (0, -2.88) {Sammuel Moura};
+      \node[font=\sffamily\bfseries\fontsize{8.5pt}{12pt}\selectfont\color{moss950}] at (0, -2.88) {Sammuel Moura};
       \node[color=smoke] at (4.5, -2.88) {Manual do usuário + glossário};
 
-      \node[font=\sffamily\bfseries\fontsize{9.5pt}{13pt}\selectfont\color{moss950}] at (0, -3.36) {Vinicius Henrique};
+      \node[font=\sffamily\bfseries\fontsize{8.5pt}{12pt}\selectfont\color{moss950}] at (0, -3.36) {Vinicius Henrique};
       \node[color=smoke] at (4.5, -3.36) {Arquitetura + DevOps + roteiro de demo};
     \end{tikzpicture}
 
     \begin{tikzpicture}[remember picture, overlay]
       \node[anchor=south east, inner sep=0,
-            font=\sffamily\bfseries\fontsize{20pt}{22pt}\selectfont\color{moss950}]
+            font=\sffamily\bfseries\fontsize{16pt}{18pt}\selectfont\color{moss950}]
         at ([xshift=-2.2cm, yshift=0.45cm]current page.south east)
         {Perguntas?};
     \end{tikzpicture}
