@@ -241,23 +241,48 @@
 \begin{frame}[plain]
   \vspace{0.5cm}
   \hspace{1.2cm}\begin{minipage}{0.85\textwidth}
-    \slidehead{Escopo}{Backlog priorizado\\por MoSCoW.}
+    \slidehead{Escopo}{30 de 35 histórias entregues.}
 
-    \vspace{0.6cm}
+    \vspace{0.2cm}
 
+    {\sffamily\fontsize{9.5pt}{14pt}\selectfont\color{smoke}%
+    \textbf{6 épicos} priorizados por \textbf{MoSCoW}. Os \textit{Won't Have} foram conscientes — escopo enxuto para caber em um semestre.\par}
+
+    \vspace{0.5cm}
+
+    % Barra de progresso visual: 28 verde + 2 amarelo + 5 cinza
     \begin{tikzpicture}
-      \node[anchor=north west, inner sep=0,
-            font=\sffamily\bfseries\fontsize{68pt}{68pt}\selectfont\color{moss950}]
-        at (0,0) {35};
-      \node[anchor=north west, inner sep=0, text width=8cm,
-            font=\sffamily\fontsize{8.5pt}{12pt}\selectfont\color{charcoal}]
-        at (6.5, -0.4) {%
-        \textbf{histórias} em \textbf{6 épicos}.\\[6pt]
-        \textcolor{moss700}{\textbf{28 implementadas}} + 2 parciais\\
-        = 85{,}7\% do escopo.\\[4pt]
-        \textbf{5 \textit{Won't Have}} conscientes\\
-        (auth, persistência, exportação...).\par};
+      \def\barH{0.75}
+      \def\unit{0.32}
+      \fill[moss700, rounded corners=2pt] (0,0) rectangle (28*\unit, \barH);
+      \fill[ndvimid] (28*\unit, 0) rectangle (30*\unit, \barH);
+      \fill[moss100, rounded corners=2pt] (30*\unit, 0) rectangle (35*\unit, \barH);
+
+      \node[anchor=south, font=\sffamily\bfseries\fontsize{14pt}{14pt}\selectfont\color{moss950}]
+        at (14*\unit, \barH + 0.1) {28};
+      \node[anchor=south, font=\sffamily\bfseries\fontsize{10pt}{10pt}\selectfont\color{moss950}]
+        at (29*\unit, \barH + 0.1) {2};
+      \node[anchor=south, font=\sffamily\bfseries\fontsize{10pt}{10pt}\selectfont\color{stone}]
+        at (32.5*\unit, \barH + 0.1) {5};
     \end{tikzpicture}
+
+    \vspace{0.25cm}
+
+    % Legenda com bullets coloridos em 3 linhas
+    {\sffamily\fontsize{9pt}{14pt}\selectfont\color{charcoal}%
+    \textcolor{moss700}{$\blacksquare$}\, \textbf{28 entregues} \textcolor{smoke}{— índices, classificação, mapa, 3D, drawing}\par
+    \textcolor{ndvimid}{$\blacksquare$}\, \textbf{2 parciais} \textcolor{smoke}{— download manual de imagem Sentinel}\par
+    \textcolor{stone}{$\blacksquare$}\, \textbf{5 \textit{Won't Have}} \textcolor{smoke}{— autenticação, persistência, exportação}\par}
+
+    \vspace{0.25cm}
+
+    {\color{moss100}\rule{0.6\textwidth}{0.4pt}}
+
+    \vspace{0.15cm}
+
+    {\sffamily\fontsize{18pt}{20pt}\selectfont\bfseries\color{moss950}%
+    85{,}7\%\,}{\sffamily\fontsize{9.5pt}{13pt}\selectfont\color{smoke}%
+    do escopo entregue, dentro do prazo.\par}
   \end{minipage}
   \footchrome
 \end{frame}
@@ -378,16 +403,16 @@
 
     \begin{tikzpicture}[
       stepbox/.style={draw=moss100, fill=cream, rounded corners=2pt,
-                   minimum width=2.4cm, minimum height=1.5cm, inner sep=6pt,
-                   font=\sffamily\fontsize{8pt}{10pt}\selectfont\color{charcoal},
+                   minimum width=2.05cm, minimum height=1.5cm, inner sep=5pt,
+                   font=\sffamily\fontsize{7.5pt}{9.5pt}\selectfont\color{charcoal},
                    align=center},
       arrow/.style={->, >=stealth, line width=0.8pt, color=moss300}]
 
-      \node[stepbox] (s1) at (0,0)    {\textbf{01}\\Usuário\\seleciona\\talhão + NDVI};
-      \node[stepbox] (s2) at (2.9,0)  {\textbf{02}\\\texttt{POST}\\\texttt{/calculate-}\\\texttt{index}};
-      \node[stepbox] (s3) at (5.8,0)  {\textbf{03}\\\texttt{rasterio} lê\\B08 (NIR)\\+ B04 (Red)};
-      \node[stepbox] (s4) at (8.7,0)  {\textbf{04}\\\texttt{pyproj}\\reprojeta\\WGS84 → UTM};
-      \node[stepbox] (s5) at (11.6,0) {\textbf{05}\\NumPy +\\Pillow $\rightarrow$\\PNG colorido};
+      \node[stepbox] (s1) at (0,0)    {\textbf{01}\\Usuário\\seleciona talhão};
+      \node[stepbox] (s2) at (2.4,0)  {\textbf{02}\\\texttt{POST}\\\texttt{/calculate-}\\\texttt{index}};
+      \node[stepbox] (s3) at (4.8,0)  {\textbf{03}\\\texttt{rasterio} lê\\B08 (NIR)\\+ B04 (Red)};
+      \node[stepbox] (s4) at (7.2,0)  {\textbf{04}\\\texttt{pyproj}\\reprojeta\\WGS84 \textrightarrow{} UTM};
+      \node[stepbox] (s5) at (9.6,0)  {\textbf{05}\\NumPy + Pillow\\\textrightarrow{} PNG\\colorido};
 
       \draw[arrow] (s1) -- (s2);
       \draw[arrow] (s2) -- (s3);
