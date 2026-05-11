@@ -243,12 +243,12 @@
   \hspace{1.2cm}\begin{minipage}{0.85\textwidth}
     \slidehead{Escopo}{30 de 35 histórias entregues.}
 
-    \vspace{0.2cm}
+    \vspace{0.1cm}
 
-    {\sffamily\fontsize{9.5pt}{14pt}\selectfont\color{smoke}%
-    \textbf{6 épicos} priorizados por \textbf{MoSCoW}. Os \textit{Won't Have} foram conscientes — escopo enxuto para caber em um semestre.\par}
+    {\sffamily\fontsize{9pt}{13pt}\selectfont\color{smoke}%
+    \textbf{6 épicos} priorizados por \textbf{MoSCoW}. Os \textit{Won't Have} foram conscientes — escopo enxuto para um semestre.\par}
 
-    \vspace{0.5cm}
+    \vspace{0.35cm}
 
     % Barra de progresso visual: 28 verde + 2 amarelo + 5 cinza
     \begin{tikzpicture}
@@ -278,10 +278,10 @@
 
     {\color{moss100}\rule{0.6\textwidth}{0.4pt}}
 
-    \vspace{0.15cm}
+    \vspace{0.1cm}
 
-    {\sffamily\fontsize{18pt}{20pt}\selectfont\bfseries\color{moss950}%
-    85{,}7\%\,}{\sffamily\fontsize{9.5pt}{13pt}\selectfont\color{smoke}%
+    {\sffamily\fontsize{16pt}{18pt}\selectfont\bfseries\color{moss950}%
+    85{,}7\%\,}{\sffamily\fontsize{9pt}{12pt}\selectfont\color{smoke}%
     do escopo entregue, dentro do prazo.\par}
   \end{minipage}
   \footchrome
@@ -500,32 +500,56 @@
 \begin{frame}[plain]
   \vspace{0.5cm}
   \hspace{1.2cm}\begin{minipage}{0.85\textwidth}
-    \slidehead{Resultados}{Cobertura crítica.}
+    \slidehead{Resultados}{Suíte verde, cobertura honesta.}
 
-    \vspace{0.4cm}
+    \vspace{0.3cm}
 
+    % Linha 1: testes passando — destaque grande
     \begin{tikzpicture}
-      \node[anchor=north west, inner sep=0,
-            font=\sffamily\bfseries\fontsize{58pt}{58pt}\selectfont\color{moss950}]
-        at (0,0) {28};
-      \node[anchor=north west, inner sep=0,
-            font=\sffamily\bfseries\fontsize{38pt}{38pt}\selectfont\color{moss700}]
-        at (3.4,0.6) {/28};
-
-      \node[anchor=north west, inner sep=0,
-            text width=5.6cm,
-            font=\sffamily\fontsize{8pt}{11pt}\selectfont\color{charcoal}]
-        at (6.4,-0.1) {%
-        \textbf{casos passando · 0{,}79\,s}\\[6pt]
-        \textcolor{smoke}{Cobertura \textbf{\textcolor{moss950}{55\%}} no processador (onde a lógica de cálculo está).}\\[4pt]
-        \textcolor{smoke}{Cobertura global \textbf{\textcolor{moss950}{24\%}} — endpoints exigem produto Sentinel real.}\par};
+      \node[anchor=west, font=\sffamily\bfseries\fontsize{42pt}{42pt}\selectfont\color{moss950}]
+        at (0,0) {28/28};
+      \node[anchor=west, font=\sffamily\fontsize{10pt}{14pt}\selectfont\color{charcoal}, text width=8cm]
+        at (4.5,0.1) {%
+        \textbf{testes passando} em \textbf{0{,}79\,s}\\[2pt]
+        \textcolor{smoke}{pytest + FastAPI TestClient · zero \textit{flaky}}};
     \end{tikzpicture}
 
-    \vspace{0.4cm}
+    \vspace{0.6cm}
+
+    {\sffamily\fontsize{8pt}{10pt}\selectfont\bfseries\color{moss700}COBERTURA POR CAMADA\par}
+
+    \vspace{0.2cm}
+
+    % Barra de cobertura: processador (55%)
+    \begin{tikzpicture}
+      \def\barH{0.45}
+      \def\barW{7.0}
+      \fill[moss100, rounded corners=2pt] (0,0) rectangle (\barW, \barH);
+      \fill[moss700, rounded corners=2pt] (0,0) rectangle (0.55*\barW, \barH);
+      \node[anchor=west, font=\sffamily\bfseries\fontsize{11pt}{13pt}\selectfont\color{cream}]
+        at (0.1, \barH/2) {55\%};
+      \node[anchor=west, font=\sffamily\fontsize{9pt}{12pt}\selectfont\color{charcoal}]
+        at (\barW + 0.3, \barH/2) {\textbf{Processador} \textcolor{smoke}{— lógica de cálculo}};
+    \end{tikzpicture}
+
+    \vspace{0.18cm}
+
+    % Barra de cobertura: global (24%)
+    \begin{tikzpicture}
+      \def\barH{0.45}
+      \def\barW{7.0}
+      \fill[moss100, rounded corners=2pt] (0,0) rectangle (\barW, \barH);
+      \fill[moss700, rounded corners=2pt] (0,0) rectangle (0.24*\barW, \barH);
+      \node[anchor=west, font=\sffamily\bfseries\fontsize{11pt}{13pt}\selectfont\color{cream}]
+        at (0.1, \barH/2) {24\%};
+      \node[anchor=west, font=\sffamily\fontsize{9pt}{12pt}\selectfont\color{charcoal}]
+        at (\barW + 0.3, \barH/2) {\textbf{Global} \textcolor{smoke}{— endpoints exigem \texttt{.SAFE} real}};
+    \end{tikzpicture}
+
+    \vspace{0.6cm}
 
     {\sffamily\fontsize{8pt}{11pt}\selectfont\color{smoke}%
-    Gap declarado como dívida técnica \textbf{DT-03} no \texttt{00-ENTREGA-P2.pdf}.\\
-    Rastreabilidade: RF-04, 05, 06, 10, 11, 20 cobertos por casos vinculados.\par}
+    Gap declarado como dívida técnica \textbf{DT-03} · Rastreabilidade: RF-04, 05, 06, 10, 11, 20.\par}
   \end{minipage}
   \footchrome
 \end{frame}
