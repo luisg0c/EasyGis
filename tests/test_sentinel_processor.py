@@ -126,6 +126,67 @@ class TestSAVI:
         assert np.all(np.isnan(savi))
 
 
+class TestNDWI:
+    """RF (extensão): Normalized Difference Water Index — bandas B03 + B08."""
+
+    def test_ndwi_in_valid_range(self, processor):
+        """CT-NDWI.1: NDWI deve ser limitado a [-1, 1]"""
+        green = np.array([[3000.0, 5000.0], [1500.0, 7000.0]])
+        nir = np.array([[5000.0, 3000.0], [7000.0, 1500.0]])
+        ndwi = processor.calculate_ndwi(green, nir)
+        assert ndwi.min() >= -1.0
+        assert ndwi.max() <= 1.0
+
+    def test_ndwi_water_is_positive(self, processor):
+        """CT-NDWI.2: Pixel de água (green > nir) → valor positivo."""
+        green = np.array([[5000.0]])
+        nir = np.array([[2000.0]])
+        ndwi = processor.calculate_ndwi(green, nir)
+        # NDWI = (5000-2000)/(5000+2000) = 3000/7000 ≈ 0.4286
+        assert ndwi[0, 0] == pytest.approx(0.4286, abs=1e-4)
+
+    def test_ndwi_vegetation_is_negative(self, processor):
+        """CT-NDWI.3: Pixel de vegetação (nir > green) → valor negativo."""
+        green = np.array([[2000.0]])
+        nir = np.array([[5000.0]])
+        ndwi = processor.calculate_ndwi(green, nir)
+        assert ndwi[0, 0] < 0
+
+    def test_ndwi_handles_zero_denominator(self, processor):
+        """CT-NDWI.4: Green = NIR = 0 → NaN."""
+        green = np.zeros((2, 2))
+        nir = np.zeros((2, 2))
+        ndwi = processor.calculate_ndwi(green, nir)
+        assert np.all(np.isnan(ndwi))
+
+
+class TestNDBI:
+    """RF (extensão): Normalized Difference Built-up Index — B11 + B08."""
+
+    def test_ndbi_in_valid_range(self, processor):
+        """CT-NDBI.1: NDBI deve ser limitado a [-1, 1]"""
+        swir = np.array([[4000.0, 6000.0], [2000.0, 8000.0]])
+        nir = np.array([[6000.0, 4000.0], [8000.0, 2000.0]])
+        ndbi = processor.calculate_ndbi(swir, nir)
+        assert ndbi.min() >= -1.0
+        assert ndbi.max() <= 1.0
+
+    def test_ndbi_builtup_is_positive(self, processor):
+        """CT-NDBI.2: Pixel de área construída (swir > nir) → positivo."""
+        swir = np.array([[5000.0]])
+        nir = np.array([[2000.0]])
+        ndbi = processor.calculate_ndbi(swir, nir)
+        # NDBI = (5000-2000)/(5000+2000) = 3000/7000 ≈ 0.4286
+        assert ndbi[0, 0] == pytest.approx(0.4286, abs=1e-4)
+
+    def test_ndbi_vegetation_is_negative(self, processor):
+        """CT-NDBI.3: Vegetação (nir > swir) → negativo."""
+        swir = np.array([[2000.0]])
+        nir = np.array([[5000.0]])
+        ndbi = processor.calculate_ndbi(swir, nir)
+        assert ndbi[0, 0] < 0
+
+
 class TestStatistics:
     """RF-10: Estatísticas descritivas"""
 

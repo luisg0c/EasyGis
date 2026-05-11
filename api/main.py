@@ -7,7 +7,7 @@ import re
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator
-from typing import List, Optional
+from typing import List, Literal, Optional
 from pathlib import Path
 import base64
 import io
@@ -197,6 +197,28 @@ def generate_elevation_data(data: np.ndarray, downsample_factor: int = 4) -> dic
         'min_value': float(np.nanmin(data)) if np.any(valid_mask) else 0,
         'max_value': float(np.nanmax(data)) if np.any(valid_mask) else 0,
     }
+
+
+def _min_max_to_uint8(data_filled: np.ndarray) -> tuple[np.ndarray, float, float]:
+    """
+    Min-max normalize a filled (no NaN) array to uint8 [0, 255].
+    Returns (uint8_array, vmin, vmax) so callers can de-normalize back to the
+    original range. Safe for constant arrays (vmax == vmin) — returns zeros.
+    """
+    vmin = float(data_filled.min())
+    vmax = float(data_filled.max())
+    if vmax <= vmin:
+        return np.zeros(data_filled.shape, dtype=np.uint8), vmin, vmax
+    normalized = ((data_filled - vmin) / (vmax - vmin) * 255.0).astype(np.uint8)
+    return normalized, vmin, vmax
+
+
+def _denormalize_from_uint8(arr_uint8: np.ndarray, vmin: float, vmax: float) -> np.ndarray:
+    """Inverse of _min_max_to_uint8. Safe for constant range (returns vmin)."""
+    span = vmax - vmin
+    if span <= 0:
+        return np.full_like(arr_uint8, vmin, dtype=np.float32)
+    return arr_uint8.astype(np.float32) / 255.0 * span + vmin
 
 
 def _normalize_to_uint8(data: np.ndarray, valid_mask: np.ndarray) -> np.ndarray:
@@ -443,6 +465,38 @@ def calculate_index(request: CalculateIndexRequest):
 
             index_data = processor.calculate_evi(nir_cropped, red_cropped, blue_cropped)
 
+        elif request.index_type == 'SAVI':
+            # Read NIR and Red at 10 m — soil-adjusted vegetation index
+            nir_data, nir_meta = processor.read_band('B08', '10m')
+            red_data, red_meta = processor.read_band('B04', '10m')
+            nir_cropped, _ = processor.crop_to_geometry(nir_data, nir_meta, geometry)
+            red_cropped, _ = processor.crop_to_geometry(red_data, red_meta, geometry)
+            index_data = processor.calculate_savi(nir_cropped, red_cropped)
+
+        elif request.index_type == 'NDWI':
+            # Read Green and NIR at 10 m — McFeeters water index
+            green_data, green_meta = processor.read_band('B03', '10m')
+            nir_data, nir_meta = processor.read_band('B08', '10m')
+            green_cropped, _ = processor.crop_to_geometry(green_data, green_meta, geometry)
+            nir_cropped, _ = processor.crop_to_geometry(nir_data, nir_meta, geometry)
+            index_data = processor.calculate_ndwi(green_cropped, nir_cropped)
+
+        elif request.index_type == 'NDBI':
+            # Read SWIR (B11, 20 m) and NIR (B08, 10 m). crop_to_geometry
+            # respects the source raster's pixel grid, then we resize SWIR
+            # to NIR's grid using nearest-neighbor before differencing.
+            swir_data, swir_meta = processor.read_band('B11', '20m')
+            nir_data, nir_meta = processor.read_band('B08', '10m')
+            swir_cropped, _ = processor.crop_to_geometry(swir_data, swir_meta, geometry)
+            nir_cropped, _ = processor.crop_to_geometry(nir_data, nir_meta, geometry)
+            # Reamostra SWIR pra grade de NIR (10 m) — nearest preserva valores discretos.
+            from PIL import Image as _PILImage
+            if swir_cropped.shape != nir_cropped.shape:
+                pil = _PILImage.fromarray(swir_cropped.astype(np.float32))
+                pil = pil.resize((nir_cropped.shape[1], nir_cropped.shape[0]), _PILImage.NEAREST)
+                swir_cropped = np.array(pil)
+            index_data = processor.calculate_ndbi(swir_cropped, nir_cropped)
+
         elif request.index_type == 'RGB':
             # True Color RGB (B04-Red, B03-Green, B02-Blue)
             red_data, red_meta = processor.read_band('B04', '10m')
@@ -647,7 +701,7 @@ def run_experiment(request: ExperimentRequest):
             data_filled = np.where(valid_mask, nir_cropped, 0)
 
             # Normalize to 0-255 for OpenCV
-            data_normalized = ((data_filled - data_filled.min()) / (data_filled.max() - data_filled.min()) * 255).astype(np.uint8)
+            data_normalized, _vmin, _vmax = _min_max_to_uint8(data_filled)
 
             d = request.parameters.get('d', 9)
             sigma_color = request.parameters.get('sigma_color', 75)
@@ -656,7 +710,7 @@ def run_experiment(request: ExperimentRequest):
             filtered = cv2.bilateralFilter(data_normalized, d, sigma_color, sigma_space)
 
             # Denormalize back
-            result_data = filtered.astype(np.float32) / 255.0 * (data_filled.max() - data_filled.min()) + data_filled.min()
+            result_data = _denormalize_from_uint8(filtered, _vmin, _vmax)
             result_data[~valid_mask] = np.nan
             stats_description = {'filter': 'Bilateral', 'd': d, 'sigma_color': sigma_color, 'sigma_space': sigma_space}
 
@@ -675,7 +729,7 @@ def run_experiment(request: ExperimentRequest):
             data_filled = np.where(valid_mask, nir_cropped, 0)
 
             # Normalize for edge detection
-            data_normalized = ((data_filled - data_filled.min()) / (data_filled.max() - data_filled.min()) * 255).astype(np.uint8)
+            data_normalized, _vmin, _vmax = _min_max_to_uint8(data_filled)
 
             low_threshold = request.parameters.get('low_threshold', 50)
             high_threshold = request.parameters.get('high_threshold', 150)
@@ -699,12 +753,12 @@ def run_experiment(request: ExperimentRequest):
             data_filled = np.where(valid_mask, nir_cropped, 0)
 
             # Normalize to 0-255
-            data_normalized = ((data_filled - data_filled.min()) / (data_filled.max() - data_filled.min()) * 255).astype(np.uint8)
+            data_normalized, _vmin, _vmax = _min_max_to_uint8(data_filled)
 
             equalized = cv2.equalizeHist(data_normalized)
 
             # Denormalize
-            result_data = equalized.astype(np.float32) / 255.0 * (data_filled.max() - data_filled.min()) + data_filled.min()
+            result_data = _denormalize_from_uint8(equalized, _vmin, _vmax)
             result_data[~valid_mask] = np.nan
             stats_description = {'enhancement': 'Histogram Equalization'}
 
@@ -715,10 +769,10 @@ def run_experiment(request: ExperimentRequest):
             kernel_size = request.parameters.get('kernel_size', 3)
             kernel = np.ones((kernel_size, kernel_size), np.uint8)
 
-            data_normalized = ((data_filled - data_filled.min()) / (data_filled.max() - data_filled.min()) * 255).astype(np.uint8)
+            data_normalized, _vmin, _vmax = _min_max_to_uint8(data_filled)
             eroded = cv2.erode(data_normalized, kernel, iterations=1)
 
-            result_data = eroded.astype(np.float32) / 255.0 * (data_filled.max() - data_filled.min()) + data_filled.min()
+            result_data = _denormalize_from_uint8(eroded, _vmin, _vmax)
             result_data[~valid_mask] = np.nan
             stats_description = {'operation': 'Erosion', 'kernel_size': kernel_size}
 
@@ -729,10 +783,10 @@ def run_experiment(request: ExperimentRequest):
             kernel_size = request.parameters.get('kernel_size', 3)
             kernel = np.ones((kernel_size, kernel_size), np.uint8)
 
-            data_normalized = ((data_filled - data_filled.min()) / (data_filled.max() - data_filled.min()) * 255).astype(np.uint8)
+            data_normalized, _vmin, _vmax = _min_max_to_uint8(data_filled)
             dilated = cv2.dilate(data_normalized, kernel, iterations=1)
 
-            result_data = dilated.astype(np.float32) / 255.0 * (data_filled.max() - data_filled.min()) + data_filled.min()
+            result_data = _denormalize_from_uint8(dilated, _vmin, _vmax)
             result_data[~valid_mask] = np.nan
             stats_description = {'operation': 'Dilation', 'kernel_size': kernel_size}
 
@@ -743,10 +797,10 @@ def run_experiment(request: ExperimentRequest):
             kernel_size = request.parameters.get('kernel_size', 3)
             kernel = np.ones((kernel_size, kernel_size), np.uint8)
 
-            data_normalized = ((data_filled - data_filled.min()) / (data_filled.max() - data_filled.min()) * 255).astype(np.uint8)
+            data_normalized, _vmin, _vmax = _min_max_to_uint8(data_filled)
             opening = cv2.morphologyEx(data_normalized, cv2.MORPH_OPEN, kernel)
 
-            result_data = opening.astype(np.float32) / 255.0 * (data_filled.max() - data_filled.min()) + data_filled.min()
+            result_data = _denormalize_from_uint8(opening, _vmin, _vmax)
             result_data[~valid_mask] = np.nan
             stats_description = {'operation': 'Opening', 'kernel_size': kernel_size}
 
@@ -757,10 +811,10 @@ def run_experiment(request: ExperimentRequest):
             kernel_size = request.parameters.get('kernel_size', 3)
             kernel = np.ones((kernel_size, kernel_size), np.uint8)
 
-            data_normalized = ((data_filled - data_filled.min()) / (data_filled.max() - data_filled.min()) * 255).astype(np.uint8)
+            data_normalized, _vmin, _vmax = _min_max_to_uint8(data_filled)
             closing = cv2.morphologyEx(data_normalized, cv2.MORPH_CLOSE, kernel)
 
-            result_data = closing.astype(np.float32) / 255.0 * (data_filled.max() - data_filled.min()) + data_filled.min()
+            result_data = _denormalize_from_uint8(closing, _vmin, _vmax)
             result_data[~valid_mask] = np.nan
             stats_description = {'operation': 'Closing', 'kernel_size': kernel_size}
 
@@ -770,8 +824,12 @@ def run_experiment(request: ExperimentRequest):
 
             threshold = request.parameters.get('threshold', 0.5)
 
-            # Normalize data
-            data_normalized = (data_filled - data_filled.min()) / (data_filled.max() - data_filled.min())
+            # Normalize data (safe for uniform / no-range arrays)
+            _vmin, _vmax = float(data_filled.min()), float(data_filled.max())
+            if _vmax <= _vmin:
+                data_normalized = np.zeros_like(data_filled, dtype=np.float32)
+            else:
+                data_normalized = (data_filled - _vmin) / (_vmax - _vmin)
             result_data = (data_normalized > threshold).astype(np.float32)
             result_data[~valid_mask] = np.nan
             stats_description = {'segmentation': 'Binary Threshold', 'threshold': threshold}
@@ -781,7 +839,7 @@ def run_experiment(request: ExperimentRequest):
             data_filled = np.where(valid_mask, nir_cropped, 0)
 
             # Normalize to 0-255
-            data_normalized = ((data_filled - data_filled.min()) / (data_filled.max() - data_filled.min()) * 255).astype(np.uint8)
+            data_normalized, _vmin, _vmax = _min_max_to_uint8(data_filled)
 
             threshold_value = filters.threshold_otsu(data_normalized[valid_mask])
             result_data = (data_normalized > threshold_value).astype(np.float32)
@@ -793,7 +851,7 @@ def run_experiment(request: ExperimentRequest):
             data_filled = np.where(valid_mask, nir_cropped, 0)
 
             # Normalize to 0-255
-            data_normalized = ((data_filled - data_filled.min()) / (data_filled.max() - data_filled.min()) * 255).astype(np.uint8)
+            data_normalized, _vmin, _vmax = _min_max_to_uint8(data_filled)
 
             block_size = request.parameters.get('block_size', 11)
             c = request.parameters.get('c', 2)
@@ -847,11 +905,19 @@ def run_experiment(request: ExperimentRequest):
 class ClassificationRequest(BaseModel):
     field_id: str = Field(..., min_length=1, max_length=200)
     coordinates: List[Coordinate] = Field(..., min_length=3)
-    method: str  # 'supervised', 'unsupervised', 'threshold'
-    crop_type: Optional[str] = 'multi'  # 'soja', 'milho', 'cafe', 'cana', 'multi'
+    method: Literal["supervised", "unsupervised", "threshold"]
+    crop_type: Optional[Literal["soja", "milho", "cafe", "cana", "multi"]] = "multi"
     n_classes: int = Field(default=3, ge=2, le=6)
     indices: dict = {'ndvi': True, 'evi': True, 'savi': True}
     product_name: Optional[str] = None
+
+    @field_validator("indices")
+    @classmethod
+    def validate_indices(cls, v: dict) -> dict:
+        # Pelo menos um índice precisa estar habilitado (o cálculo precisa de feature)
+        if not any(bool(val) for val in v.values()):
+            raise ValueError("Selecione ao menos um índice (NDVI, EVI ou SAVI)")
+        return v
 
     @field_validator("product_name")
     @classmethod
@@ -984,7 +1050,12 @@ def classify_crops(request: ClassificationRequest):
 
         elif request.method == 'threshold':
             # Threshold-based classification using NDVI
-            ndvi_data = indices_data[0] if indices_names[0] == 'NDVI' else indices_data[indices_names.index('NDVI')]
+            if 'NDVI' not in indices_names:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Método 'limiar' requer NDVI ativo nos índices",
+                )
+            ndvi_data = indices_data[indices_names.index('NDVI')]
 
             classification_map = np.full(ndvi_data.shape, -1, dtype=np.int32)
 

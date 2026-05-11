@@ -218,6 +218,51 @@ class SentinelProcessor:
 
         return savi
 
+    def calculate_ndwi(
+        self,
+        green_band: np.ndarray,
+        nir_band: np.ndarray,
+    ) -> np.ndarray:
+        """
+        Calculate NDWI (Normalized Difference Water Index, McFeeters 1996).
+
+        NDWI = (Green - NIR) / (Green + NIR)
+
+        Detecta corpos d'água. Valores positivos → água; negativos → solo / vegetação.
+        Usa bandas B03 (Green) e B08 (NIR) do Sentinel-2 em 10 m.
+        """
+        green = green_band.astype(np.float32)
+        nir = nir_band.astype(np.float32)
+
+        denominator = green + nir
+        denominator[denominator == 0] = np.nan
+
+        ndwi = (green - nir) / denominator
+        return np.clip(ndwi, -1, 1)
+
+    def calculate_ndbi(
+        self,
+        swir_band: np.ndarray,
+        nir_band: np.ndarray,
+    ) -> np.ndarray:
+        """
+        Calculate NDBI (Normalized Difference Built-up Index, Zha et al. 2003).
+
+        NDBI = (SWIR - NIR) / (SWIR + NIR)
+
+        Detecta áreas construídas / solo exposto. Usa B11 (SWIR, 20 m) e
+        B08 (NIR, 10 m) — chamador é responsável por reamostrar para a
+        mesma grade antes de invocar.
+        """
+        swir = swir_band.astype(np.float32)
+        nir = nir_band.astype(np.float32)
+
+        denominator = swir + nir
+        denominator[denominator == 0] = np.nan
+
+        ndbi = (swir - nir) / denominator
+        return np.clip(ndbi, -1, 1)
+
     def calculate_statistics(self, data: np.ndarray) -> Dict[str, float]:
         """
         Calculate statistics for index array

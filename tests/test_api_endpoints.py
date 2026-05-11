@@ -194,6 +194,20 @@ class FakeProcessor:
         denom[denom == 0] = np.nan
         return np.clip(((nir - red) / denom) * (1 + L), -1, 1)
 
+    def calculate_ndwi(self, green_band, nir_band):
+        green = green_band.astype(np.float32)
+        nir = nir_band.astype(np.float32)
+        denom = green + nir
+        denom[denom == 0] = np.nan
+        return np.clip((green - nir) / denom, -1, 1)
+
+    def calculate_ndbi(self, swir_band, nir_band):
+        swir = swir_band.astype(np.float32)
+        nir = nir_band.astype(np.float32)
+        denom = swir + nir
+        denom[denom == 0] = np.nan
+        return np.clip((swir - nir) / denom, -1, 1)
+
     def calculate_statistics(self, data):
         valid = data[~np.isnan(data)]
         if valid.size == 0:
@@ -272,6 +286,27 @@ class TestHappyPath:
         response = client.post("/calculate-index", json=valid_payload)
         assert response.status_code == 200
 
+    def test_savi_endpoint_happy_path(self, client, fake_backend, valid_payload):
+        """CT-11.2b: SAVI agora é despachado pelo /calculate-index (não só pela classificação)."""
+        valid_payload["index_type"] = "SAVI"
+        response = client.post("/calculate-index", json=valid_payload)
+        assert response.status_code == 200
+        assert response.json()["index_type"] == "SAVI"
+
+    def test_ndwi_endpoint_happy_path(self, client, fake_backend, valid_payload):
+        """CT-11.2c: NDWI (água) — bandas B03 + B08."""
+        valid_payload["index_type"] = "NDWI"
+        response = client.post("/calculate-index", json=valid_payload)
+        assert response.status_code == 200
+        assert response.json()["index_type"] == "NDWI"
+
+    def test_ndbi_endpoint_happy_path(self, client, fake_backend, valid_payload):
+        """CT-11.2d: NDBI (área construída) — bandas B11 (SWIR, 20m) + B08 (NIR, 10m)."""
+        valid_payload["index_type"] = "NDBI"
+        response = client.post("/calculate-index", json=valid_payload)
+        assert response.status_code == 200
+        assert response.json()["index_type"] == "NDBI"
+
     def test_savi_via_classification_happy_path(self, client, fake_backend, valid_payload):
         """CT-11.3: Classificação threshold (usa NDVI internamente) executa OK.
         Cobre regressão do bug `calculate_savi` indefinido + ordem de args invertida.
@@ -312,6 +347,67 @@ class TestHappyPath:
         body = response.json()
         assert body["experiment_type"] == "gaussian_blur"
         assert "image_base64" in body and len(body["image_base64"]) > 0
+
+
+class TestClassificationGuards:
+    """CT-12: Validação de entrada do POST /api/classification/classify.
+    Regressão de bugs encontrados na revisão sistemática:
+      - índices vazios causava IndexError
+      - method='threshold' sem NDVI causava ValueError
+      - method inválido caía silenciosamente em 'supervised'
+    """
+
+    @pytest.fixture
+    def valid_payload(self):
+        return {
+            "field_id": "test-field",
+            "coordinates": [
+                {"longitude": -42.6194, "latitude": -4.8809},
+                {"longitude": -42.6186, "latitude": -4.8807},
+                {"longitude": -42.6180, "latitude": -4.8798},
+                {"longitude": -42.6194, "latitude": -4.8809},
+            ],
+            "method": "unsupervised",
+        }
+
+    def test_all_indices_disabled_returns_422(self, client, valid_payload):
+        """CT-12.1: Desmarcar NDVI, EVI e SAVI deve falhar na validação Pydantic."""
+        response = client.post("/api/classification/classify", json={
+            **valid_payload,
+            "indices": {"ndvi": False, "evi": False, "savi": False},
+        })
+        assert response.status_code == 422, response.text
+        body = response.json()
+        # mensagem do validador deve aparecer em algum lugar do erro
+        assert "ndvi" in response.text.lower() or "índice" in response.text.lower() or "indice" in response.text.lower()
+
+    def test_threshold_without_ndvi_returns_400(self, client, fake_backend, valid_payload):
+        """CT-12.2: method='threshold' sem NDVI deve retornar 400 explícito."""
+        response = client.post("/api/classification/classify", json={
+            **valid_payload,
+            "method": "threshold",
+            "indices": {"ndvi": False, "evi": True, "savi": False},
+        })
+        assert response.status_code == 400, response.text
+        body = response.json()
+        assert "ndvi" in body["detail"].lower()
+
+    def test_invalid_method_returns_422(self, client, valid_payload):
+        """CT-12.3: method fora de {supervised, unsupervised, threshold} → 422 Pydantic."""
+        response = client.post("/api/classification/classify", json={
+            **valid_payload,
+            "method": "magico",
+        })
+        assert response.status_code == 422, response.text
+
+    def test_invalid_crop_type_returns_422(self, client, valid_payload):
+        """CT-12.4: crop_type fora do enum válido → 422 Pydantic."""
+        response = client.post("/api/classification/classify", json={
+            **valid_payload,
+            "method": "supervised",
+            "crop_type": "trigo",
+        })
+        assert response.status_code == 422, response.text
 
 
 class TestCoordinatesToPolygon:
