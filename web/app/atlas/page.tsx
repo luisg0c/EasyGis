@@ -532,7 +532,7 @@ export default function Home() {
       {/* ──── Map / 3D viewport ──── */}
       <section className="relative flex-1 overflow-hidden">
         {/* Floating chrome — index label + 3D pill */}
-        <div className="pointer-events-none absolute left-0 right-0 top-0 z-[400] flex items-start justify-between px-6 pt-5">
+        <div className="pointer-events-none absolute left-0 right-0 top-0 z-500 flex items-start justify-between px-6 pt-5">
           <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-moss-100 bg-cream/95 px-4 py-1.5 backdrop-blur-sm">
             <span className="dot h-1.5 w-1.5 rounded-full bg-lime" />
             <span className="font-mono text-[11px] tracking-[0.18em] text-moss-900 uppercase">
