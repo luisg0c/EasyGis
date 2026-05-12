@@ -1,4 +1,4 @@
-# Documentação --- ICEV Remote Sensing Software
+# Documentação --- EasyGis
 
 Esta pasta consolida toda a documentação do projeto, organizada por entrega.
 
@@ -37,7 +37,7 @@ Os documentos abaixo foram produzidos no **TP1** (concepção, requisitos e arqu
 | Documento | Conteúdo |
 |-----------|----------|
 | [01-documento-visao-produto.md](01-documento-visao-produto.md) | Problema, solução proposta, usuários-alvo, contexto |
-| [02-backlog-produto.md](02-backlog-produto.md) | 33 histórias de usuário em 6 épicos (priorizadas MoSCoW) |
+| [02-backlog-produto.md](02-backlog-produto.md) | 35 histórias de usuário em 6 épicos (priorizadas MoSCoW) |
 | [03-especificacao-requisitos-SRS.md](03-especificacao-requisitos-SRS.md) | 20 RFs + 8 RNFs + matriz de rastreabilidade |
 | [04-diagramas-arquitetura.md](04-diagramas-arquitetura.md) | 8 diagramas (alto nível, componentes, deployment, sequência, fluxo de dados, estrutura de diretórios) + stack consolidada + decisões DA-01 a DA-05 |
 | [05-prototipo-interface.md](05-prototipo-interface.md) | Wireframes ASCII das telas |

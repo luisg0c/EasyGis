@@ -1,12 +1,32 @@
-# ICEV Remote Sensing Software
+# EasyGis
 
 > Plataforma web de sensoriamento remoto para agricultura de precisão. Processa imagens Sentinel-2 sobre talhões agrícolas, calcula índices de vegetação e classifica zonas — sem custo de licenciamento.
+
+**Avaliação P2 · Gerência e Manutenção de Software · Prof. Mauro · ICEV · 2026.1**
 
 [![Python 3.12+](https://img.shields.io/badge/Python-3.12+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Next.js 16](https://img.shields.io/badge/Next.js-16-000?logo=next.js&logoColor=white)](https://nextjs.org/)
 [![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev/)
-[![Tests](https://img.shields.io/badge/tests-28%20passing-3FB950)](docs/p2/09-relatorio-de-testes.pdf)
+[![Tests](https://img.shields.io/badge/tests-54%20passing-3FB950)](docs/p2/09-relatorio-de-testes.pdf)
+[![Coverage](https://img.shields.io/badge/coverage%20core-65%25-3FB950)](docs/p2/09-relatorio-de-testes.pdf)
+
+---
+
+## Para o avaliador
+
+Esta tabela mapeia cada critério da Avaliação P2 ao artefato que comprova a entrega. Tudo está versionado neste repositório.
+
+| # | Critério (peso) | Onde encontrar |
+|---|---|---|
+| **1** | **Implementação do MVP** (3,0 pt) | [`api/`](api/) · [`web/`](web/) · [Como executar](#como-executar) (2 comandos) · [Demo na apresentação](docs/p2/apresentacao-p2.pdf) |
+| **2** | **Qualidade do código** (2,0 pt) | [`api/main.py`](api/main.py) (Pydantic v2, `Literal`, validators, exception handling) · [`web/`](web/) (TS strict, sem `any`, Server/Client boundary) · [Decisões de design — DA-06/07/09](docs/p2/00-ENTREGA-P2.pdf) |
+| **3** | **Testes de software** (2,0 pt) | [`tests/`](tests/) · **54 casos, 100% aprovados, 1,20 s** · cobertura **65%** no processador · [Plano](docs/p2/08-plano-de-testes.pdf) · [Relatório](docs/p2/09-relatorio-de-testes.pdf) |
+| **4** | **Documentação técnica** (1,5 pt) | [Visão de produto](docs/01-documento-visao-produto.md) · [Backlog (35 histórias)](docs/02-backlog-produto.md) · [SRS (20 RFs + 8 RNFs)](docs/03-especificacao-requisitos-SRS.md) · [Arquitetura (8 diagramas + ADRs)](docs/04-diagramas-arquitetura.md) · [Mapeamento P2](docs/p2/00-ENTREGA-P2.pdf) |
+| **5** | **Manual do usuário** (0,5 pt) | [`docs/p2/07-manual-usuario.pdf`](docs/p2/07-manual-usuario.pdf) — linguagem leiga, 8 screenshots passo-a-passo |
+| **6** | **Apresentação** (1,0 pt) | [`docs/p2/apresentacao-p2.pdf`](docs/p2/apresentacao-p2.pdf) — 14 slides conceituais + demo ao vivo |
+
+> **Quick start em 30 segundos:** `uv sync && cd web && npm install && cd .. && ./run_api.sh & cd web && npm run dev` → abrir `http://localhost:3000`
 
 ---
 
@@ -47,7 +67,7 @@ Para entender o produto em profundidade, comece por [`docs/01-documento-visao-pr
 - **Supervisionada simulada** — assinaturas espectrais para soja, milho, café, cana
 
 ### Laboratório de experimentos
-13 algoritmos de processamento de imagem com parâmetros ajustáveis em sliders:
+14 algoritmos de processamento de imagem com parâmetros ajustáveis em sliders:
 - Filtros: Gaussiano · Mediana · Bilateral
 - Detecção de bordas: Sobel · Canny · Laplaciano
 - Equalização de histograma
@@ -165,7 +185,7 @@ Acesse http://localhost:3000/classification para classificar o talhão em zonas 
 │   ├── lib/                    # kml-parser, spectral-indices, utils
 │   └── types/                  # Tipos TypeScript
 │
-├── tests/                      # Suíte pytest (28 casos)
+├── tests/                      # Suíte pytest (54 casos)
 │   ├── conftest.py             # Fixtures sintéticas (NumPy)
 │   ├── test_sentinel_processor.py
 │   └── test_api_endpoints.py   # FastAPI TestClient
@@ -197,10 +217,11 @@ uv run pytest tests/ -v --cov=api --cov-report=term-missing
 
 | Métrica | Valor |
 |---|---|
-| Casos planejados | 28 |
-| **Aprovados** | **28 (100%)** |
-| Tempo total | < 1 s |
-| Cobertura `sentinel_processor.py` (lógica de negócio) | 55% |
+| Casos planejados | 54 |
+| **Aprovados** | **54 (100%)** |
+| Tempo total | 1,20 s |
+| Cobertura `sentinel_processor.py` (lógica de negócio) | 65% |
+| Cobertura global (`api/`) | 58% |
 
 > **Plano + Relatório completos:** [`docs/p2/08-plano-de-testes.pdf`](docs/p2/08-plano-de-testes.pdf) · [`docs/p2/09-relatorio-de-testes.pdf`](docs/p2/09-relatorio-de-testes.pdf)
 
@@ -211,12 +232,12 @@ uv run pytest tests/ -v --cov=api --cov-report=term-missing
 | Documento | Descrição |
 |---|---|
 | [`docs/README.md`](docs/README.md) | Índice geral da documentação |
-| [`docs/tp1/documento-unificado.pdf`](docs/tp1/documento-unificado.pdf) | **TP1 consolidado** — visão de produto, backlog (33 histórias / 6 épicos), SRS (20 RFs + 8 RNFs / IEEE 830), 8 diagramas de arquitetura, protótipo de interface e plano de projeto |
+| [`docs/tp1/documento-unificado.pdf`](docs/tp1/documento-unificado.pdf) | **TP1 consolidado** — visão de produto, backlog (35 histórias / 6 épicos), SRS (20 RFs + 8 RNFs / IEEE 830), 8 diagramas de arquitetura, protótipo de interface e plano de projeto |
 | [`docs/p2/00-ENTREGA-P2.pdf`](docs/p2/00-ENTREGA-P2.pdf) | Mapeamento dos entregáveis P2 + decisões de design DA-06 a DA-11 |
 | [`docs/p2/07-manual-usuario.pdf`](docs/p2/07-manual-usuario.pdf) | Manual do usuário (linguagem leiga) |
-| [`docs/p2/08-plano-de-testes.pdf`](docs/p2/08-plano-de-testes.pdf) | Plano de testes — 28 casos + matriz de rastreabilidade |
-| [`docs/p2/09-relatorio-de-testes.pdf`](docs/p2/09-relatorio-de-testes.pdf) | Relatório de execução — 28/28 passando + evidências |
-| [`docs/p2/apresentacao-p2.pdf`](docs/p2/apresentacao-p2.pdf) | Slides de apresentação (16 slides, tema escuro) |
+| [`docs/p2/08-plano-de-testes.pdf`](docs/p2/08-plano-de-testes.pdf) | Plano de testes — 54 casos + matriz de rastreabilidade |
+| [`docs/p2/09-relatorio-de-testes.pdf`](docs/p2/09-relatorio-de-testes.pdf) | Relatório de execução — 54/54 passando + evidências |
+| [`docs/p2/apresentacao-p2.pdf`](docs/p2/apresentacao-p2.pdf) | Slides de apresentação (14 slides, identidade EasyGis) |
 
 ### Recompilar os PDFs
 
@@ -229,15 +250,16 @@ cd docs/tp1 && pdflatex documento-unificado.tex && pdflatex documento-unificado.
 
 ## Equipe
 
-Desenvolvido como projeto acadêmico no **ICEV — Instituto de Ensino Superior** (Teresina, PI).
+Desenvolvido como projeto acadêmico no **ICEV — Instituto de Ensino Superior** (Teresina, PI), na disciplina **Gerência e Manutenção de Software** ministrada pelo **Prof. Mauro** (2026.1).
 
+- João Leonardi da Silva Melo
+- João Vinícius Passos Castello Branco Carvalho
+- José Melquíades Neto
+- Lauan Matheus da Rocha Alves
+- Lucas Benevinuto Pereira
 - Luis Gustavo Olimpio
-- Lauan Matheus
-- João Leonardi
-- João Vinícius Castello
-- Vinícius Henrique
-- Lucas Benevinuto
-- José Melquíades
+- Sammuel Moura Saraiva
+- Vinicius Henrique Albino Andrade
 
 ---
 

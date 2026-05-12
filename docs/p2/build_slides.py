@@ -98,7 +98,7 @@ def add_accent_bar(slide, top: Emu = Inches(0.45), width: Emu = Inches(0.18), he
 def add_footer(slide, slide_num: int, total: int):
     add_text_box(
         slide, Inches(0.55), Inches(7.05), Inches(6), Inches(0.3),
-        "ICEV Remote Sensing Software · P2 Engenharia de Software",
+        "EasyGis · P2 Gerência e Manutenção de Software · Prof. Mauro",
         size=10, color=TEXT_MUTED,
     )
     add_text_box(

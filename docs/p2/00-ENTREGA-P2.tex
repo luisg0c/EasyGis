@@ -4,7 +4,7 @@
 \title{%
   \vspace{-1.5cm}
   {\Huge\bfseries\color{accentdim} Entrega da Avaliação P2}\\[8pt]
-  {\Large\bfseries Engenharia de Software --- 2026.1}\\[18pt]
+  {\Large\bfseries Gerência e Manutenção de Software --- 2026.1}\\[18pt]
   {\large EasyGis}\\[4pt]
   {\normalsize\itshape Plataforma de Sensoriamento Remoto para Agricultura de Precisão}
 }
@@ -24,7 +24,8 @@
 \begin{center}
 \small\textit{Instituto de Ensino Superior --- ICEV}\\
 \small\textit{Teresina, PI, Brasil}\\[6pt]
-\small\textit{Disciplina: Engenharia de Software --- Avaliação P2}\\
+\small\textit{Disciplina: Gerência e Manutenção de Software --- Avaliação P2}\\
+\small\textit{Professor: Mauro}\\
 \small\textit{Prazo de entrega: 11/05/2026}
 \end{center}
 \newpage
@@ -183,7 +184,7 @@ Auto-avaliação honesta das cinco sub-características da norma, em escala 1--5
 Modularidade     & 4/5 & Camada \texttt{SentinelProcessor} isolada das rotas (DA-06); separação \texttt{api/web/tests/data} & Funções utilitárias (\texttt{ndvi\_to\_image}, \texttt{apply\_smooth\_filter}) deveriam estar em \texttt{api/image\_utils.py}\\
 Reusabilidade    & 3/5 & \texttt{SentinelProcessor} reutilizável em scripts; componentes shadcn/ui & Colormap acoplado à codificação base64 em \texttt{ndvi\_to\_image}\\
 Analisabilidade  & 4/5 & Type hints, docstrings, vínculo CT$\times$RF nos testes facilita rastrear bug a requisito & Faltam logs estruturados com \textit{request\_id} para diagnóstico\\
-Modificabilidade & 3/5 & Adicionar índice novo exige tocar \texttt{main.py}; cobertura de testes (55\% no \textit{core}) protege & Refatorar para \textit{registry pattern}: \texttt{INDEX\_HANDLERS = \{"NDVI": \dots\}}\\
+Modificabilidade & 3/5 & Adicionar índice novo exige tocar \texttt{main.py}; cobertura de testes (65\% no \textit{core}) protege & Refatorar para \textit{registry pattern}: \texttt{INDEX\_HANDLERS = \{"NDVI": \dots\}}\\
 Testabilidade    & 4/5 & Suíte determinística (\texttt{seed=42}), \(<1\)\,s, sem dependência de produto real para a maior parte da lógica & Endpoints de processamento sem teste de \textit{smoke} com produto sintético JP2\\
 \bottomrule
 \end{tabularx}
@@ -306,7 +307,7 @@ cd web && npm run dev         # frontend na porta 3000
 
 \begin{lstlisting}[style=shellstyle]
 uv sync --group dev           # instala pytest e dependencias de teste
-uv run pytest tests/ -v       # roda 28 testes - ver relatorio em docs/09
+uv run pytest tests/ -v       # roda 54 testes - ver relatorio em docs/09
 \end{lstlisting}
 
 % ══════════════════════════════════════════════════════════════

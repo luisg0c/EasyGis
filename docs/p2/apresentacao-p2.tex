@@ -102,7 +102,7 @@
           font=\sffamily\fontsize{8pt}{10pt}\selectfont\bfseries\color{moss700},
           inner sep=0]
       at ([xshift=1.2cm, yshift=-2.2cm]current page.north west)
-      {AVALIAÇÃO P2 · ENGENHARIA DE SOFTWARE · 2026.1};
+      {AVALIAÇÃO P2 · GERÊNCIA E MANUTENÇÃO DE SOFTWARE · PROF. MAURO · 2026.1};
     \node[anchor=north west,
           font=\sffamily\bfseries\fontsize{28pt}{30pt}\selectfont\color{moss950},
           inner sep=0]
@@ -375,7 +375,7 @@
       \node[font=\sffamily\bfseries\fontsize{11pt}{14pt}\selectfont\color{moss950}, text width=12cm] at (1.5, 0)
         {Separação processador / rotas HTTP};
       \node[font=\sffamily\fontsize{8pt}{11pt}\selectfont\color{smoke}, text width=12cm] at (1.5, -0.55)
-        {Permite testar a lógica sem subir HTTP — 28 testes unitários em < 1\,s.};
+        {Permite testar a lógica sem subir HTTP — 54 testes em $\sim 1{,}2$\,s.};
 
       \node[font=\sffamily\bfseries\fontsize{8pt}{10pt}\selectfont\color{moss700}] at (0, -1.5) {DA-07};
       \node[font=\sffamily\bfseries\fontsize{11pt}{14pt}\selectfont\color{moss950}, text width=12cm] at (1.5, -1.5)
@@ -507,10 +507,10 @@
     % Linha 1: testes passando — destaque grande
     \begin{tikzpicture}
       \node[anchor=west, font=\sffamily\bfseries\fontsize{42pt}{42pt}\selectfont\color{moss950}]
-        at (0,0) {28/28};
+        at (0,0) {54/54};
       \node[anchor=west, font=\sffamily\fontsize{10pt}{14pt}\selectfont\color{charcoal}, text width=8cm]
         at (4.5,0.1) {%
-        \textbf{testes passando} em \textbf{0{,}79\,s}\\[2pt]
+        \textbf{testes passando} em \textbf{1{,}20\,s}\\[2pt]
         \textcolor{smoke}{pytest + FastAPI TestClient · zero \textit{flaky}}};
     \end{tikzpicture}
 
@@ -520,28 +520,28 @@
 
     \vspace{0.2cm}
 
-    % Barra de cobertura: processador (55%)
+    % Barra de cobertura: processador (65%)
     \begin{tikzpicture}
       \def\barH{0.45}
       \def\barW{7.0}
       \fill[moss100, rounded corners=2pt] (0,0) rectangle (\barW, \barH);
-      \fill[moss700, rounded corners=2pt] (0,0) rectangle (0.55*\barW, \barH);
+      \fill[moss700, rounded corners=2pt] (0,0) rectangle (0.65*\barW, \barH);
       \node[anchor=west, font=\sffamily\bfseries\fontsize{11pt}{13pt}\selectfont\color{cream}]
-        at (0.1, \barH/2) {55\%};
+        at (0.1, \barH/2) {65\%};
       \node[anchor=west, font=\sffamily\fontsize{9pt}{12pt}\selectfont\color{charcoal}]
         at (\barW + 0.3, \barH/2) {\textbf{Processador} \textcolor{smoke}{— lógica de cálculo}};
     \end{tikzpicture}
 
     \vspace{0.18cm}
 
-    % Barra de cobertura: global (24%)
+    % Barra de cobertura: global (58%)
     \begin{tikzpicture}
       \def\barH{0.45}
       \def\barW{7.0}
       \fill[moss100, rounded corners=2pt] (0,0) rectangle (\barW, \barH);
-      \fill[moss700, rounded corners=2pt] (0,0) rectangle (0.24*\barW, \barH);
+      \fill[moss700, rounded corners=2pt] (0,0) rectangle (0.58*\barW, \barH);
       \node[anchor=west, font=\sffamily\bfseries\fontsize{11pt}{13pt}\selectfont\color{cream}]
-        at (0.1, \barH/2) {24\%};
+        at (0.1, \barH/2) {58\%};
       \node[anchor=west, font=\sffamily\fontsize{9pt}{12pt}\selectfont\color{charcoal}]
         at (\barW + 0.3, \barH/2) {\textbf{Global} \textcolor{smoke}{— endpoints exigem \texttt{.SAFE} real}};
     \end{tikzpicture}

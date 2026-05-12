@@ -31,3 +31,13 @@ docs/**/*.synctex.gz
 # macOS
 .DS_Store
 *.zip
+.coverage
+docs/p2/FALAS_APRESENTACAO.pdf
+docs/p2/GUIA_DE_ESTUDO.pdf
+docs/p2/*.aux
+docs/p2/*.log
+docs/p2/*.out
+docs/p2/*.toc
+docs/p2/*.nav
+docs/p2/*.snm
+docs/p2/*.vrb

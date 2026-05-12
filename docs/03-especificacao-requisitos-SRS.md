@@ -55,7 +55,7 @@ Comunicação via REST API (JSON + imagens codificadas em base64). Sem banco de 
 1. Importação e visualização de talhões agrícolas (KML + desenho no mapa)
 2. Processamento de índices espectrais sobre imagens Sentinel-2
 3. Visualização 2D (mapa Leaflet) e 3D (Three.js) dos resultados
-4. Laboratório de 13 experimentos de processamento de imagem
+4. Laboratório de 14 experimentos de processamento de imagem
 5. Classificação de culturas (K-Means, limiar, supervisionada simulada)
 6. Geração de estatísticas descritivas e histogramas
 
@@ -169,7 +169,7 @@ Comunicação via REST API (JSON + imagens codificadas em base64). Sem banco de 
 - **Prioridade:** Média
 
 ### RF-16: Executar Experimentos de Processamento de Imagem
-- **Descrição:** O sistema deve permitir a execução de 13 experimentos de processamento de imagem sobre a banda NIR (B08), organizados em 5 categorias:
+- **Descrição:** O sistema deve permitir a execução de 14 experimentos de processamento de imagem sobre a banda NIR (B08), organizados em 5 categorias:
   - **Filtros:** Gaussiano (sigma), Mediana (tamanho), Bilateral (d, sigma_color, sigma_space)
   - **Detecção de Bordas:** Sobel, Canny (low/high threshold), Laplaciano
   - **Equalização:** Equalização de Histograma

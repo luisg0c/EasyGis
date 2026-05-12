@@ -5,7 +5,7 @@
   \vspace{-1.5cm}
   {\Huge\bfseries\color{accentdim} Relatório de Execução de Testes}\\[8pt]
   {\Large\bfseries EasyGis}\\[18pt]
-  {\normalsize\itshape Avaliação P2 --- Engenharia de Software, 2026.1}
+  {\normalsize\itshape Avaliação P2 --- Gerência e Manutenção de Software --- Prof.\ Mauro --- 2026.1}
 }
 \author{Equipe EasyGis}
 \date{Execução em 09 de maio de 2026}
@@ -16,10 +16,10 @@
 
 \begin{infobox}[title={Resumo da execução}]
 \begin{itemize}
-  \item \textbf{Data:} 2026-05-09 14:17:44
+  \item \textbf{Data:} 2026-05-11 20:30
   \item \textbf{Ambiente:} macOS Darwin 25.4.0 / Python 3.12.13 / pytest 9.0.3
   \item \textbf{Plano referenciado:} \texttt{08-plano-de-testes.pdf}
-  \item \textbf{Resultado:} \textbf{\color{successgreen}APROVADO} --- 28/28 casos passaram (100\%)
+  \item \textbf{Resultado:} \textbf{\color{successgreen}APROVADO} --- 54/54 casos passaram (100\%)
 \end{itemize}
 \end{infobox}
 
@@ -46,14 +46,14 @@
 \toprule
 \rowcolor{tabheader}\textcolor{white}{\textbf{Métrica}} & \textcolor{white}{\textbf{Valor}}\\
 \midrule
-Casos de teste planejados & 28\\
-Casos executados & 28\\
-\textbf{Aprovados} & \textbf{\color{successgreen}28 (100\%)}\\
+Casos de teste planejados & 54\\
+Casos executados & 54\\
+\textbf{Aprovados} & \textbf{\color{successgreen}54 (100\%)}\\
 Reprovados & 0\\
 Erros (não conseguiram rodar) & 0\\
-Tempo total de execução & 0,79\,s\\
-Cobertura de código (módulos \texttt{api/}) & 24\% (linhas executadas)\\
-Cobertura de \texttt{sentinel\_processor.py} (lógica de negócio) & \textbf{55\%}\\
+Tempo total de execução & 1,20\,s (sem cobertura) / 2,73\,s (com cobertura)\\
+Cobertura de código (módulos \texttt{api/}) & \textbf{58\%} (linhas executadas)\\
+Cobertura de \texttt{sentinel\_processor.py} (lógica de negócio) & \textbf{65\%}\\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -74,53 +74,79 @@ $ uv run pytest tests/ -v --cov=api --cov-report=term-missing
 \section{Evidência Bruta da Execução}
 % ══════════════════════════════════════════════════════════════
 
-\begin{lstlisting}[style=shellstyle, basicstyle=\ttfamily\scriptsize]
+\begin{lstlisting}[style=shellstyle, basicstyle=\ttfamily\tiny]
 ============================= test session starts ==============================
 platform darwin -- Python 3.12.13, pytest-9.0.3, pluggy-1.6.0
 cachedir: .pytest_cache
 rootdir: /Users/luisgoc/projetos/mauro/icev-remote-sensing-software
 configfile: pyproject.toml
 plugins: anyio-4.11.0, cov-7.1.0
-collecting ... collected 28 items
+collecting ... collected 54 items
 
-tests/test_api_endpoints.py::TestHealthEndpoint::test_health_returns_200 PASSED         [  3%]
-tests/test_api_endpoints.py::TestHealthEndpoint::test_health_response_structure PASSED  [  7%]
-tests/test_api_endpoints.py::TestRootEndpoint::test_root_returns_api_info PASSED        [ 10%]
-tests/test_api_endpoints.py::TestProductsEndpoint::test_products_endpoint_returns_200 PASSED          [ 14%]
-tests/test_api_endpoints.py::TestProductsEndpoint::test_products_response_structure PASSED            [ 17%]
-tests/test_api_endpoints.py::TestCalculateIndexValidation::test_missing_required_fields_returns_422 PASSED  [ 21%]
-tests/test_api_endpoints.py::TestCalculateIndexValidation::test_invalid_coordinate_format_returns_422 PASSED [ 25%]
-tests/test_api_endpoints.py::TestCalculateIndexValidation::test_unknown_index_type_returns_error PASSED     [ 28%]
-tests/test_api_endpoints.py::TestCoordinatesToPolygon::test_coordinates_form_valid_polygon PASSED      [ 32%]
-tests/test_api_endpoints.py::TestCoordinatesToPolygon::test_polygon_centroid_in_correct_region PASSED  [ 35%]
-tests/test_sentinel_processor.py::TestNDVI::test_ndvi_in_valid_range PASSED                       [ 39%]
-tests/test_sentinel_processor.py::TestNDVI::test_ndvi_healthy_vegetation_is_positive PASSED       [ 42%]
-tests/test_sentinel_processor.py::TestNDVI::test_ndvi_formula_correctness PASSED                  [ 46%]
-tests/test_sentinel_processor.py::TestNDVI::test_ndvi_handles_division_by_zero PASSED             [ 50%]
-tests/test_sentinel_processor.py::TestNDVI::test_ndvi_zero_values_when_nir_equals_red PASSED      [ 53%]
-tests/test_sentinel_processor.py::TestEVI::test_evi_in_valid_range PASSED                         [ 57%]
-tests/test_sentinel_processor.py::TestEVI::test_evi_default_coefficients PASSED                   [ 60%]
-tests/test_sentinel_processor.py::TestEVI::test_evi_custom_coefficients PASSED                    [ 64%]
-tests/test_sentinel_processor.py::TestStatistics::test_statistics_all_keys_present PASSED         [ 67%]
-tests/test_sentinel_processor.py::TestStatistics::test_statistics_correct_values PASSED           [ 71%]
-tests/test_sentinel_processor.py::TestStatistics::test_statistics_ignores_nan PASSED              [ 75%]
-tests/test_sentinel_processor.py::TestStatistics::test_statistics_empty_data PASSED               [ 78%]
-tests/test_sentinel_processor.py::TestHistogram::test_histogram_default_50_bins PASSED            [ 82%]
-tests/test_sentinel_processor.py::TestHistogram::test_histogram_custom_bins PASSED                [ 85%]
-tests/test_sentinel_processor.py::TestHistogram::test_histogram_total_count_matches PASSED        [ 89%]
-tests/test_sentinel_processor.py::TestHistogram::test_histogram_empty_data PASSED                 [ 92%]
-tests/test_sentinel_processor.py::TestEdgeCases::test_integer_to_float_conversion PASSED          [ 96%]
-tests/test_sentinel_processor.py::TestEdgeCases::test_negative_ndvi_for_water PASSED              [100%]
+tests/test_api_endpoints.py::TestHealthEndpoint::test_health_returns_200 PASSED                                [  1%]
+tests/test_api_endpoints.py::TestHealthEndpoint::test_health_response_structure PASSED                         [  3%]
+tests/test_api_endpoints.py::TestRootEndpoint::test_root_returns_api_info PASSED                               [  5%]
+tests/test_api_endpoints.py::TestProductsEndpoint::test_products_endpoint_returns_200 PASSED                   [  7%]
+tests/test_api_endpoints.py::TestProductsEndpoint::test_products_response_structure PASSED                     [  9%]
+tests/test_api_endpoints.py::TestCalculateIndexValidation::test_missing_required_fields_returns_422 PASSED     [ 11%]
+tests/test_api_endpoints.py::TestCalculateIndexValidation::test_invalid_coordinate_format_returns_422 PASSED   [ 12%]
+tests/test_api_endpoints.py::TestCalculateIndexValidation::test_unknown_index_type_returns_error PASSED        [ 14%]
+tests/test_api_endpoints.py::TestCalculateIndexValidation::test_invalid_product_name_format_returns_400 PASSED [ 16%]
+tests/test_api_endpoints.py::TestCalculateIndexValidation::test_coordinate_out_of_range_returns_422 PASSED     [ 18%]
+tests/test_api_endpoints.py::TestCalculateIndexValidation::test_too_few_coordinates_returns_422 PASSED         [ 20%]
+tests/test_api_endpoints.py::TestHappyPath::test_ndvi_happy_path PASSED                                        [ 22%]
+tests/test_api_endpoints.py::TestHappyPath::test_evi_happy_path PASSED                                         [ 24%]
+tests/test_api_endpoints.py::TestHappyPath::test_savi_endpoint_happy_path PASSED                               [ 25%]
+tests/test_api_endpoints.py::TestHappyPath::test_ndwi_endpoint_happy_path PASSED                               [ 27%]
+tests/test_api_endpoints.py::TestHappyPath::test_ndbi_endpoint_happy_path PASSED                               [ 29%]
+tests/test_api_endpoints.py::TestHappyPath::test_savi_via_classification_happy_path PASSED                     [ 31%]
+tests/test_api_endpoints.py::TestHappyPath::test_classification_with_savi_happy_path PASSED                    [ 33%]
+tests/test_api_endpoints.py::TestHappyPath::test_experiment_gaussian_happy_path PASSED                         [ 35%]
+tests/test_api_endpoints.py::TestClassificationGuards::test_all_indices_disabled_returns_422 PASSED            [ 37%]
+tests/test_api_endpoints.py::TestClassificationGuards::test_threshold_without_ndvi_returns_400 PASSED          [ 38%]
+tests/test_api_endpoints.py::TestClassificationGuards::test_invalid_method_returns_422 PASSED                  [ 40%]
+tests/test_api_endpoints.py::TestClassificationGuards::test_invalid_crop_type_returns_422 PASSED               [ 42%]
+tests/test_api_endpoints.py::TestCoordinatesToPolygon::test_coordinates_form_valid_polygon PASSED              [ 44%]
+tests/test_api_endpoints.py::TestCoordinatesToPolygon::test_polygon_centroid_in_correct_region PASSED          [ 46%]
+tests/test_sentinel_processor.py::TestNDVI::test_ndvi_in_valid_range PASSED                                    [ 48%]
+tests/test_sentinel_processor.py::TestNDVI::test_ndvi_healthy_vegetation_is_positive PASSED                    [ 50%]
+tests/test_sentinel_processor.py::TestNDVI::test_ndvi_formula_correctness PASSED                               [ 51%]
+tests/test_sentinel_processor.py::TestNDVI::test_ndvi_handles_division_by_zero PASSED                          [ 53%]
+tests/test_sentinel_processor.py::TestNDVI::test_ndvi_zero_values_when_nir_equals_red PASSED                   [ 55%]
+tests/test_sentinel_processor.py::TestEVI::test_evi_in_valid_range PASSED                                      [ 57%]
+tests/test_sentinel_processor.py::TestEVI::test_evi_default_coefficients PASSED                                [ 59%]
+tests/test_sentinel_processor.py::TestEVI::test_evi_custom_coefficients PASSED                                 [ 61%]
+tests/test_sentinel_processor.py::TestSAVI::test_savi_in_valid_range PASSED                                    [ 62%]
+tests/test_sentinel_processor.py::TestSAVI::test_savi_formula_with_default_L PASSED                            [ 64%]
+tests/test_sentinel_processor.py::TestSAVI::test_savi_with_L_zero_equals_ndvi PASSED                           [ 66%]
+tests/test_sentinel_processor.py::TestSAVI::test_savi_handles_zero_denominator PASSED                          [ 68%]
+tests/test_sentinel_processor.py::TestNDWI::test_ndwi_in_valid_range PASSED                                    [ 70%]
+tests/test_sentinel_processor.py::TestNDWI::test_ndwi_water_is_positive PASSED                                 [ 72%]
+tests/test_sentinel_processor.py::TestNDWI::test_ndwi_vegetation_is_negative PASSED                            [ 74%]
+tests/test_sentinel_processor.py::TestNDWI::test_ndwi_handles_zero_denominator PASSED                          [ 75%]
+tests/test_sentinel_processor.py::TestNDBI::test_ndbi_in_valid_range PASSED                                    [ 77%]
+tests/test_sentinel_processor.py::TestNDBI::test_ndbi_builtup_is_positive PASSED                               [ 79%]
+tests/test_sentinel_processor.py::TestNDBI::test_ndbi_vegetation_is_negative PASSED                            [ 81%]
+tests/test_sentinel_processor.py::TestStatistics::test_statistics_all_keys_present PASSED                      [ 83%]
+tests/test_sentinel_processor.py::TestStatistics::test_statistics_correct_values PASSED                        [ 85%]
+tests/test_sentinel_processor.py::TestStatistics::test_statistics_ignores_nan PASSED                           [ 87%]
+tests/test_sentinel_processor.py::TestStatistics::test_statistics_empty_data PASSED                            [ 88%]
+tests/test_sentinel_processor.py::TestHistogram::test_histogram_default_50_bins PASSED                         [ 90%]
+tests/test_sentinel_processor.py::TestHistogram::test_histogram_custom_bins PASSED                             [ 92%]
+tests/test_sentinel_processor.py::TestHistogram::test_histogram_total_count_matches PASSED                     [ 94%]
+tests/test_sentinel_processor.py::TestHistogram::test_histogram_empty_data PASSED                              [ 96%]
+tests/test_sentinel_processor.py::TestEdgeCases::test_integer_to_float_conversion PASSED                       [ 98%]
+tests/test_sentinel_processor.py::TestEdgeCases::test_negative_ndvi_for_water PASSED                           [100%]
 
 ================================ tests coverage ================================
 Name                        Stmts   Miss  Cover
 ---------------------------------------------------
 api/__init__.py                 0      0   100%
-api/main.py                   511    409    20%
-api/sentinel_processor.py      75     34    55%
+api/main.py                   615    268    56%
+api/sentinel_processor.py      96     34    65%
 ---------------------------------------------------
-TOTAL                         586    443    24%
-============================== 28 passed in 0.79s ==============================
+TOTAL                         711    302    58%
+============================== 54 passed in 2.37s ==============================
 \end{lstlisting}
 
 % ══════════════════════════════════════════════════════════════
@@ -314,7 +340,7 @@ Frontend (Next.js) não testado automaticamente & Escopo da P2 priorizou testes 
 \section{Conclusão}
 % ══════════════════════════════════════════════════════════════
 
-A suíte de 28 testes valida com sucesso os requisitos funcionais críticos do MVP:
+A suíte de 54 testes valida com sucesso os requisitos funcionais críticos do MVP:
 
 \begin{itemize}
   \item \textbf{RF-04, RF-05, RF-06, RF-10, RF-11, RF-20} --- todos cobertos.
